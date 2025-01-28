@@ -3,9 +3,19 @@ import { GameContext } from "../../../context/GameContext";
 import { GameMode } from "../game/game";
 import classNames from "classnames";
 
+const confirmSFX = "button-press-beep-269718.mp3";
+const cancelSFX = "stop-13692.mp3";
+const brewSFX = "steam-101163.mp3";
+
 const BottomUI = () => {
-  const { gameState, resetActiveBars, brewCoffee, setGameMode, completeSale } =
-    useContext(GameContext);
+  const {
+    gameState,
+    resetActiveBars,
+    brewCoffee,
+    setGameMode,
+    completeSale,
+    playSound,
+  } = useContext(GameContext);
   const [confirm, setConfirm] = useState<boolean>(false);
   const [cancel, setCancel] = useState<boolean>(false);
 
@@ -34,7 +44,22 @@ const BottomUI = () => {
     if (cancel) {
       setCancel(false);
     }
-  }, [cancel, confirm, confirmCheck]);
+  }, [cancel, confirm, confirmCheck, playSound]);
+
+  const handleConfirm = () => {
+    playSound(confirmSFX);
+    setConfirm(true);
+  };
+
+  const handleCancel = () => {
+    playSound(cancelSFX);
+    setCancel(true);
+  };
+
+  const handleBrewCoffee = () => {
+    // playSound("steam-101163.mp3");
+    brewCoffee(() => playSound(brewSFX));
+  };
 
   return (
     <div className="bottom-ui">
@@ -52,7 +77,7 @@ const BottomUI = () => {
             className={classNames("btn confirm-button", {
               "btn-pulse": gameState.gameMode === GameMode.opening,
             })}
-            onClick={() => setConfirm(true)}
+            onClick={handleConfirm}
           >
             <div className="btn-wrapper">
               <div className="btn-body">
@@ -61,7 +86,7 @@ const BottomUI = () => {
               </div>
             </div>
           </div>
-          <div className="btn cancel-button" onClick={() => setCancel(true)}>
+          <div className="btn cancel-button" onClick={handleCancel}>
             <div className="btn-wrapper">
               <div className="btn-body">
                 <span className="btn-bg"></span>
@@ -70,7 +95,7 @@ const BottomUI = () => {
             </div>
           </div>
         </div>
-        <div className="brew-button" onClick={brewCoffee}>
+        <div className="brew-button" onClick={handleBrewCoffee}>
           <div className="btn-wrapper">
             <div className="btn-tail"></div>
             <div className="btn-body">

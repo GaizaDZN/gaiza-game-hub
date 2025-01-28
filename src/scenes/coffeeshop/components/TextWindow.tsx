@@ -53,7 +53,7 @@ const TextWindow: React.FC = () => {
   return (
     <div className="coffee-ui-textWindow">
       <div className="textBG">
-        <ul className="textContainer">
+        <ul className="textContainer blink-subtle">
           {customer?.getActive ? (
             loadingMessage ? (
               <Diamonds />

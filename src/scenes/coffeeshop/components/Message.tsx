@@ -15,8 +15,8 @@ const DefaultAvatar: React.FC = () => {
 
 const CustomerAvatar: React.FC<{ avatar: string }> = ({ avatar }) => {
   return (
-    <div className="customerInner">
-      <img src={avatar} alt="customer icon" />
+    <div className="customerInner avatar">
+      <img className="" src={avatar} alt="customer icon" />
     </div>
   );
 };
@@ -32,7 +32,7 @@ export const Message: React.FC = () => {
 
   return (
     <li
-      className={`message-container ${
+      className={`message-container scanning-laser data-stream ${
         isRendered ? "fade-in ui-open" : "fade-out ui-close"
       }`}
     >

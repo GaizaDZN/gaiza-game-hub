@@ -9,13 +9,14 @@ interface GameContextType {
   gameState: GameState;
   currentKey: string;
   setCurrentKey: (key: string) => void;
-  brewCoffee: () => void;
+  brewCoffee: (onSuccess: () => void) => void;
   incrementActiveBar: (resource: keyof ResourceState) => void;
   resetActiveBars: () => void;
   setGameMode: (mode: GameMode) => void;
   completeSale: () => void;
   checkRecipes: () => void;
   updateGameState: (game: GameState) => void;
+  playSound: (filename: string) => void;
 }
 
 export const GameContext = createContext<GameContextType>({
@@ -29,6 +30,7 @@ export const GameContext = createContext<GameContextType>({
   completeSale: () => {},
   checkRecipes: () => {},
   updateGameState: () => {},
+  playSound: () => {},
 });
 
 // Custom hooks for accessing game state and actions
@@ -74,4 +76,9 @@ export function useSales() {
 export function useGameMode() {
   const { gameState } = useGame();
   return gameState.gameMode;
+}
+
+export function useSounds() {
+  const { playSound } = useGame();
+  return playSound;
 }

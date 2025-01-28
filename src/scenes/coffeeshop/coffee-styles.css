@@ -576,6 +576,24 @@
   width: 100%;
   height: 100%;
 }
+.avatar {
+  position: relative;
+}
+.avatar img {
+  opacity: 0.8;
+}
+
+@keyframes glitch {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    filter: hue-rotate(30deg) contrast(1.2);
+  }
+  100% {
+    filter: hue-rotate(0deg);
+  }
+}
 
 .customerInner img {
   width: 85%;
@@ -609,7 +627,6 @@
   width: 80%;
   height: 50%;
 }
-
 .textContainer {
   overflow-y: hidden;
   width: 100%;
@@ -1017,6 +1034,66 @@
   }
 }
 
+.scanning-laser {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanning-laser::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #42ffe6, transparent);
+  animation: scan 1s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+}
+
+@keyframes scan {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+  1% {
+    opacity: 0.4;
+  }
+  99% {
+    top: 100%;
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* CLASS MODIFIERS //////////////////////////////*/
+.data-stream {
+  position: relative;
+  overflow: hidden;
+}
+
+.data-stream::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.1;
+  background: linear-gradient(to bottom, transparent, #00f7ffcc, transparent);
+  animation: data-stream 5s linear infinite;
+}
+
+@keyframes data-stream {
+  0% {
+    top: -100%;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
 /* Animations //////////////////////////////// */
 
 .btn-pulse .btn-bg {
@@ -1130,5 +1207,131 @@
   50% {
     background-color: var(--diamond-color); /* Border color */
     transform: translate(0, 0);
+  }
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0;
+  }
+  14.2% {
+    opacity: 1;
+  }
+  28.4% {
+    opacity: 0;
+  }
+  42.6% {
+    opacity: 1;
+  }
+  56.8% {
+    opacity: 0;
+  }
+  71% {
+    opacity: 1;
+  }
+  85.2% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.blink {
+  animation-name: blink;
+  animation-duration: 0.2s;
+  animation-iteration-count: 1;
+  animation-timing-function: steps(1);
+}
+
+@keyframes subtle-blink {
+  0% {
+    opacity: 1;
+  }
+  10% {
+    opacity: 0.9; /* Slight dip */
+  }
+  20% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0.95; /* Minor flicker */
+  }
+  40% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.98; /* Very subtle flicker */
+  }
+  60% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.99; /* Barely noticeable */
+  }
+  80% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.97;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.blink-subtle {
+  animation-name: subtle-blink;
+  animation-duration: 1s;
+  animation-iteration-count: 1;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes hologram {
+  0% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.floating-particles {
+  position: relative;
+  overflow: hidden;
+}
+
+.floating-particles::before,
+.floating-particles::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #00ffff;
+  border-radius: 50%;
+  animation: float 5s infinite;
+}
+
+.floating-particles::before {
+  top: 10%;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.floating-particles::after {
+  top: 30%;
+  left: 50%;
+  animation-delay: 2s;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+  100% {
+    transform: translateY(0);
   }
 }

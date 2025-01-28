@@ -6,6 +6,7 @@ import {
   GameState,
   ResourceState,
 } from "../scenes/coffeeshop/game/game";
+import { soundFiles } from "../assets/assets";
 
 interface GameProviderProps {
   children: React.ReactNode;
@@ -26,10 +27,13 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
   }, [game, gameState.version]);
 
   // Memoize game actions to prevent unnecessary re-renders
-  const brewCoffee = useCallback(() => {
-    game.brewCoffee();
-    setGame(new Game(game.getState()));
-  }, [game]);
+  const brewCoffee = useCallback(
+    (onSuccess: () => void) => {
+      game.brewCoffee(onSuccess);
+      setGame(new Game(game.getState()));
+    },
+    [game]
+  );
 
   const incrementActiveBar = useCallback(
     (resource: keyof ResourceState) => {
@@ -72,6 +76,17 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
     [game]
   );
 
+  // Sounds
+
+  const playSound = (filename: string) => {
+    if (soundFiles[filename]) {
+      const audio = new Audio(soundFiles[filename]);
+      audio.play();
+    } else {
+      console.warn(`Sound file ${filename} not found`);
+    }
+  };
+
   // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(
     () => ({
@@ -83,6 +98,7 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       completeSale,
       checkRecipes,
       updateGameState,
+      playSound,
     }),
     [
       gameState,

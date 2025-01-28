@@ -196,7 +196,7 @@ export class Game {
     }));
   }
 
-  public brewCoffee(): void {
+  public brewCoffee(onSuccess: () => void): void {
     const usedResources = this.state.activeBars;
 
     const newTerminalContent = [...this.state.terminalLog.content];
@@ -213,6 +213,7 @@ export class Game {
 
       // Identify coffee type
       const coffeeType = this.identifyCoffee(usedResources) || undefined;
+
       if (!coffeeType) {
         // brewing shouldn't work if the coffee type is not recognized
         // assign 'shake' class to brew button for feedback
@@ -225,6 +226,9 @@ export class Game {
           },
         };
       }
+
+      // PLAY SFX
+      onSuccess();
 
       return {
         ...state,
