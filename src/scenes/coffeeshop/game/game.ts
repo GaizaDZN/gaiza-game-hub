@@ -9,6 +9,8 @@ import {
   CoffeeState,
 } from "./coffeeshop.types";
 
+const newLineChar = "::";
+
 // Core types
 export interface GameState {
   gameMode: GameMode;
@@ -230,6 +232,10 @@ export class Game {
       // PLAY SFX
       onSuccess();
 
+      const brewMsg = "Beverage Module: ENGAGED";
+      const brewMsg2 = `Brewing ${coffeeType}...`;
+      this.addToTerminal(newTerminalContent, [brewMsg, brewMsg2]);
+
       return {
         ...state,
         resources: newResources,
@@ -240,7 +246,7 @@ export class Game {
         },
         terminalLog: {
           ...state.terminalLog,
-          content: [...state.terminalLog.content, `Brewing ${coffeeType}...`],
+          content: newTerminalContent,
         },
       };
     });
@@ -493,6 +499,12 @@ export class Game {
       money: Math.round(player.money * 100) / 100,
       reputation: Math.round(player.reputation * 100) / 100,
     };
+  }
+
+  private addToTerminal(terminalLog: string[], newcontent: string[]): void {
+    for (const line of newcontent) {
+      terminalLog.push(`${newLineChar} ${line}`);
+    }
   }
 }
 
