@@ -1,11 +1,11 @@
 import { Canvas } from "@react-three/fiber";
 import { SceneLayoutProps } from "../common";
-import TextWindow from "./components/TextWindow";
-import Info from "./components/Info";
-import MiddleButtons from "./components/MiddleButtons";
-import Title from "./components/Title";
+import TextWindow from "./components/UI/TextWindow";
+import Info from "./components/UI/Info";
+import MiddleButtons from "./components/UI/MiddleButtons";
+import Title from "./components/UI/Title";
 import { useContext, useEffect } from "react";
-import { GameContext } from "../../context/GameContext";
+import { GameContext } from "../../context/game/GameContext";
 import { GameMode } from "./game/game";
 
 const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({

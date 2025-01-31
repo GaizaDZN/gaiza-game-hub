@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect } from "react";
 import { SceneConfig } from "../scenes/common";
 import { debounce } from "lodash";
-import { GameContext } from "./GameContext";
+import { GameContext } from "./game/GameContext";
 
 export enum ButtonAction {
   Confirm,

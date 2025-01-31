@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import {
+  GameContext,
   useCustomer,
   useOrder,
   useSales,
-  useSounds,
-} from "../../../context/GameContext";
+} from "../../../../context/game/GameContext";
 import React from "react";
-import { PrevOrderState } from "../game/game";
+import { PrevOrderState } from "../../game/game";
+import TypewriterEffect from "./TypeWriterEffect";
 
 const userImg = "/src/assets/img/user.png";
 
@@ -21,7 +22,10 @@ const DefaultAvatar: React.FC = () => {
 const CustomerAvatar: React.FC<{ avatar: string }> = ({ avatar }) => {
   return (
     <div className="customerInner avatar">
-      <img className="" src={avatar} alt="customer icon" />
+      <div className="customerInner-bg"></div>
+      <div className="avatar-container pixelated">
+        <img src={avatar} alt="customer icon" />
+      </div>
     </div>
   );
 };
@@ -67,6 +71,21 @@ export const Message: React.FC = () => {
 
 export const ResultMessage: React.FC = () => {
   const customerOrder = useOrder();
+  const { playSound } = useContext(GameContext);
+
+  const onRender = useCallback(() => {
+    const prevOrder = customerOrder.prevOrderState;
+    if (prevOrder === PrevOrderState.success) {
+      playSound("transaction_success.mp3");
+    } else if (prevOrder === PrevOrderState.fail) {
+      playSound("transaction_fail.mp3");
+    }
+  }, [customerOrder.prevOrderState, playSound]);
+
+  useEffect(() => {
+    // play sfx on render
+    onRender();
+  }, [onRender]);
   return (
     <li className="message-container fade-in ui-open">
       <div className="allText-container-result">
@@ -123,44 +142,4 @@ export const DayEndMessage: React.FC = () => {
       </div>
     </li>
   );
-};
-
-const typingSound = "typing_sound.mp3";
-interface TypewriterEffectProps {
-  message: string;
-  delay?: number; // Optional delay between character appearances
-  tag: string; // flag for appropiate tag
-}
-
-const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
-  message,
-  delay = 40,
-  tag,
-}) => {
-  const [printedMessage, setPrintedMessage] = useState("");
-  const [currentCharacterIndex, setCurrentCharacterIndex] = useState(0);
-
-  const playSound = useSounds();
-  const handleUpdate = () => {
-    playSound(typingSound);
-    setPrintedMessage(message.substring(0, currentCharacterIndex + 1));
-    setCurrentCharacterIndex((prevIndex) => prevIndex + 1);
-  };
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (currentCharacterIndex < message.length) {
-        handleUpdate();
-      } else {
-        clearInterval(intervalId); // Stop the interval when finished
-      }
-    }, delay);
-
-    return () => clearInterval(intervalId); // Cleanup on component unmount
-  }, [message, delay, currentCharacterIndex]);
-
-  if (tag === "p") {
-    return <p>{printedMessage}</p>;
-  } else if (tag === "pre") {
-    return <pre>{printedMessage}</pre>;
-  }
 };

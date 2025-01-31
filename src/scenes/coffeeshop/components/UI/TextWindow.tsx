@@ -4,9 +4,9 @@ import {
   GameContext,
   useCustomer,
   useOrder,
-} from "../../../context/GameContext";
+} from "../../../../context/game/GameContext";
 import React from "react";
-import { GameMode, PrevOrderState } from "../game/game";
+import { GameMode, PrevOrderState } from "../../game/game";
 
 const Diamonds = () => {
   return (

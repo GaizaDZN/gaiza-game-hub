@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { GameContext } from "../../../context/GameContext";
+import { GameContext } from "../../../../context/game/GameContext";
 
 const TerminalLines = () => {
   const { gameState } = useContext(GameContext);

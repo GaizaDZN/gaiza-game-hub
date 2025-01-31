@@ -1,9 +1,9 @@
 import { createContext, useContext } from "react";
 import {
-  GameMode,
   GameState,
   ResourceState,
-} from "../scenes/coffeeshop/game/game";
+  GameMode,
+} from "../../scenes/coffeeshop/game/game";
 
 interface GameContextType {
   gameState: GameState;

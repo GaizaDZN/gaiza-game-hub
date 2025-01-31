@@ -1,5 +1,5 @@
-import { coffeeAscii } from "../ascii/art";
-import Ascii from "./Ascii";
+import { coffeeAscii } from "../../ascii/art";
+import Ascii from "../aesthetics/Ascii";
 
 const Title: React.FC = () => {
   return (

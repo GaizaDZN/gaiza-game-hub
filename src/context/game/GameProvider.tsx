@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo } from "react";
 import { GameContext } from "./GameContext";
+
+import { soundFiles } from "../../assets/assets";
 import {
-  Game,
-  GameMode,
   GameState,
+  Game,
   ResourceState,
-} from "../scenes/coffeeshop/game/game";
-import { soundFiles } from "../assets/assets";
+  GameMode,
+} from "../../scenes/coffeeshop/game/game";
 
 interface GameProviderProps {
   children: React.ReactNode;

@@ -1,5 +1,5 @@
 import { RandRange, stringToLines } from "../../../helpers/helpers";
-import { asciiCat } from "../ascii/art";
+import { asciiCat, cybergrid } from "../ascii/art";
 import {
   Order,
   Customer,
@@ -8,8 +8,6 @@ import {
   coffeeRecipes,
   CoffeeState,
 } from "./coffeeshop.types";
-
-const newLineChar = "::";
 
 // Core types
 export interface GameState {
@@ -31,6 +29,11 @@ export interface GameState {
 interface PlayerState {
   reputation: number;
   money: number;
+}
+
+enum TerminalLine {
+  result = "-",
+  system = "::",
 }
 
 interface TerminalLog {
@@ -176,7 +179,7 @@ export class Game {
       activeBars: { beans: 0, water: 0, milk: 0, sugar: 0 },
       terminalLog: {
         ...state.terminalLog,
-        content: [...state.terminalLog.content, "Ingredients reset."],
+        content: [...state.terminalLog.content, ":: Ingredients reset."],
       },
     }));
   }
@@ -185,7 +188,7 @@ export class Game {
     const newTerminalContent = ["+------------------------------------------+"];
     for (const [coffeeType, recipe] of coffeeRecipes.entries()) {
       const coffeeLine = `${coffeeType} - B: ${recipe.beans}, W: ${recipe.water}, M: ${recipe.milk}, S: ${recipe.sugar}`;
-      newTerminalContent.push(coffeeLine);
+      this.addToTerminal(newTerminalContent, [coffeeLine], TerminalLine.system);
     }
     newTerminalContent.push("+------------------------------------------+");
 
@@ -219,7 +222,11 @@ export class Game {
       if (!coffeeType) {
         // brewing shouldn't work if the coffee type is not recognized
         // assign 'shake' class to brew button for feedback
-        newTerminalContent.push("Bad combination. Check the recipe book.");
+        this.addToTerminal(
+          newTerminalContent,
+          ["Bad combination. Check the recipe book."],
+          TerminalLine.system
+        );
         return {
           ...state,
           terminalLog: {
@@ -234,7 +241,11 @@ export class Game {
 
       const brewMsg = "Beverage Module: ENGAGED";
       const brewMsg2 = `Brewing ${coffeeType}...`;
-      this.addToTerminal(newTerminalContent, [brewMsg, brewMsg2]);
+      this.addToTerminal(
+        newTerminalContent,
+        [brewMsg, brewMsg2],
+        TerminalLine.system
+      );
 
       return {
         ...state,
@@ -260,13 +271,16 @@ export class Game {
       let updates: Partial<GameState> = { gameMode: newMode };
       let newTerminalContent = [
         ...state.terminalLog.content,
-        `Game mode: ${newMode}`,
+        `:: Game mode: ${newMode}`,
       ];
 
       switch (newMode) {
         case GameMode.opening:
-          newTerminalContent.push("Welcome to the cafe!");
-          newTerminalContent.push('Press "Confirm" to start the day.');
+          this.addToTerminal(
+            newTerminalContent,
+            ["Welcome to the cafe!", 'Press "Confirm" to start the day.'],
+            TerminalLine.system
+          );
           updates = {
             ...updates,
             customerState: {
@@ -284,8 +298,14 @@ export class Game {
           const firstCustomer = state.customerState.customers[0];
           if (!firstCustomer) throw new Error("No customers available!");
           newTerminalContent = [];
-          newTerminalContent.push("Starting sales mode...");
-          newTerminalContent.push("Let's make some coffee!");
+          this.addToTerminal(
+            newTerminalContent,
+            [
+              "Starting sales mode...",
+              ...stringToLines(cybergrid, state.terminalLog.maxCharacters),
+            ],
+            TerminalLine.system
+          );
 
           updates = {
             ...updates,
@@ -348,8 +368,11 @@ export class Game {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       Object.entries(this.state.coffeeState).every(([_, value]) => value === 0)
     ) {
-      newTerminalContent.push("No coffee brewed.");
-      newTerminalContent.push("Enter ingredients using the buttons above!");
+      this.addToTerminal(
+        newTerminalContent,
+        ["No coffee brewed.", "Enter ingredients using the buttons above!"],
+        TerminalLine.system
+      );
       this.setState((state) => ({
         ...state,
         terminalLog: {
@@ -374,20 +397,28 @@ export class Game {
       const reputationChange = orderSuccess
         ? currentCustomer.getRepValue()
         : -currentCustomer.getRepValue();
-      let newTerminalContent = [...this.state.terminalLog.content];
+      const newTerminalContent = [...this.state.terminalLog.content];
       if (orderSuccess) {
-        newTerminalContent.push("Order successful!");
-        newTerminalContent.push(
-          `${
-            currentCustomer.getCustomerMessage().customerName
-          } paid $${+moneyChange.toFixed(2)}`
+        this.addToTerminal(
+          newTerminalContent,
+          [
+            "Order successful!",
+            `${
+              currentCustomer.getCustomerMessage().customerName
+            } paid $${+moneyChange.toFixed(2)}`,
+          ],
+          TerminalLine.result
         );
       } else {
-        newTerminalContent.push("Order failed!");
-        newTerminalContent.push(
-          `${
-            currentCustomer.getCustomerMessage().customerName
-          } left without paying...`
+        this.addToTerminal(
+          newTerminalContent,
+          [
+            "Order failed!",
+            `${
+              currentCustomer.getCustomerMessage().customerName
+            } left without paying...`,
+          ],
+          TerminalLine.result
         );
       }
 
@@ -402,14 +433,16 @@ export class Game {
           : state.gameMode;
 
       if (newGameMode === GameMode.dayEnd) {
-        // reset terminal
-        newTerminalContent = ["The day has ended...", "Consider restocking."];
-
-        // push random ascii art
-        newTerminalContent = [
-          ...newTerminalContent,
-          ...stringToLines(asciiCat, state.terminalLog.maxCharacters),
-        ];
+        // add ascii art
+        this.addToTerminal(
+          newTerminalContent,
+          [
+            "The day has ended...",
+            "Consider restocking.",
+            ...stringToLines(asciiCat, state.terminalLog.maxCharacters),
+          ],
+          TerminalLine.system
+        );
       }
 
       return {
@@ -501,9 +534,23 @@ export class Game {
     };
   }
 
-  private addToTerminal(terminalLog: string[], newcontent: string[]): void {
+  private addToTerminal(
+    terminalLog: string[],
+    newcontent: string[],
+    terminalLineType: TerminalLine
+  ): void {
+    let lineType = "";
+    switch (terminalLineType) {
+      case TerminalLine.result:
+        lineType = TerminalLine.result;
+        break;
+      default:
+        lineType = TerminalLine.system;
+        break;
+    }
+
     for (const line of newcontent) {
-      terminalLog.push(`${newLineChar} ${line}`);
+      terminalLog.push(`${lineType} ${line}`);
     }
   }
 }

@@ -11,8 +11,9 @@ import RightBar from "../components/Menu/RightBar.tsx";
 import Chibi from "../components/Menu/Chibi.tsx";
 import { useEffect, useState } from "react";
 import HandleInputs from "../context/HandleInputs.tsx";
-import { GameProvider } from "../context/GameProvider.tsx";
+import { GameProvider } from "../context/game/GameProvider.tsx";
 import CoffeeShopLayout from "../scenes/coffeeshop/CoffeeShopLayout.tsx";
+import { TooltipProvider } from "../context/tooltip/ToolTipProvider.tsx";
 
 // Create a centralized GUI instance
 const gui = new GUI({ title: "GUI Controls" });
@@ -74,21 +75,23 @@ const Main: React.FC<MainProps> = ({
   return (
     <div className="main">
       <GameProvider>
-        <Sidebar
-          views={sceneViews}
-          onViewChange={onViewChange}
-          onSceneChange={onSceneChange}
-          sceneList={sceneList}
-        />
-        <SceneLayout
-          currentScene={currentScene}
-          currentView={currentView}
-          gui={gui}
-        />
-        <BottomBar />
-        <RightBar />
-        <Chibi />
-        {/* <HandleInputs scene={currentScene} /> */}
+        <TooltipProvider>
+          <Sidebar
+            views={sceneViews}
+            onViewChange={onViewChange}
+            onSceneChange={onSceneChange}
+            sceneList={sceneList}
+          />
+          <SceneLayout
+            currentScene={currentScene}
+            currentView={currentView}
+            gui={gui}
+          />
+          <BottomBar />
+          <RightBar />
+          <Chibi />
+          {/* <HandleInputs scene={currentScene} /> turn this into context*/}
+        </TooltipProvider>
       </GameProvider>
     </div>
   );

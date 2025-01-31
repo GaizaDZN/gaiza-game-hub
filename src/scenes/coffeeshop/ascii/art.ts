@@ -37,3 +37,10 @@ export const saleConfirmation2 = `
 :: System Logs Updated           ::
 ==================================
 `;
+
+export const cybergrid = `
+█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+█░░░ Let's make some coffee! ░░░█
+█░░░                         ░░░█
+█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+`;

@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { GameContext } from "../../../context/GameContext";
+import { GameContext } from "../../../../context/game/GameContext";
 
 const Info: React.FC = () => {
   const { gameState, checkRecipes } = useContext(GameContext);

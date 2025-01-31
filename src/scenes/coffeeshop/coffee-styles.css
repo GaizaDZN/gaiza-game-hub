@@ -37,7 +37,7 @@
   color: transparent;
   font-family: "Nulshock", sans-serif;
   text-transform: uppercase;
-  webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: transparent;
   -webkit-text-stroke-width: 1px;
   -webkit-text-stroke-color: var(--coffeeUIAccent);
 }
@@ -568,18 +568,34 @@
   border: 1px solid var(--avatarColorDefault);
   position: relative;
 }
-.customerInner::after {
-  content: "";
-  opacity: 0.1;
+
+.customerInner-bg {
+  opacity: 0.15;
   background-image: url("/src/assets/img/av-bg.png");
   position: absolute;
   width: 100%;
   height: 100%;
+  filter: sepia(1) hue-rotate(360deg) saturate(20);
+}
+
+.customerInner img {
+  width: 85%;
+  background-color: var(--avatarColorDefault);
+  border-radius: 10px;
+  border: 1px solid aliceblue;
+  display: flex;
+  justify-self: center;
+  margin: 10px;
+  z-index: 1;
 }
 .avatar {
-  position: relative;
 }
-.avatar img {
+.avatar-container {
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+}
+.avatar-container img {
   opacity: 0.8;
 }
 
@@ -593,15 +609,6 @@
   100% {
     filter: hue-rotate(0deg);
   }
-}
-
-.customerInner img {
-  width: 85%;
-  height: 85%;
-  background-color: var(--avatarColorDefault);
-  border-radius: 10px;
-  border: 1px solid aliceblue;
-  z-index: 1;
 }
 
 .allText-container,
@@ -729,6 +736,34 @@
 .day-end-stats td:last-child {
   text-align: right;
   color: #00ff99; /* Slightly greenish neon for numbers */
+}
+
+.tool-tip {
+  position: fixed;
+  background: rgba(8, 15, 26, 0.95);
+  color: #00ffff;
+  padding: 8px 12px;
+  border: 1px solid #00ffff;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 10% 100%, 0 80%);
+  pointer-events: none;
+  z-index: 100;
+  font-family: "Monaco", monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.8em;
+}
+
+.tool-tip-bg:after {
+  content: "";
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAG0lEQVQYV2P8//+/FCMj4zMGJMCIzIGxKRQEAJgPBAbJqUVTAAAAAElFTkSuQmCC);
+  opacity: 0.8;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.tool-tip-text {
 }
 
 /* Sci-fi UI ///////////////////////// */
@@ -1034,66 +1069,26 @@
   }
 }
 
-.scanning-laser {
-  position: relative;
-  overflow: hidden;
-}
-
-.scanning-laser::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(to right, transparent, #42ffe6, transparent);
-  animation: scan 1s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
-}
-
-@keyframes scan {
-  0% {
-    top: 0;
-    opacity: 0;
-  }
-  1% {
-    opacity: 0.4;
-  }
-  99% {
-    top: 100%;
-    opacity: 0.4;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
 /* CLASS MODIFIERS //////////////////////////////*/
-.data-stream {
+.pixelated {
+  /* Set the image rendering to pixelate */
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges; /* Firefox */
+  image-rendering: -o-pixelated; /* Opera */
+  image-rendering: -webkit-crisp-edges; /* Safari */
   position: relative;
-  overflow: hidden;
 }
-
-.data-stream::before {
+.pixelated::after {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.1;
-  background: linear-gradient(to bottom, transparent, #00f7ffcc, transparent);
-  animation: data-stream 5s linear infinite;
+  inset: 0;
+  background: repeating-linear-gradient(
+    rgba(0, 0, 0, 0.062) 2px,
+    rgba(0, 0, 0, 0.062) 2px,
+    transparent 3px,
+    transparent 4px
+  );
 }
-
-@keyframes data-stream {
-  0% {
-    top: -100%;
-  }
-  100% {
-    top: 100%;
-  }
-}
-
 /* Animations //////////////////////////////// */
 
 .btn-pulse .btn-bg {
@@ -1333,5 +1328,64 @@
   }
   100% {
     transform: translateY(0);
+  }
+}
+
+.data-stream {
+  position: relative;
+  overflow: hidden;
+}
+
+.data-stream::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.1;
+  background: linear-gradient(to bottom, transparent, #00f7ffcc, transparent);
+  animation: data-stream 5s linear infinite;
+}
+
+@keyframes data-stream {
+  0% {
+    top: -100%;
+  }
+  100% {
+    top: 100%;
+  }
+}
+
+.scanning-laser {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanning-laser::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #42ffe6, transparent);
+  animation: scan 1s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+}
+
+@keyframes scan {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+  1% {
+    opacity: 0.4;
+  }
+  99% {
+    top: 100%;
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 0;
   }
 }
