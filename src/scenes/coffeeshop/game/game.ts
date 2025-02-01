@@ -1,5 +1,5 @@
 import { RandRange, stringToLines } from "../../../helpers/helpers";
-import { asciiCat, cybergrid, salesAscii } from "../ascii/art";
+import { asciiCat, salesAscii } from "../ascii/art";
 import {
   Order,
   Customer,
@@ -160,10 +160,59 @@ export class Game {
   ];
   public getVersion = (): number => this.state.version;
 
+  // Reset to initial state
+  public reset = (): void => {
+    if (this.state.gameMode !== GameMode.init) {
+      this.state = {
+        gameMode: GameMode.init,
+        player: { money: 100, reputation: 100 },
+        resources: { beans: 20, water: 20, milk: 20, sugar: 20 },
+        orderState: {
+          currentOrder: undefined,
+          orderSuccess: false,
+          prevOrderState: PrevOrderState.none,
+        },
+        coffeeState: {
+          latte: 0,
+          espresso: 0,
+          cappuccino: 0,
+          americano: 0,
+          black: 0,
+        },
+        customerState: {
+          currentCustomer: undefined,
+          customers: [],
+          completedCustomers: [],
+        },
+        messageLog: { messages: [] },
+        terminalLog: {
+          content: [],
+          maxLines: 50,
+          maxCharacters: 46,
+        },
+        salesState: {
+          goodOrders: 0,
+          badOrders: 0,
+          moneyStart: 0,
+          moneyEnd: 0,
+        },
+        priceModifier: 3,
+        storeOpen: false,
+        activeBars: { beans: 0, water: 0, milk: 0, sugar: 0 },
+        version: 0,
+      };
+    }
+  };
+
   // Resource Management
-  public incrementActiveBar(resource: keyof ResourceState): void {
+  public incrementActiveBar(
+    resource: keyof ResourceState,
+    onSuccess: () => void
+  ): void {
     if (this.state.activeBars[resource] >= 10) return;
 
+    // play sound
+    onSuccess();
     this.setState((state) => ({
       ...state,
       activeBars: {

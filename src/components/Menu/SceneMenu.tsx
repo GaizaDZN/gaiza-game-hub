@@ -1,3 +1,5 @@
+import { useContext } from "react";
+import { GameContext } from "../../context/game/GameContext";
 import { SceneConfig } from "../../scenes/common";
 import Button from "./buttons/Button";
 
@@ -12,13 +14,20 @@ const SceneMenu: React.FC<SceneMenuProps> = ({
   onSceneChange,
   sceneList,
 }) => {
+  const { resetGame } = useContext(GameContext);
+
+  const handleSceneChange = (sceneId: string) => {
+    resetGame();
+    onSceneChange(sceneId);
+  };
+
   const Scenes = () => {
     return sceneList.map((scene) => (
       <Button
         key={scene.id}
         content={scene.name}
         menuName="sceneMenu"
-        action={() => onSceneChange(scene.id)}
+        action={() => handleSceneChange(scene.id)}
       />
     ));
   };

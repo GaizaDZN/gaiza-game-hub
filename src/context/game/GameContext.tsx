@@ -7,22 +7,22 @@ import {
 
 interface GameContextType {
   gameState: GameState;
-  currentKey: string;
-  setCurrentKey: (key: string) => void;
   brewCoffee: (onSuccess: () => void) => void;
-  incrementActiveBar: (resource: keyof ResourceState) => void;
+  incrementActiveBar: (
+    resource: keyof ResourceState,
+    onSuccess: () => void
+  ) => void;
   resetActiveBars: () => void;
   setGameMode: (mode: GameMode) => void;
   completeSale: () => void;
   checkRecipes: () => void;
   updateGameState: (game: GameState) => void;
+  resetGame: () => void;
   playSound: (filename: string) => void;
 }
 
 export const GameContext = createContext<GameContextType>({
   gameState: {} as GameState,
-  currentKey: "",
-  setCurrentKey: () => {},
   brewCoffee: () => {},
   incrementActiveBar: () => {},
   resetActiveBars: () => {},
@@ -30,6 +30,7 @@ export const GameContext = createContext<GameContextType>({
   completeSale: () => {},
   checkRecipes: () => {},
   updateGameState: () => {},
+  resetGame: () => {},
   playSound: () => {},
 });
 

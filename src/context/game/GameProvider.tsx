@@ -37,8 +37,8 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
   );
 
   const incrementActiveBar = useCallback(
-    (resource: keyof ResourceState) => {
-      game.incrementActiveBar(resource);
+    (resource: keyof ResourceState, onSuccess: () => void) => {
+      game.incrementActiveBar(resource, onSuccess);
       setGame(new Game(game.getState()));
     },
     [game]
@@ -64,6 +64,11 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
 
   const checkRecipes = useCallback(() => {
     game.checkRecipes();
+    setGame(new Game(game.getState()));
+  }, [game]);
+
+  const resetGame = useCallback(() => {
+    game.reset();
     setGame(new Game(game.getState()));
   }, [game]);
 
@@ -99,6 +104,7 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       completeSale,
       checkRecipes,
       updateGameState,
+      resetGame,
       playSound,
     }),
     [
@@ -109,6 +115,7 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       setGameMode,
       completeSale,
       checkRecipes,
+      resetGame,
       updateGameState,
     ]
   );

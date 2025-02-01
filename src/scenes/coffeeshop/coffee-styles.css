@@ -261,7 +261,7 @@
   margin: 0;
   white-space: pre-wrap;
   line-height: 1.5em;
-  margin-left: 1em;
+  /* margin-left: 1em; */
 }
 
 /* Style the scrollbar track */

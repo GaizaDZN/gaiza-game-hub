@@ -1,17 +1,38 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import Button from "../../../../components/Menu/buttons/Button";
 import QuantityBars from "./QuantityBars";
 import { ResourceState } from "../../game/game";
 import { GameContext } from "../../../../context/game/GameContext";
 import { Hoverable } from "../../../../context/tooltip/Hoverable";
+import { InputContext } from "../../../../context/input/InputContext";
+import { keybinds } from "../../../../context/input/keybinds";
 
 const TopUI = () => {
   const { playSound } = useContext(GameContext);
+  const { currentKey } = useContext(InputContext);
 
   const handleIncrement = (ingredient: keyof ResourceState) => {
-    playSound("minor_button.mp3");
-    incrementActiveBar(ingredient);
+    incrementActiveBar(ingredient, () => playSound("minor_button.mp3"));
   };
+
+  useEffect(() => {
+    switch (currentKey) {
+      case keybinds.coffeeshop.q:
+        handleIncrement("beans");
+        break;
+      case keybinds.coffeeshop.w:
+        handleIncrement("water");
+        break;
+      case keybinds.coffeeshop.e:
+        handleIncrement("milk");
+        break;
+      case keybinds.coffeeshop.r:
+        handleIncrement("sugar");
+        break;
+      default:
+        break;
+    }
+  }, [currentKey]);
 
   const { gameState, incrementActiveBar } = useContext(GameContext);
   return (

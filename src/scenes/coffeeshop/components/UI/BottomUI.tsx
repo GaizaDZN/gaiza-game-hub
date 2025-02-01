@@ -3,6 +3,8 @@ import { GameContext } from "../../../../context/game/GameContext";
 import { GameMode } from "../../game/game";
 import classNames from "classnames";
 import { Hoverable } from "../../../../context/tooltip/Hoverable";
+import { InputContext } from "../../../../context/input/InputContext";
+import { keybinds } from "../../../../context/input/keybinds";
 
 const confirmSFX = "confirm.mp3";
 const cancelSFX = "stop-13692.mp3";
@@ -17,6 +19,7 @@ const BottomUI = () => {
     completeSale,
     playSound,
   } = useContext(GameContext);
+  const { currentKey } = useContext(InputContext);
   const [confirm, setConfirm] = useState<boolean>(false);
   const [cancel, setCancel] = useState<boolean>(false);
 
@@ -36,17 +39,6 @@ const BottomUI = () => {
     }
   }, [completeSale, gameState.gameMode, setGameMode]);
 
-  useEffect(() => {
-    if (confirm) {
-      confirmCheck();
-      setConfirm(false);
-    }
-
-    if (cancel) {
-      setCancel(false);
-    }
-  }, [cancel, confirm, confirmCheck, playSound]);
-
   const handleConfirm = () => {
     playSound(confirmSFX);
     setConfirm(true);
@@ -58,9 +50,37 @@ const BottomUI = () => {
   };
 
   const handleBrewCoffee = () => {
-    // playSound("steam-101163.mp3");
     brewCoffee(() => playSound(brewSFX));
   };
+
+  const clickBtn = (classname: string) => {
+    const btn = document.querySelector(classname) as HTMLElement;
+    if (btn) {
+      btn.click();
+    }
+  };
+
+  useEffect(() => {
+    if (confirm) {
+      confirmCheck();
+      setConfirm(false);
+    }
+
+    if (cancel) {
+      setCancel(false);
+    }
+
+    if (currentKey) {
+      switch (currentKey) {
+        case keybinds.coffeeshop.enter:
+          clickBtn(".confirm-button");
+          break;
+        case keybinds.coffeeshop.space:
+          clickBtn(".brew-button");
+          break;
+      }
+    }
+  }, [cancel, confirm, currentKey, confirmCheck]);
 
   return (
     <div className="bottom-ui">
