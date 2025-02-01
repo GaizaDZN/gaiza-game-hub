@@ -17,30 +17,35 @@ export const coffeeAscii = `
    "----"
   `;
 
-export const saleConfirmation = `
+export const salesAscii = {
+  saleSuccess: `
 ╔═══════════════════════╗
-║     SALE COMPLETE     ║
-╠═══════════════════════╣
-║    PAYMENT VERIFIED   ║
-║       THANK YOU!      ║
+    ✔ SALE COMPLETE    
 ╚═══════════════════════╝
-`;
+`,
+  saleFail: `
+╔═══════════════════════╗
+     ⚠ SALE FAILED     
+╚═══════════════════════╝
+`,
+  salesStart: `
+┌──────────────────────────────┐
+│ ████████████████████████████ │
+│ █                          █ │
+│ █  LET'S MAKE SOME COFFEE! █ │
+│ █                          █ │
+│ ████████████████████████████ │
+└──────────────────────────────┘`,
+};
 
 export const saleConfirmation2 = `
 ==================================
 :: SALE COMPLETE                 ::
 ==================================
 :: Account Verified              ::
-:: Transaction ID: #4F3A-92D1    :: // this can be customer id
+:: Transaction ID: #4F3A-92D1    ::
 :: Funds Received                ::
 :: Beverage Module: ENGAGED      ::
 :: System Logs Updated           ::
 ==================================
-`;
-
-export const cybergrid = `
-█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
-█░░░ Let's make some coffee! ░░░█
-█░░░                         ░░░█
-█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
 `;

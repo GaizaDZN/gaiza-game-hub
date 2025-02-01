@@ -1,5 +1,5 @@
 import { RandRange, stringToLines } from "../../../helpers/helpers";
-import { asciiCat, cybergrid } from "../ascii/art";
+import { asciiCat, cybergrid, salesAscii } from "../ascii/art";
 import {
   Order,
   Customer,
@@ -108,7 +108,7 @@ export class Game {
       messageLog: { messages: [] },
       terminalLog: {
         content: [],
-        maxLines: 12,
+        maxLines: 50, // might reduce this later who knows.
         maxCharacters: 46,
       },
       salesState: {
@@ -302,7 +302,10 @@ export class Game {
             newTerminalContent,
             [
               "Starting sales mode...",
-              ...stringToLines(cybergrid, state.terminalLog.maxCharacters),
+              ...stringToLines(
+                salesAscii.salesStart,
+                state.terminalLog.maxCharacters
+              ),
             ],
             TerminalLine.system
           );
@@ -402,7 +405,10 @@ export class Game {
         this.addToTerminal(
           newTerminalContent,
           [
-            "Order successful!",
+            ...stringToLines(
+              salesAscii.saleSuccess,
+              state.terminalLog.maxCharacters
+            ),
             `${
               currentCustomer.getCustomerMessage().customerName
             } paid $${+moneyChange.toFixed(2)}`,
@@ -413,7 +419,10 @@ export class Game {
         this.addToTerminal(
           newTerminalContent,
           [
-            "Order failed!",
+            ...stringToLines(
+              salesAscii.saleFail,
+              state.terminalLog.maxCharacters
+            ),
             `${
               currentCustomer.getCustomerMessage().customerName
             } left without paying...`,

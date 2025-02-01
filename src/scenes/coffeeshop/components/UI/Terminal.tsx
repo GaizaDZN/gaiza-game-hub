@@ -1,12 +1,22 @@
-import { useContext } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { GameContext } from "../../../../context/game/GameContext";
 
 const TerminalLines = () => {
   const { gameState } = useContext(GameContext);
+  const containerRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    containerRef.current = document.querySelector(".terminal");
+
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [gameState.terminalLog.content]);
 
   if (gameState.terminalLog.content.length === 0) {
-    return;
+    return null;
   }
+
   const terminalLines = gameState.terminalLog.content.map((line, index) => (
     <pre key={index} className="terminal-output">
       {line}
