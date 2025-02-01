@@ -226,11 +226,8 @@
 .terminal {
   color: var(--coffeeUIAccent);
   font-family: monospace; /* Important for ASCII art alignment */
-  padding: 10px;
-  overflow-y: auto; /* Add scrollbar if content overflows */
   height: 100%;
   box-sizing: border-box; /* Include padding and border in element's total width and height */
-  font-size: 18px;
   background-image: linear-gradient(
     180deg,
     hsl(20deg 43% 4%) 72%,
@@ -248,10 +245,15 @@
     hsl(35deg 44% 42%) 100%
   );
   position: relative;
-  overflow-x: hidden;
-  overflow-y: auto;
   padding: 0;
+  overflow-y: hidden;
+  overflow-x: hidden;
   user-select: text;
+}
+.terminal .lines-container {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .terminal-output {
@@ -263,20 +265,20 @@
 }
 
 /* Style the scrollbar track */
-.terminal::-webkit-scrollbar {
+.terminal .lines-container::-webkit-scrollbar {
   width: 12px;
 }
 
-.terminal::-webkit-scrollbar-track {
+.terminal .lines-container::-webkit-scrollbar-track {
   background: #1a1410;
 }
 
 /* Style the scrollbar thumb */
-.terminal::-webkit-scrollbar-thumb {
+.terminal .lines-container::-webkit-scrollbar-thumb {
   background: #2b231b;
 }
 
-.terminal::-webkit-scrollbar-thumb:hover {
+.terminal .lines-container::-webkit-scrollbar-thumb:hover {
   background: #443620;
 }
 
@@ -419,7 +421,7 @@
   background-color: #1c2831;
 
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 360px 1fr;
   grid-template-rows: auto 1fr 1fr;
   position: relative;
   user-select: none;
@@ -481,10 +483,14 @@
 }
 
 .resource-info img {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
 }
-
+.resource-info span {
+  display: inline-block;
+  text-align: right;
+  min-width: 40px;
+}
 .coffee-quantities .recipes-btn {
   display: flex;
   justify-content: center;
@@ -1006,9 +1012,9 @@
   }
 
   .coffee-ui-info {
-    grid-area: 4 / 1 / 5/ 2;
+    grid-area: 4 / 1 / 5 / 2;
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 245px 1fr;
     grid-template-rows: auto 1fr;
   }
 
@@ -1092,6 +1098,15 @@
   .triangles-container .triangle-holes .row .hole {
     width: 10px;
     height: 10px;
+  }
+
+  .resource-info img {
+    width: 20px;
+    height: 20px;
+  }
+  .resource-info span {
+    font-size: 14px;
+    min-width: 20px;
   }
 }
 

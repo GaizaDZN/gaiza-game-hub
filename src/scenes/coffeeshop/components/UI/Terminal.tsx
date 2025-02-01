@@ -6,7 +6,7 @@ const TerminalLines = () => {
   const containerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    containerRef.current = document.querySelector(".terminal");
+    containerRef.current = document.querySelector(".lines-container");
 
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
@@ -28,7 +28,9 @@ const TerminalLines = () => {
 const Terminal: React.FC = () => {
   return (
     <div className="terminal">
-      <TerminalLines />
+      <div className="lines-container">
+        <TerminalLines />
+      </div>
     </div>
   );
 };
