@@ -1,40 +1,48 @@
-import { useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import Button from "../../../../components/Menu/buttons/Button";
 import QuantityBars from "./QuantityBars";
 import { ResourceState } from "../../game/game";
 import { GameContext } from "../../../../context/game/GameContext";
 import { Hoverable } from "../../../../context/tooltip/Hoverable";
-import { InputContext } from "../../../../context/input/InputContext";
 import { keybinds } from "../../../../context/input/keybinds";
+import { inputDispatcher } from "../../../../context/input/InputDispatcher";
 
 const TopUI = () => {
-  const { playSound } = useContext(GameContext);
-  const { currentKey } = useContext(InputContext);
+  const { gameState, incrementActiveBar, playSound } = useContext(GameContext);
 
-  const handleIncrement = (ingredient: keyof ResourceState) => {
-    incrementActiveBar(ingredient, () => playSound("minor_button.mp3"));
-  };
+  const handleIncrement = useCallback(
+    (ingredient: keyof ResourceState) => {
+      incrementActiveBar(ingredient, () => playSound("minor_button.mp3"));
+    },
+    [incrementActiveBar, playSound]
+  );
 
   useEffect(() => {
-    switch (currentKey) {
-      case keybinds.coffeeshop.q:
-        handleIncrement("beans");
-        break;
-      case keybinds.coffeeshop.w:
-        handleIncrement("water");
-        break;
-      case keybinds.coffeeshop.e:
-        handleIncrement("milk");
-        break;
-      case keybinds.coffeeshop.r:
-        handleIncrement("sugar");
-        break;
-      default:
-        break;
-    }
-  }, [currentKey]);
+    const handleKeyPress = (key: string) => {
+      switch (key) {
+        case keybinds.coffeeshop.q:
+          handleIncrement("beans");
+          break;
+        case keybinds.coffeeshop.w:
+          handleIncrement("water");
+          break;
+        case keybinds.coffeeshop.e:
+          handleIncrement("milk");
+          break;
+        case keybinds.coffeeshop.r:
+          handleIncrement("sugar");
+          break;
+        default:
+          break;
+      }
+    };
 
-  const { gameState, incrementActiveBar } = useContext(GameContext);
+    inputDispatcher.subscribe("keyPress", handleKeyPress);
+    return () => {
+      inputDispatcher.unsubscribe("keyPress", handleKeyPress);
+    };
+  }, [handleIncrement]);
+
   return (
     <ul className="top-ui">
       <div className="coffee-button-group">

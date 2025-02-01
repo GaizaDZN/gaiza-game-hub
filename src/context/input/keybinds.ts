@@ -5,6 +5,8 @@ export const keybinds = {
     e: "e",
     r: "r",
     enter: "Enter",
+    escape: "Escape",
     space: " ",
+    backspace: "Backspace",
   },
 };

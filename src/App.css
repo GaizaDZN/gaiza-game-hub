@@ -40,7 +40,7 @@ body {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr 1fr 80px;
   background-color: #172030;
-  z-index: 2;
+  z-index: 3;
 }
 
 .sceneName {

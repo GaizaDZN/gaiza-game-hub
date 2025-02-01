@@ -1,10 +1,10 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { GameContext } from "../../../../context/game/GameContext";
 import { GameMode } from "../../game/game";
 import classNames from "classnames";
 import { Hoverable } from "../../../../context/tooltip/Hoverable";
-import { InputContext } from "../../../../context/input/InputContext";
 import { keybinds } from "../../../../context/input/keybinds";
+import { inputDispatcher } from "../../../../context/input/InputDispatcher";
 
 const confirmSFX = "confirm.mp3";
 const cancelSFX = "stop-13692.mp3";
@@ -19,9 +19,6 @@ const BottomUI = () => {
     completeSale,
     playSound,
   } = useContext(GameContext);
-  const { currentKey } = useContext(InputContext);
-  const [confirm, setConfirm] = useState<boolean>(false);
-  const [cancel, setCancel] = useState<boolean>(false);
 
   const confirmCheck = useCallback(() => {
     const mode = gameState.gameMode;
@@ -32,7 +29,8 @@ const BottomUI = () => {
       case GameMode.sales:
         completeSale();
         break;
-      case GameMode.closing:
+      case GameMode.dayEnd:
+        setGameMode(GameMode.opening);
         break;
       default:
         break;
@@ -41,12 +39,11 @@ const BottomUI = () => {
 
   const handleConfirm = () => {
     playSound(confirmSFX);
-    setConfirm(true);
+    confirmCheck();
   };
 
   const handleCancel = () => {
     playSound(cancelSFX);
-    setCancel(true);
   };
 
   const handleBrewCoffee = () => {
@@ -56,31 +53,69 @@ const BottomUI = () => {
   const clickBtn = (classname: string) => {
     const btn = document.querySelector(classname) as HTMLElement;
     if (btn) {
-      btn.click();
+      const pointerEvent = new PointerEvent("pointerdown", {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        button: 0, // Left mouse button
+        buttons: 1, // Left mouse button pressed
+        clientX: btn.offsetLeft + btn.offsetWidth / 2, // Center of the button
+        clientY: btn.offsetTop + btn.offsetHeight / 2,
+      });
+      btn.dispatchEvent(pointerEvent);
+
+      const pointerUpEvent = new PointerEvent("pointerup", {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        button: 0, // Left mouse button
+        buttons: 0, // No buttons pressed
+        clientX: btn.offsetLeft + btn.offsetWidth / 2, // Center of the button
+        clientY: btn.offsetTop + btn.offsetHeight / 2,
+      });
+      btn.dispatchEvent(pointerUpEvent);
+
+      const clickEvent = new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        button: 0, // Left mouse button
+        clientX: btn.offsetLeft + btn.offsetWidth / 2, // Center of the button
+        clientY: btn.offsetTop + btn.offsetHeight / 2,
+      });
+      btn.dispatchEvent(clickEvent);
     }
   };
 
   useEffect(() => {
-    if (confirm) {
-      confirmCheck();
-      setConfirm(false);
-    }
-
-    if (cancel) {
-      setCancel(false);
-    }
-
-    if (currentKey) {
-      switch (currentKey) {
+    const handleKeyPress = (key: string) => {
+      switch (key) {
         case keybinds.coffeeshop.enter:
-          clickBtn(".confirm-button");
-          break;
-        case keybinds.coffeeshop.space:
           clickBtn(".brew-button");
           break;
+        case keybinds.coffeeshop.space:
+          clickBtn(".confirm-button");
+          break;
+        case keybinds.coffeeshop.backspace:
+          clickBtn(".reset-button");
+          break;
+        case keybinds.coffeeshop.escape:
+          clickBtn(".cancel-button");
+          break;
+        default:
+          break;
       }
-    }
-  }, [cancel, confirm, currentKey, confirmCheck]);
+    };
+
+    inputDispatcher.subscribe("keyPress", handleKeyPress);
+    inputDispatcher.subscribe("confirm", handleKeyPress);
+    inputDispatcher.subscribe("cancel", handleKeyPress);
+    return () => {
+      inputDispatcher.unsubscribe("keyPress", handleKeyPress);
+      inputDispatcher.unsubscribe("confirm", handleKeyPress);
+      inputDispatcher.unsubscribe("cancel", handleKeyPress);
+    };
+  }, [confirmCheck]);
 
   return (
     <div className="bottom-ui">
