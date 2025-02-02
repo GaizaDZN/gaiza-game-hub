@@ -19,20 +19,18 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   const isSceneButton = !!scene;
 
-  let className = [
+  const className = [
     "button",
     `${menuName}-button`,
     view?.active || scene?.active ? "button-active" : "",
   ]
     .filter(Boolean)
     .join(" ");
-  if (classname != "") {
-    className = `${className} ${classname}`;
-  }
+
   const displayContent = isSceneButton ? scene?.name : content;
 
   return (
-    <div className={className} onClick={action}>
+    <div className={`${className} ${classname}`.trim()} onClick={action}>
       <span>{displayContent}</span>
     </div>
   );

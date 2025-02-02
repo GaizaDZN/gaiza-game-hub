@@ -17,19 +17,39 @@ const TopUI = () => {
     [incrementActiveBar, playSound]
   );
 
+  const clickBtn = (classname: string) => {
+    const btn = document.querySelector(classname) as HTMLElement;
+    if (btn) {
+      btn.classList.add("btn-click");
+      console.log("button clicked:", classname);
+      // listen for animationend event
+      btn.addEventListener(
+        "animationend",
+        () => {
+          btn.classList.remove("btn-click");
+        },
+        { once: true }
+      );
+    }
+  };
+
   useEffect(() => {
     const handleKeyPress = (key: string) => {
       switch (key) {
         case keybinds.coffeeshop.q:
+          clickBtn(".beans-button");
           handleIncrement("beans");
           break;
         case keybinds.coffeeshop.w:
+          clickBtn(".water-button");
           handleIncrement("water");
           break;
         case keybinds.coffeeshop.e:
+          clickBtn(".milk-button");
           handleIncrement("milk");
           break;
         case keybinds.coffeeshop.r:
+          clickBtn(".sugar-button");
           handleIncrement("sugar");
           break;
         default:
@@ -49,6 +69,7 @@ const TopUI = () => {
         <QuantityBars quantity={gameState.activeBars["beans"]} />
         <Hoverable tooltip="Beans [Q]">
           <Button
+            classname="beans-button"
             content={"Beans"}
             menuName={"coffee-ui"}
             action={() => handleIncrement("beans")}
@@ -59,6 +80,7 @@ const TopUI = () => {
         <QuantityBars quantity={gameState.activeBars["water"]} />
         <Hoverable tooltip="Water [W]">
           <Button
+            classname="water-button"
             content={"Water"}
             menuName={"coffee-ui"}
             action={() => handleIncrement("water")}
@@ -69,6 +91,7 @@ const TopUI = () => {
         <QuantityBars quantity={gameState.activeBars["milk"]} />
         <Hoverable tooltip="Milk [E]">
           <Button
+            classname="milk-button"
             content={"Milk"}
             menuName={"coffee-ui"}
             action={() => handleIncrement("milk")}
@@ -79,6 +102,7 @@ const TopUI = () => {
         <QuantityBars quantity={gameState.activeBars["sugar"]} />
         <Hoverable tooltip="Sugar [R]">
           <Button
+            classname="sugar-button"
             content={"Sugar"}
             menuName={"coffee-ui"}
             action={() => handleIncrement("sugar")}

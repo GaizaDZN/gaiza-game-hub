@@ -50,40 +50,24 @@ const BottomUI = () => {
     brewCoffee(() => playSound(brewSFX));
   };
 
-  const clickBtn = (classname: string) => {
+  const clickBtn = (classname: string, animationClass?: string) => {
     const btn = document.querySelector(classname) as HTMLElement;
     if (btn) {
-      const pointerEvent = new PointerEvent("pointerdown", {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-        button: 0, // Left mouse button
-        buttons: 1, // Left mouse button pressed
-        clientX: btn.offsetLeft + btn.offsetWidth / 2, // Center of the button
-        clientY: btn.offsetTop + btn.offsetHeight / 2,
-      });
-      btn.dispatchEvent(pointerEvent);
+      btn.click();
+      btn.classList.add(
+        animationClass === "" ? "btn-click" : animationClass || "btn-click"
+      );
 
-      const pointerUpEvent = new PointerEvent("pointerup", {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-        button: 0, // Left mouse button
-        buttons: 0, // No buttons pressed
-        clientX: btn.offsetLeft + btn.offsetWidth / 2, // Center of the button
-        clientY: btn.offsetTop + btn.offsetHeight / 2,
-      });
-      btn.dispatchEvent(pointerUpEvent);
-
-      const clickEvent = new MouseEvent("click", {
-        bubbles: true,
-        cancelable: true,
-        view: window,
-        button: 0, // Left mouse button
-        clientX: btn.offsetLeft + btn.offsetWidth / 2, // Center of the button
-        clientY: btn.offsetTop + btn.offsetHeight / 2,
-      });
-      btn.dispatchEvent(clickEvent);
+      // listen for animationend event
+      btn.addEventListener(
+        "animationend",
+        () => {
+          btn.classList.remove(
+            animationClass === "" ? "btn-click" : animationClass || "btn-click"
+          );
+        },
+        { once: true }
+      );
     }
   };
 
@@ -91,7 +75,7 @@ const BottomUI = () => {
     const handleKeyPress = (key: string) => {
       switch (key) {
         case keybinds.coffeeshop.enter:
-          clickBtn(".brew-button");
+          clickBtn(".brew-button", "brew-button-click");
           break;
         case keybinds.coffeeshop.space:
           clickBtn(".confirm-button");
