@@ -143,7 +143,11 @@ const BottomUI = () => {
         </div>
         <Hoverable tooltip={"Brew [Space]"}>
           <div className="brew-button" onClick={handleBrewCoffee}>
-            <div className="btn-wrapper">
+            <div
+              className={`btn-wrapper ${
+                gameState.brewState.brewable ? "brew-btn-prompt" : "".trim()
+              }`}
+            >
               <div className="btn-tail"></div>
               <div className="btn-body">
                 <p>Brew</p>

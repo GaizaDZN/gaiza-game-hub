@@ -299,6 +299,26 @@
   user-select: none;
 }
 
+.brew-btn-prompt .btn-body,
+.brew-btn-prompt .btn-tail {
+  animation: color-pulse 0.8s infinite ease-in-out;
+}
+
+@keyframes color-pulse {
+  0% {
+    filter: brightness(1) hue-rotate(0deg)
+      drop-shadow(0 0 4px rgba(255, 196, 0, 0.5));
+  }
+  50% {
+    filter: brightness(1.5) hue-rotate(20deg)
+      drop-shadow(0 0 12px rgb(255, 196, 0));
+  }
+  100% {
+    filter: brightness(1) hue-rotate(0deg)
+      drop-shadow(0 0 4px rgba(255, 166, 0, 0.5));
+  }
+}
+
 .brew-button .btn-body {
   position: relative;
   min-width: 150px;

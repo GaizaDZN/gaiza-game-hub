@@ -20,6 +20,7 @@ export interface GameState {
   terminalLog: TerminalLog;
   messageLog: MessageLog;
   salesState: SalesState;
+  brewState: BrewState;
   storeOpen: boolean;
   priceModifier: number;
   activeBars: ResourceState;
@@ -79,6 +80,11 @@ interface SalesState {
   moneyEnd: number;
 }
 
+interface BrewState {
+  coffeeName: keyof CoffeeState;
+  brewable: boolean;
+}
+
 // Game class with clear state management
 export class Game {
   private state: GameState;
@@ -116,6 +122,10 @@ export class Game {
         badOrders: 0,
         moneyStart: 0,
         moneyEnd: 0,
+      },
+      brewState: {
+        coffeeName: "latte",
+        brewable: false,
       },
       priceModifier: 3,
       storeOpen: false,
@@ -187,7 +197,7 @@ export class Game {
         messageLog: { messages: [] },
         terminalLog: {
           content: [],
-          maxLines: 50,
+          maxLines: 50, // might reduce this later who knows.
           maxCharacters: 46,
         },
         salesState: {
@@ -195,6 +205,10 @@ export class Game {
           badOrders: 0,
           moneyStart: 0,
           moneyEnd: 0,
+        },
+        brewState: {
+          coffeeName: "latte",
+          brewable: false,
         },
         priceModifier: 3,
         storeOpen: false,
@@ -204,20 +218,39 @@ export class Game {
     }
   };
 
+  // toggles activeBars.recipeDetected if coffee is brewable
+  private recipeCheck(resources: ResourceState): keyof CoffeeState | undefined {
+    return this.identifyCoffee(resources);
+  }
+
   // Resource Management
   public incrementActiveBar(
     resource: keyof ResourceState,
     onSuccess: () => void
   ): void {
     if (this.state.activeBars[resource] >= 10) return;
-
     // play sound
     onSuccess();
+
+    // const newActiveBar = (state.activeBars[resource] ?? 0) + 1,
+
+    // first increment coffee to get state with updated activity bars
+    const newBars = (this.state.activeBars = {
+      ...this.state.activeBars,
+      [resource]: (this.state.activeBars[resource] ?? 0) + 1,
+    });
+    const coffee = this.recipeCheck(newBars);
+    // then check if a coffee is brewable based on changes in newState
+
     this.setState((state) => ({
       ...state,
       activeBars: {
-        ...state.activeBars,
-        [resource]: (state.activeBars[resource] ?? 0) + 1,
+        ...newBars,
+      },
+      brewState: {
+        ...state.brewState,
+        coffeeName: coffee ?? "latte",
+        brewable: coffee != undefined,
       },
     }));
   }
@@ -265,7 +298,6 @@ export class Game {
         {} as ResourceState
       );
 
-      // Identify coffee type
       const coffeeType = this.identifyCoffee(usedResources) || undefined;
 
       if (!coffeeType) {
@@ -307,6 +339,10 @@ export class Game {
         terminalLog: {
           ...state.terminalLog,
           content: newTerminalContent,
+        },
+        brewState: {
+          ...state.brewState,
+          brewable: false,
         },
       };
     });
