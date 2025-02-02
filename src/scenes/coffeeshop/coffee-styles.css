@@ -15,11 +15,26 @@
 }
 
 :root {
+  /* Colors */
   --coffeeUI: #0f0906;
   --coffeeUIAccent: #ce9426;
   --coffeeUISubtleText: #81521c;
   --btn-color1: #d3671f;
   --btn-color1-hovered: #fa930c;
+
+  /* Spacing */
+  --spacing-sm: 5px;
+  --spacing-md: 10px;
+  --spacing-lg: 20px;
+
+  /* Font sizes */
+  --font-size-sm: 0.8em;
+  --font-size-md: 1em;
+  --font-size-lg: 1.2em;
+
+  /* Animations */
+  --transition-speed: 0.2s;
+  --animation-timing: ease-in-out;
 }
 
 .coffee-ui-title {
@@ -1136,6 +1151,15 @@
   );
 }
 
+.pixel-overlay::before {
+  content: "";
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAG0lEQVQYV2P8//+/FCMj4zMGJMCIzIGxKRQEAJgPBAbJqUVTAAAAAElFTkSuQmCC);
+  opacity: 0.8;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
 .btn-click {
   background-color: #ffce2e;
   animation: pulse 0.2s;
@@ -1215,10 +1239,10 @@
 }
 
 @keyframes fadeIn {
-  0% {
+  from {
     opacity: 0;
   }
-  100% {
+  to {
     opacity: 1;
   }
 }
@@ -1228,10 +1252,10 @@
 }
 
 @keyframes fadeOut {
-  0% {
+  from {
     opacity: 1;
   }
-  100% {
+  to {
     opacity: 0;
   }
 }
@@ -1241,10 +1265,10 @@
 }
 
 @keyframes ui-open {
-  0% {
+  from {
     transform: ScaleY(0);
   }
-  100% {
+  to {
     transform: ScaleY(1);
   }
 }
@@ -1254,10 +1278,10 @@
 }
 
 @keyframes ui-close {
-  0% {
+  from {
     transform: ScaleY(1);
   }
-  100% {
+  to {
     transform: ScaleY(0);
   }
 }
@@ -1273,10 +1297,10 @@
 }
 
 @keyframes rotate {
-  0% {
+  from {
     rotate: 0;
   }
-  100% {
+  to {
     rotate: 360deg;
   }
 }
@@ -1437,10 +1461,10 @@
 }
 
 @keyframes data-stream {
-  0% {
+  from {
     top: -100%;
   }
-  100% {
+  to {
     top: 100%;
   }
 }

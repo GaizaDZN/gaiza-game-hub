@@ -263,6 +263,10 @@ export class Game {
         ...state.terminalLog,
         content: [...state.terminalLog.content, ":: Ingredients reset."],
       },
+      brewState: {
+        ...state.brewState,
+        brewable: false,
+      },
     }));
   }
 
