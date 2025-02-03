@@ -30,7 +30,7 @@ const Button: React.FC<ButtonProps> = ({
   const displayContent = isSceneButton ? scene?.name : content;
 
   return (
-    <div className={`${className} ${classname}`.trim()} onClick={action}>
+    <div className={`${className} ${classname}`} onClick={action}>
       <span>{displayContent}</span>
     </div>
   );

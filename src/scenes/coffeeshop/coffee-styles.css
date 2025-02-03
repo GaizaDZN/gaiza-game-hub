@@ -37,6 +37,10 @@
   --animation-timing: ease-in-out;
 }
 
+.canvas-container-coffee {
+  animation: fade-in 0.8s forwards;
+}
+
 .coffee-ui-title {
   grid-area: 1 / 1 / 2 / 2;
   background-color: var(--coffeeUI);
@@ -150,9 +154,6 @@
   overflow: hidden;
   transition: background-color 0.2s ease-in-out, color 0.3s ease-in-out;
 }
-.coffee-ui-button:not(:last-child) {
-  border-right: 4px solid #0a0a09;
-}
 
 .coffee-ui-button:hover {
   cursor: pointer;
@@ -224,9 +225,6 @@
   position: relative;
   overflow: hidden;
   z-index: 2;
-}
-.coffee-button-group:not(:last-child) {
-  border-right: 2px solid var(--coffeeUI);
 }
 
 .bar {
@@ -479,11 +477,39 @@
   grid-area: 1 / 2 / 2 / 2;
   border-bottom: 1px solid #ce9426;
 }
-.coffee-ui-money div {
-  margin-left: 5px;
+.money__container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-lg);
 }
-.coffee-ui-money span:first-child {
-  margin-right: 5px;
+.money__text__container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  margin-right: 18px;
+  font-family: "Barlow", sans-serif;
+  font-weight: bold;
+}
+.money__text {
+  padding: 0;
+  margin: 0;
+}
+
+.money__number__container {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+}
+
+.money__number {
+  padding: 0;
+  margin: 0;
 }
 
 .coffee-ui-resources {
@@ -582,13 +608,13 @@
 }
 
 .coffee-quantities .coffee-name span {
-  margin-left: 10px;
+  margin-left: 18px;
 }
 
 .coffee-quantities .quantity {
   background-color: black;
   width: 100%;
-  max-width: 30px;
+  max-width: 50px;
   height: 100%;
   display: flex;
   justify-content: center;
@@ -698,7 +724,7 @@
   color: #df9f6c;
   position: relative;
   padding: 0;
-  animation: fadeIn 0.5s ease;
+  animation: fade-in 0.5s ease;
 }
 
 .textContainer::before {
@@ -931,6 +957,40 @@
   border-left: 3px solid #11141d;
 }
 
+/*  STORE //////////////////////////////*/
+.store__container {
+  grid-area: 2/1/4/2;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.store__buttons__container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+}
+
+.store__buttons {
+  list-style: none;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.store__bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  object-fit: cover;
+}
+
 /* MEDIA QUERIES ///////////////////////// */
 
 .canvas-container-coffee {
@@ -1128,6 +1188,23 @@
     font-size: 14px;
     min-width: 20px;
   }
+
+  .money__text__container {
+    margin-right: 10px;
+    font-size: var(--font-size-sm);
+  }
+
+  .money__number__container {
+    font-size: var(--font-size-sm);
+  }
+
+  .coffee-quantities .coffee-name span {
+    margin-left: 8px;
+  }
+
+  .coffee-quantities .quantity {
+    max-width: 30px;
+  }
 }
 
 /* CLASS MODIFIERS //////////////////////////////*/
@@ -1235,10 +1312,10 @@
 }
 
 .fade-in {
-  animation: fadeIn 1s forwards;
+  animation: fade-in 1s forwards;
 }
 
-@keyframes fadeIn {
+@keyframes fade-in {
   from {
     opacity: 0;
   }
@@ -1248,10 +1325,10 @@
 }
 
 .fade-out {
-  animation: fadeOut 0.5s ease-in;
+  animation: fade-out 0.5s ease-in;
 }
 
-@keyframes fadeOut {
+@keyframes fade-out {
   from {
     opacity: 1;
   }

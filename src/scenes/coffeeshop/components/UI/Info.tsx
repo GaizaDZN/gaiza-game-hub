@@ -1,5 +1,6 @@
 import { useContext } from "react";
 import { GameContext } from "../../../../context/game/GameContext";
+import Store from "./store/Store";
 
 const Info: React.FC = () => {
   const { gameState, checkRecipes } = useContext(GameContext);
@@ -26,9 +27,13 @@ const Info: React.FC = () => {
         </ul>
       </div>
       <div className="coffee-ui-money">
-        <div>
-          <span>$</span>
-          <span>{gameState.player.money}</span>
+        <div className="money__number__container">
+          <span className="money__number">{gameState.player.money}</span>
+        </div>
+        <div className="money__container">
+          <div className="money__text__container">
+            <span className="money__text">G</span>
+          </div>
         </div>
       </div>
       <ul className="coffee-quantities">
@@ -86,6 +91,7 @@ const Info: React.FC = () => {
           <span>Recipes</span>
         </li>
       </ul>
+      <Store />
     </div>
   );
 };
