@@ -21,10 +21,14 @@ export interface GameState {
   messageLog: MessageLog;
   salesState: SalesState;
   brewState: BrewState;
-  storeOpen: boolean;
+  storeState: StoreState;
   priceModifier: number;
   activeBars: ResourceState;
   version: number;
+}
+
+interface StoreState extends ResourceState {
+  storeOpen: boolean;
 }
 
 interface PlayerState {
@@ -127,8 +131,14 @@ export class Game {
         coffeeName: "latte",
         brewable: false,
       },
+      storeState: {
+        beans: 0,
+        water: 0,
+        milk: 0,
+        sugar: 0,
+        storeOpen: false,
+      },
       priceModifier: 3,
-      storeOpen: false,
       activeBars: { beans: 0, water: 0, milk: 0, sugar: 0 },
       version: 0,
       ...initialState,
@@ -210,8 +220,14 @@ export class Game {
           coffeeName: "latte",
           brewable: false,
         },
+        storeState: {
+          beans: 0,
+          water: 0,
+          milk: 0,
+          sugar: 0,
+          storeOpen: false,
+        },
         priceModifier: 3,
-        storeOpen: false,
         activeBars: { beans: 0, water: 0, milk: 0, sugar: 0 },
         version: 0,
       };
@@ -662,7 +678,6 @@ export interface GameState {
   customerState: CustomerState;
   terminalLog: TerminalLog;
   messageLog: MessageLog;
-  storeOpen: boolean;
   activeBars: ResourceState;
   version: number;
 }
