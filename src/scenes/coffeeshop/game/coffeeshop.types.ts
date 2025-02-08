@@ -211,11 +211,11 @@ coffeeRecipes.set(CoffeeName.black, {
   sugar: 0,
 });
 
-const costPerUnit = {
-  beans: 0.5,
-  water: 0.1,
-  milk: 0.3,
-  sugar: 0.05,
+export const resourceCost = {
+  beans: 1.2,
+  water: 1,
+  milk: 1.5,
+  sugar: 1.5,
 };
 
 enum CupSize {
@@ -290,10 +290,10 @@ class Coffee extends Resource {
   calculateIngredientsCost(): number {
     const { beans, water, milk, sugar } = this.ingredients;
     return (
-      beans * costPerUnit.beans +
-      water * costPerUnit.water +
-      milk * costPerUnit.milk +
-      sugar * costPerUnit.sugar
+      beans * resourceCost.beans +
+      water * resourceCost.water +
+      milk * resourceCost.milk +
+      sugar * resourceCost.sugar
     );
   }
 

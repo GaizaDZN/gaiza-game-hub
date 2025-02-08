@@ -72,6 +72,25 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
     setGame(new Game(game.getState()));
   }, [game]);
 
+  // Store
+  const incrementStoreItem = useCallback(
+    (item: keyof ResourceState) => {
+      game.incrementStoreItem(item);
+      setGame(new Game(game.getState()));
+    },
+    [game]
+  );
+
+  const resetStore = useCallback(() => {
+    game.resetStore();
+    setGame(new Game(game.getState()));
+  }, [game]);
+
+  const purchaseItems = useCallback(() => {
+    game.purchaseItems();
+    setGame(new Game(game.getState()));
+  }, [game]);
+
   const updateGameState = useCallback(
     (gameState: GameState) => {
       game.setState(() => {
@@ -103,6 +122,9 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       setGameMode,
       completeSale,
       checkRecipes,
+      incrementStoreItem,
+      resetStore,
+      purchaseItems,
       updateGameState,
       resetGame,
       playSound,
@@ -115,6 +137,9 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       setGameMode,
       completeSale,
       checkRecipes,
+      incrementStoreItem,
+      resetStore,
+      purchaseItems,
       resetGame,
       updateGameState,
     ]

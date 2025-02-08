@@ -90,7 +90,7 @@ const Main: React.FC<MainProps> = ({
             />
             <BottomBar />
             <RightBar />
-            <Chibi />
+            {/* <Chibi /> */}
           </TooltipProvider>
         </InputProvider>
       </GameProvider>

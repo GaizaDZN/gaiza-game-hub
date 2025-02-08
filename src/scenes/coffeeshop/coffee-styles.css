@@ -558,7 +558,6 @@
   background-color: #0e0e0e;
   height: 100%;
   width: 100%;
-  border-top: 2px solid #ce9426;
   overflow: hidden;
 }
 
@@ -986,9 +985,21 @@
   background-color: rgba(0, 0, 0, 0.678);
   color: aliceblue;
   display: flex;
-
+  justify-content: space-evenly;
   width: 100%;
-  border-bottom: 1px solid aliceblue;
+  cursor: pointer;
+}
+.store__item:hover {
+  background-color: aliceblue;
+  color: black;
+}
+.store__item:active {
+  background-color: rgb(0, 225, 255);
+}
+
+.store__item-title {
+  margin-left: 10px;
+  min-width: 50px;
 }
 
 .store__bg {
@@ -999,6 +1010,49 @@
   height: 100%;
   image-rendering: pixelated;
   object-fit: cover;
+}
+
+.store__sales {
+  display: flex;
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.store__total-price {
+  min-width: 100px;
+  background-color: black;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+.store__total-price-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.store__total-text-container {
+  margin-right: 10px;
+}
+
+.sales__button {
+  background-color: #0e0e0e;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-right: 1px solid black;
+}
+.sales__button:hover {
+  background-color: white;
+  color: black;
 }
 
 /* MEDIA QUERIES ///////////////////////// */
@@ -1205,7 +1259,7 @@
   }
 
   .money__number__container {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-md);
   }
 
   .coffee-quantities .coffee-name span {

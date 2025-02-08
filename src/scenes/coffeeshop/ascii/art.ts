@@ -23,18 +23,28 @@ export const coffeeAscii = `
 export const salesAscii = {
   saleSuccess: `
 ╔═══════════════════════╗
-    ✔ SALE COMPLETE    
+    ✔ SALE COMPLETE ✔   
 ╚═══════════════════════╝
 `,
   saleFail: `
-╔═══════════════════════╗
-     ⚠ SALE FAILED     
-╚═══════════════════════╝
+╔══════════════════════╗
+    ⚠ SALE FAILED ⚠   
+╚══════════════════════╝
 `,
   salesStart: `
 ╔══════════════════════════════╗
   █  LET'S MAKE SOME COFFEE! █ 
 ╚══════════════════════════════╝`,
+  insufficientFunds: `
+╔═════════════════════════╗
+  ⚠ INSUFFICIENT FUNDS ⚠  
+╚═════════════════════════╝`,
+
+  storePurchase: `
+╔═════════════════════════════╗
+    ✔ RESOURCES PURCHASED ✔   
+╚═════════════════════════════╝
+`,
 };
 
 export const saleConfirmation2 = `

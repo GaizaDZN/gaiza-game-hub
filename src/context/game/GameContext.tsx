@@ -16,6 +16,9 @@ interface GameContextType {
   setGameMode: (mode: GameMode) => void;
   completeSale: () => void;
   checkRecipes: () => void;
+  incrementStoreItem: (item: keyof ResourceState) => void;
+  resetStore: () => void;
+  purchaseItems: () => void;
   updateGameState: (game: GameState) => void;
   resetGame: () => void;
   playSound: (filename: string) => void;
@@ -29,6 +32,9 @@ export const GameContext = createContext<GameContextType>({
   setGameMode: () => {},
   completeSale: () => {},
   checkRecipes: () => {},
+  incrementStoreItem: () => {},
+  resetStore: () => {},
+  purchaseItems: () => {},
   updateGameState: () => {},
   resetGame: () => {},
   playSound: () => {},
@@ -47,6 +53,11 @@ export function useGame() {
 export function useResources() {
   const { gameState } = useGame();
   return gameState.resources;
+}
+
+export function useResourceStore() {
+  const { gameState } = useGame();
+  return gameState.storeState;
 }
 
 export function useActiveBars() {

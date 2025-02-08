@@ -7,6 +7,7 @@ import {
   Message,
   coffeeRecipes,
   CoffeeState,
+  resourceCost,
 } from "./coffeeshop.types";
 
 // Core types
@@ -29,6 +30,7 @@ export interface GameState {
 
 interface StoreState extends ResourceState {
   storeOpen: boolean;
+  totalPrice: number;
 }
 
 interface PlayerState {
@@ -136,6 +138,7 @@ export class Game {
         water: 0,
         milk: 0,
         sugar: 0,
+        totalPrice: 0,
         storeOpen: false,
       },
       priceModifier: 3,
@@ -225,6 +228,7 @@ export class Game {
           water: 0,
           milk: 0,
           sugar: 0,
+          totalPrice: 0,
           storeOpen: false,
         },
         priceModifier: 3,
@@ -601,6 +605,117 @@ export class Game {
             ? state.salesState.badOrders + 1
             : state.salesState.badOrders,
           moneyEnd: state.player.money + moneyChange,
+        },
+      };
+    });
+  }
+
+  // STORE ///////////////////////////////////
+  public incrementStoreItem(item: keyof ResourceState): void {
+    this.setState((state) => {
+      // get item base price
+      const itemPrice = resourceCost[item];
+
+      return {
+        ...state,
+        storeState: {
+          ...state.storeState,
+          [item]: (state.storeState[item] ?? 0) + 1,
+          totalPrice: state.storeState.totalPrice + itemPrice,
+        },
+      };
+    });
+  }
+
+  public resetStore(): void {
+    this.setState((state) => {
+      const newTerminalContent = [...state.terminalLog.content];
+      this.addToTerminal(
+        newTerminalContent,
+        ["Store reset."],
+        TerminalLine.system
+      );
+      return {
+        ...state,
+        storeState: {
+          ...state.storeState,
+          beans: 0,
+          water: 0,
+          milk: 0,
+          sugar: 0,
+          totalPrice: 0,
+        },
+      };
+    });
+  }
+
+  public purchaseItems(): void {
+    // confirm player has enough money to buy resources
+    if (this.state.player.money < this.state.storeState.totalPrice) {
+      // INSUFFICIENT FUNDS message
+      this.setState((state) => {
+        const newTerminalContent = [...state.terminalLog.content];
+        this.addToTerminal(
+          newTerminalContent,
+          [
+            ...stringToLines(
+              salesAscii.insufficientFunds,
+              state.terminalLog.maxCharacters
+            ),
+          ],
+          TerminalLine.system
+        );
+        return {
+          ...state,
+          terminalLog: {
+            ...state.terminalLog,
+            content: newTerminalContent,
+          },
+        };
+      });
+      return;
+    }
+
+    this.setState((state) => {
+      // add values in storeState to resourceState
+      const newResources: ResourceState = {
+        beans: state.resources.beans + state.storeState.beans,
+        water: state.resources.water + state.storeState.water,
+        milk: state.resources.milk + state.storeState.milk,
+        sugar: state.resources.sugar + state.storeState.sugar,
+      };
+
+      // subtract totalPrice from current money
+      const newMoney = state.player.money - state.storeState.totalPrice;
+
+      // terminal confirmation message
+      const newTerminalContent = [...state.terminalLog.content];
+
+      this.addToTerminal(
+        newTerminalContent,
+        [
+          ...stringToLines(
+            salesAscii.storePurchase,
+            state.terminalLog.maxCharacters
+          ),
+        ],
+        TerminalLine.system
+      );
+
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          money: newMoney,
+        },
+        storeState: {
+          ...state.storeState,
+          ...newResources,
+          totalPrice: 0,
+        },
+        terminalLog: {
+          ...state.terminalLog,
+          content: newTerminalContent,
         },
       };
     });
