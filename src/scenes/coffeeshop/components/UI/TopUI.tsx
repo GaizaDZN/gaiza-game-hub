@@ -17,11 +17,11 @@ const TopUI = () => {
     [incrementActiveBar, playSound]
   );
 
-  const clickBtn = (classname: string) => {
+  const clickBtn = (classname: string, resource: keyof ResourceState) => {
     const btn = document.querySelector(classname) as HTMLElement;
+    handleIncrement(resource);
     if (btn) {
       btn.classList.add("btn-click");
-      console.log("button clicked:", classname);
       // listen for animationend event
       btn.addEventListener(
         "animationend",
@@ -37,20 +37,16 @@ const TopUI = () => {
     const handleKeyPress = (key: string) => {
       switch (key) {
         case keybinds.coffeeshop.q:
-          clickBtn(".beans-button");
-          handleIncrement("beans");
+          clickBtn(".beans-button", "beans");
           break;
         case keybinds.coffeeshop.w:
-          clickBtn(".water-button");
-          handleIncrement("water");
+          clickBtn(".water-button", "water");
           break;
         case keybinds.coffeeshop.e:
-          clickBtn(".milk-button");
-          handleIncrement("milk");
+          clickBtn(".milk-button", "milk");
           break;
         case keybinds.coffeeshop.r:
-          clickBtn(".sugar-button");
-          handleIncrement("sugar");
+          clickBtn(".sugar-button", "sugar");
           break;
         default:
           break;

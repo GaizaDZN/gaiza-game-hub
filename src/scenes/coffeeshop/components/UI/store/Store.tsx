@@ -61,7 +61,7 @@ const Store: React.FC = () => {
           <div className="store__total-price-container">
             {gameState.storeState.totalPrice > 0 && (
               <span className="store__total-price-amount">
-                {gameState.storeState.totalPrice}
+                {gameState.storeState.totalPrice.toFixed(2)}
               </span>
             )}
           </div>

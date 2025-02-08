@@ -615,13 +615,14 @@ export class Game {
     this.setState((state) => {
       // get item base price
       const itemPrice = resourceCost[item];
+      const incrementAmount = 5;
 
       return {
         ...state,
         storeState: {
           ...state.storeState,
-          [item]: (state.storeState[item] ?? 0) + 1,
-          totalPrice: state.storeState.totalPrice + itemPrice,
+          [item]: (state.storeState[item] ?? 0) + incrementAmount,
+          totalPrice: state.storeState.totalPrice + itemPrice * incrementAmount,
         },
       };
     });
@@ -709,6 +710,7 @@ export class Game {
       };
 
       // subtract totalPrice from current money
+      const prevMoney = state.player.money;
       const newMoney = state.player.money - state.storeState.totalPrice;
 
       // terminal confirmation message
@@ -721,6 +723,7 @@ export class Game {
             salesAscii.storePurchase,
             state.terminalLog.maxCharacters
           ),
+          `Funds updated: ${prevMoney}G -> ${newMoney}G`,
         ],
         TerminalLine.system
       );
@@ -733,8 +736,15 @@ export class Game {
         },
         storeState: {
           ...state.storeState,
-          ...newResources,
+          beans: 0,
+          water: 0,
+          milk: 0,
+          sugar: 0,
           totalPrice: 0,
+        },
+        resources: {
+          ...state.resources,
+          ...newResources,
         },
         terminalLog: {
           ...state.terminalLog,
