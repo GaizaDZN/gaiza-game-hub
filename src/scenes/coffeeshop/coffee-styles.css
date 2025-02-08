@@ -961,11 +961,10 @@
   width: 100%;
   height: 100%;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 .store__items-container {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   z-index: 1;
@@ -978,6 +977,8 @@
   padding: 0;
   margin: 0;
   display: flex;
+  align-items: center;
+  justify-content: center;
   flex-direction: column;
 }
 
@@ -1014,10 +1015,7 @@
 
 .store__sales {
   display: flex;
-  position: absolute;
   width: 100%;
-  bottom: 0;
-  left: 0;
   z-index: 1;
 }
 

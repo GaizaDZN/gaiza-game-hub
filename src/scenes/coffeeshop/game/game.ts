@@ -645,11 +645,34 @@ export class Game {
           sugar: 0,
           totalPrice: 0,
         },
+        terminalLog: {
+          ...state.terminalLog,
+          content: newTerminalContent,
+        },
       };
     });
   }
 
   public purchaseItems(): void {
+    if (this.state.storeState.totalPrice === 0) {
+      this.setState((state) => {
+        const newTerminalContent = [...state.terminalLog.content];
+        this.addToTerminal(
+          newTerminalContent,
+          ["No items purchased."],
+          TerminalLine.system
+        );
+        return {
+          ...state,
+          terminalLog: {
+            ...state.terminalLog,
+            content: newTerminalContent,
+          },
+        };
+      });
+      return;
+    }
+
     // confirm player has enough money to buy resources
     if (this.state.player.money < this.state.storeState.totalPrice) {
       // INSUFFICIENT FUNDS message
