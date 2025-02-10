@@ -14,6 +14,7 @@ import { GameProvider } from "../context/game/GameProvider.tsx";
 import CoffeeShopLayout from "../scenes/coffeeshop/CoffeeShopLayout.tsx";
 import { TooltipProvider } from "../context/tooltip/ToolTipProvider.tsx";
 import { InputProvider } from "../context/input/InputProvider.tsx";
+import { AudioProvider } from "../context/audio/AudioProvider.tsx";
 
 // Create a centralized GUI instance
 const gui = new GUI({ title: "GUI Controls" });
@@ -75,24 +76,26 @@ const Main: React.FC<MainProps> = ({
   return (
     <div className="main">
       <GameProvider>
-        <InputProvider>
-          <TooltipProvider>
-            <Sidebar
-              views={sceneViews}
-              onViewChange={onViewChange}
-              onSceneChange={onSceneChange}
-              sceneList={sceneList}
-            />
-            <SceneLayout
-              currentScene={currentScene}
-              currentView={currentView}
-              gui={gui}
-            />
-            <BottomBar />
-            <RightBar />
-            {/* <Chibi /> */}
-          </TooltipProvider>
-        </InputProvider>
+        <AudioProvider>
+          <InputProvider>
+            <TooltipProvider>
+              <Sidebar
+                views={sceneViews}
+                onViewChange={onViewChange}
+                onSceneChange={onSceneChange}
+                sceneList={sceneList}
+              />
+              <SceneLayout
+                currentScene={currentScene}
+                currentView={currentView}
+                gui={gui}
+              />
+              <BottomBar />
+              <RightBar />
+              {/* <Chibi /> */}
+            </TooltipProvider>
+          </InputProvider>
+        </AudioProvider>
       </GameProvider>
     </div>
   );

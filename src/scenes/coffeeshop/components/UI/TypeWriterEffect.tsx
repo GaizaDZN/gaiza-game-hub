@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { useSounds } from "../../../../context/game/GameContext";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { AudioContext } from "../../../../context/audio/AudioContext";
 
 const typingSound = "typing_sound.mp3";
 interface TypewriterEffectProps {
@@ -16,7 +16,8 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
   const [printedMessage, setPrintedMessage] = useState("");
   const [currentCharacterIndex, setCurrentCharacterIndex] = useState(0);
 
-  const playSound = useSounds();
+  const { playSound } = useContext(AudioContext);
+
   const handleUpdate = useCallback(() => {
     playSound(typingSound);
     setPrintedMessage(message.substring(0, currentCharacterIndex + 1));

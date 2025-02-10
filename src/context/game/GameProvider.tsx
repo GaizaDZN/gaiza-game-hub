@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo } from "react";
 import { GameContext } from "./GameContext";
 
-import { soundFiles } from "../../assets/assets";
 import {
   GameState,
   Game,
@@ -101,17 +100,6 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
     [game]
   );
 
-  // Sounds
-
-  const playSound = (filename: string) => {
-    if (soundFiles[filename]) {
-      const audio = new Audio(soundFiles[filename]);
-      audio.play();
-    } else {
-      console.warn(`Sound file ${filename} not found`);
-    }
-  };
-
   // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(
     () => ({
@@ -127,7 +115,6 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       purchaseItems,
       updateGameState,
       resetGame,
-      playSound,
     }),
     [
       gameState,

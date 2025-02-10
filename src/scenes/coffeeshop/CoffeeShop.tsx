@@ -4,6 +4,7 @@ import { GuiControls, SceneProps } from "../common";
 import gsap from "gsap";
 import * as THREE from "three";
 import React from "react";
+import Coffee from "./components/threejs/Coffee";
 
 interface ColorPalette {
   [key: string]: string;
@@ -164,9 +165,7 @@ const CoffeeShop: React.FC<SceneProps> = ({
 
   return (
     <>
-      <mesh>
-        <meshBasicMaterial color={"orange"} />
-      </mesh>
+      <Coffee />
     </>
   );
 };

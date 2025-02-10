@@ -5,20 +5,16 @@ import classNames from "classnames";
 import { Hoverable } from "../../../../context/tooltip/Hoverable";
 import { keybinds } from "../../../../context/input/keybinds";
 import { inputDispatcher } from "../../../../context/input/InputDispatcher";
+import { AudioContext } from "../../../../context/audio/AudioContext";
 
 const confirmSFX = "confirm.mp3";
 const cancelSFX = "stop-13692.mp3";
 const brewSFX = "brew.mp3";
 
 const BottomUI = () => {
-  const {
-    gameState,
-    resetActiveBars,
-    brewCoffee,
-    setGameMode,
-    completeSale,
-    playSound,
-  } = useContext(GameContext);
+  const { gameState, resetActiveBars, brewCoffee, setGameMode, completeSale } =
+    useContext(GameContext);
+  const { playSound } = useContext(AudioContext);
 
   const confirmCheck = useCallback(() => {
     const mode = gameState.gameMode;

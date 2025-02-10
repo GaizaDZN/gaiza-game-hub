@@ -1,6 +1,5 @@
 import { useCallback, useContext, useEffect } from "react";
 import {
-  GameContext,
   useCustomer,
   useOrder,
   useSales,
@@ -8,6 +7,7 @@ import {
 import React from "react";
 import { PrevOrderState } from "../../game/game";
 import TypewriterEffect from "./TypeWriterEffect";
+import { AudioContext } from "../../../../context/audio/AudioContext";
 
 const userImg = "/src/assets/img/user.png";
 
@@ -71,7 +71,7 @@ export const Message: React.FC = () => {
 
 export const ResultMessage: React.FC = () => {
   const customerOrder = useOrder();
-  const { playSound } = useContext(GameContext);
+  const { playSound } = useContext(AudioContext);
 
   const onRender = useCallback(() => {
     const prevOrder = customerOrder.prevOrderState;

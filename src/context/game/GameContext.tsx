@@ -21,7 +21,6 @@ interface GameContextType {
   purchaseItems: () => void;
   updateGameState: (game: GameState) => void;
   resetGame: () => void;
-  playSound: (filename: string) => void;
 }
 
 export const GameContext = createContext<GameContextType>({
@@ -37,7 +36,6 @@ export const GameContext = createContext<GameContextType>({
   purchaseItems: () => {},
   updateGameState: () => {},
   resetGame: () => {},
-  playSound: () => {},
 });
 
 // Custom hooks for accessing game state and actions
@@ -88,9 +86,4 @@ export function useSales() {
 export function useGameMode() {
   const { gameState } = useGame();
   return gameState.gameMode;
-}
-
-export function useSounds() {
-  const { playSound } = useGame();
-  return playSound;
 }

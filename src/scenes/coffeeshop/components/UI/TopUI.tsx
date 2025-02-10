@@ -6,9 +6,11 @@ import { GameContext } from "../../../../context/game/GameContext";
 import { Hoverable } from "../../../../context/tooltip/Hoverable";
 import { keybinds } from "../../../../context/input/keybinds";
 import { inputDispatcher } from "../../../../context/input/InputDispatcher";
+import { AudioContext } from "../../../../context/audio/AudioContext";
 
 const TopUI = () => {
-  const { gameState, incrementActiveBar, playSound } = useContext(GameContext);
+  const { gameState, incrementActiveBar } = useContext(GameContext);
+  const { playSound } = useContext(AudioContext);
 
   const handleIncrement = useCallback(
     (ingredient: keyof ResourceState) => {
