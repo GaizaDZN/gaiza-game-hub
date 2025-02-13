@@ -395,6 +395,7 @@ export class Game {
             customerState: {
               ...state.customerState,
               customers: this.generateCustomers(),
+              completedCustomers: [],
             },
             salesState: {
               ...state.salesState,
@@ -455,6 +456,8 @@ export class Game {
           };
           break;
         }
+        case GameMode.closing:
+          break;
       }
 
       return {
@@ -723,7 +726,7 @@ export class Game {
             salesAscii.storePurchase,
             state.terminalLog.maxCharacters
           ),
-          `Funds updated: ${prevMoney}G -> ${newMoney}G`,
+          `Funds updated: ${prevMoney.toFixed(2)}G -> ${newMoney.toFixed(2)}G`,
         ],
         TerminalLine.system
       );

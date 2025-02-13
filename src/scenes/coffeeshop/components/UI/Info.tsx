@@ -1,6 +1,37 @@
 import { useContext } from "react";
 import { GameContext } from "../../../../context/game/GameContext";
 import Store from "./store/Store";
+import { GameMode } from "../../game/game";
+
+const CoffeeQuantity: React.FC<{ name: string; quantity: number }> = ({
+  name,
+  quantity,
+}) => {
+  return (
+    <li>
+      <div>
+        <div className="coffee-name">
+          <span>{name}</span>
+        </div>
+        <div className="quantity">
+          <span>{quantity}</span>
+        </div>
+      </div>
+    </li>
+  );
+};
+
+const ResourceQuantity: React.FC<{ url: string; quantity: number }> = ({
+  url,
+  quantity,
+}) => {
+  return (
+    <li className="resource-info">
+      <img src={url} />
+      <span>{quantity}</span>
+    </li>
+  );
+};
 
 const Info: React.FC = () => {
   const { gameState, checkRecipes } = useContext(GameContext);
@@ -8,22 +39,22 @@ const Info: React.FC = () => {
     <div className="coffee-ui-info">
       <div className="coffee-ui-resources">
         <ul className="resource-list">
-          <li className="resource-info">
-            <img src="/src/assets/img/coffee.png" alt="beans icon" />
-            <span>{gameState.resources.beans}</span>
-          </li>
-          <li className="resource-info">
-            <img src="/src/assets/img/water.png" alt="water icon" />
-            <span>{gameState.resources.water}</span>
-          </li>
-          <li className="resource-info">
-            <img src="/src/assets/img/milk.png" alt="milk icon" />
-            <span>{gameState.resources.milk}</span>
-          </li>
-          <li className="resource-info">
-            <img src="/src/assets/img/sugar.png" alt="sugar icon" />
-            <span>{gameState.resources.sugar}</span>
-          </li>
+          <ResourceQuantity
+            url="/src/assets/img/coffee.png"
+            quantity={gameState.resources.beans}
+          />
+          <ResourceQuantity
+            url="/src/assets/img/water.png"
+            quantity={gameState.resources.beans}
+          />
+          <ResourceQuantity
+            url="/src/assets/img/milk.png"
+            quantity={gameState.resources.beans}
+          />
+          <ResourceQuantity
+            url="/src/assets/img/sugar.png"
+            quantity={gameState.resources.beans}
+          />
         </ul>
       </div>
       <div className="coffee-ui-money">
@@ -37,61 +68,25 @@ const Info: React.FC = () => {
         </div>
       </div>
       <ul className="coffee-quantities">
-        <li>
-          <div>
-            <div className="coffee-name">
-              <span>Latte</span>
-            </div>
-            <div className="quantity">
-              <span>{gameState.coffeeState.latte}</span>
-            </div>
-          </div>
-        </li>
-        <li>
-          <div>
-            <div className="coffee-name">
-              <span>Espresso</span>
-            </div>
-            <div className="quantity">
-              <span>{gameState.coffeeState.espresso}</span>
-            </div>
-          </div>
-        </li>
-        <li>
-          <div>
-            <div className="coffee-name">
-              <span>Cappuccino</span>
-            </div>
-            <div className="quantity">
-              <span>{gameState.coffeeState.cappuccino}</span>
-            </div>
-          </div>
-        </li>
-        <li>
-          <div>
-            <div className="coffee-name">
-              <span>Americano</span>
-            </div>
-            <div className="quantity">
-              <span>{gameState.coffeeState.americano}</span>
-            </div>
-          </div>
-        </li>
-        <li>
-          <div>
-            <div className="coffee-name">
-              <span>Black</span>
-            </div>
-            <div className="quantity">
-              <span>{gameState.coffeeState.black}</span>
-            </div>
-          </div>
-        </li>
+        <CoffeeQuantity name="Latte" quantity={gameState.coffeeState.latte} />
+        <CoffeeQuantity
+          name="Espresso"
+          quantity={gameState.coffeeState.espresso}
+        />
+        <CoffeeQuantity
+          name="Cappuccino"
+          quantity={gameState.coffeeState.cappuccino}
+        />
+        <CoffeeQuantity
+          name="Americano"
+          quantity={gameState.coffeeState.americano}
+        />
+        <CoffeeQuantity name="Black" quantity={gameState.coffeeState.black} />
         <li className="recipes-btn btn" onClick={checkRecipes}>
           <span>Recipes</span>
         </li>
       </ul>
-      <Store />
+      {gameState.gameMode !== GameMode.sales && <Store />}
     </div>
   );
 };

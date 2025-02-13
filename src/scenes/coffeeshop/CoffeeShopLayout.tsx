@@ -7,6 +7,7 @@ import Title from "./components/UI/Title";
 import { useContext, useEffect } from "react";
 import { GameContext } from "../../context/game/GameContext";
 import { GameMode } from "./game/game";
+import Overlay from "./components/UI/overlay/Overlay";
 
 const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
   currentScene,
@@ -24,6 +25,7 @@ const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
   return (
     <div className="canvas-container-coffee">
       <div className="canvas-img-container">
+        <Overlay />
         <img className="canvas-img" src="/src/assets/img/cafe.jpg" />
       </div>
       <Canvas
