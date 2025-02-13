@@ -46,14 +46,22 @@ export function AudioProvider({ children }: AudioProviderProps) {
     Howler.volume(volume);
   }, []);
 
+  const getSound = useCallback(
+    (filename: string): Howl | undefined => {
+      return howlInstances[filename];
+    },
+    [howlInstances]
+  );
+
   // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(
     () => ({
       playSound,
       stopSound,
       setVolume,
+      getSound,
     }),
-    [playSound, setVolume, stopSound]
+    [playSound, setVolume, stopSound, getSound]
   );
 
   return (

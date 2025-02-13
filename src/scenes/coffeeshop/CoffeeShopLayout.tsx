@@ -26,7 +26,7 @@ const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
     <div className="canvas-container-coffee">
       <div className="canvas-img-container">
         <Overlay />
-        <img className="canvas-img" src="/src/assets/img/cafe.jpg" />
+        <img className="canvas-img pixelated" src="/src/assets/img/cafe.jpg" />
       </div>
       <Canvas
         className="canvas-coffee"

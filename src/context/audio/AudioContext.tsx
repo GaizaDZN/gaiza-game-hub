@@ -4,12 +4,14 @@ interface AudioContextType {
   playSound: (filename: string) => void;
   stopSound: (filename: string) => void;
   setVolume: (volume: number) => void;
+  getSound: (filename: string) => Howl | undefined;
 }
 
 export const AudioContext = createContext<AudioContextType>({
   playSound: () => {},
   stopSound: () => {},
   setVolume: () => {},
+  getSound: () => undefined,
 });
 
 export function useAudio() {

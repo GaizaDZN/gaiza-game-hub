@@ -1082,6 +1082,7 @@
   height: 100%;
   grid-area: 1/2/3/2;
   position: relative;
+  background-color: #4e1b00;
 }
 .canvas-img-container:before {
   content: "";
@@ -1091,6 +1092,7 @@
   top: 0;
   left: 0;
   background-image: linear-gradient(to top, rgba(255, 0, 0, 0), rgb(0 0 0));
+  z-index: 1;
 }
 
 .canvas-img-container:after {
@@ -1101,10 +1103,12 @@
   bottom: 0;
   left: 0;
   background-image: linear-gradient(to bottom, rgba(255, 0, 0, 0), rgb(0 0 0));
+  z-index: 1;
 }
 .canvas-img {
   height: 100%;
   width: 100%;
+  opacity: 20%;
   object-fit: cover;
 }
 
@@ -1113,7 +1117,7 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  z-index: 1;
+  z-index: 10;
 }
 
 .canvas__overlay {
@@ -1128,7 +1132,7 @@
 
 .customerqueue__container {
   position: absolute;
-  bottom: 0;
+  bottom: 3%;
   right: 3%;
   display: flex;
   justify-content: center;
