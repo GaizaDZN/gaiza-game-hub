@@ -14,7 +14,7 @@ const SalesOverlay: React.FC = () => {
 const Overlay: React.FC = () => {
   const { gameState } = useContext(GameContext);
   return (
-    <div className="canvas__overlay-container">
+    <div className="canvas__overlay-container scanlines">
       {gameState.gameMode === GameMode.sales && <SalesOverlay />}
     </div>
   );
