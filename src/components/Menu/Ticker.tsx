@@ -21,7 +21,7 @@ const TickerSymbol: React.FC = () => {
 };
 
 const Ticker: React.FC = () => {
-  // duplicated text to avoid
+  // Duplicate text to avoid gaps
   const duplicatedTickerText = [...tickerText, ...tickerText];
 
   return (

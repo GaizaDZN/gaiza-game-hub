@@ -1,6 +1,14 @@
 @import url("https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Rajdhani:wght@300;400;500;600;700&display=swap");
 /* FONTS - Barlow, Rajdhani*/
 
+@font-face {
+  font-family: "OCR-A";
+  src: url("/src/assets/fonts/OCR-A.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --activeColor: #4671ff;
   --accentColor: #46b5ff;
@@ -14,7 +22,7 @@
 
 #root {
   width: 100%;
-  background-color: rgb(44, 44, 44);
+  background-color: black;
 }
 
 body {
@@ -24,7 +32,7 @@ body {
 .main {
   display: grid;
   grid-template-columns: 0.7fr repeat(3, 1fr) 0.3fr;
-  grid-template-rows: 2fr repeat(3, 1fr) 0.5fr;
+  grid-template-rows: 2fr repeat(3, 1fr) auto;
   grid-column-gap: 0px;
   grid-row-gap: 0px;
   height: 100vh;
@@ -253,7 +261,7 @@ body {
 .sidebar-bottom {
   background-color: black;
   grid-area: 5/1/6/3;
-  box-shadow: 0 0 10px var(--accentColor);
+  /* box-shadow: 0 0 10px var(--accentColor); */
 }
 
 /* CANVAS ////////////////////////////////////// */
@@ -297,7 +305,7 @@ body {
   display: grid;
   grid-template-columns: 6fr 0.8fr;
   grid-template-rows: 1fr 1fr;
-  box-shadow: -4px 2px 10px var(--accentColor);
+  /* box-shadow: -4px 2px 10px var(--accentColor); */
 }
 
 .bottom-bar-block {
@@ -313,15 +321,6 @@ body {
   position: absolute;
   width: 200%;
   height: 200%;
-  background-image: url("/src/assets/pattern/pattern2.png");
-  background-repeat: repeat;
-  /* Set background-size to match your pattern's dimensions */
-  -webkit-transform: translateX(-50%) translateY(-50%);
-  transform: translateX(-50%) translateY(-50%);
-  background-size: 50px 50px; /* Adjust these values to match your image size */
-  background-origin: content-box;
-  opacity: 0.3;
-  animation: infiniteScroll 4s linear infinite;
 }
 
 /* TICKER ////////////////////////////////////////  */
@@ -331,15 +330,19 @@ body {
   width: 100%;
   overflow: hidden;
   white-space: nowrap;
-  padding: 10px 0;
   background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAG0lEQVQYV2P8//+/FCMj4zMGJMCIzIGxKRQEAJgPBAbJqUVTAAAAAElFTkSuQmCC);
   grid-area: 1/1/3/2;
+  font-family: "OCR-A", monospace;
+  font-size: 12px;
+  line-height: 3em;
 }
 
 .ticker {
   display: inline-block;
   white-space: nowrap;
-  animation: ticker 120s linear infinite;
+  animation: ticker 240s linear infinite;
+  border-top: rgba(241, 248, 255, 0.219) 1px solid;
+  border-bottom: rgba(241, 248, 255, 0.219) 1px solid;
 }
 
 .ticker span {

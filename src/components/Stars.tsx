@@ -60,7 +60,14 @@ const Stars: React.FC<StarsProps> = ({
       });
     }
     return temp;
-  }, [count, viewport.width, viewport.height, colors]);
+  }, [
+    count,
+    propPosition,
+    viewport.width,
+    viewport.height,
+    colors,
+    baseVelocity,
+  ]);
 
   // Set initial colors
   useEffect(() => {

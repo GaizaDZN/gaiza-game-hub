@@ -1075,6 +1075,7 @@
   /* Fixed dimensions to prevent reflow */
   width: 864px;
   height: 580px;
+  z-index: 99;
 }
 
 .canvas-img-container {
