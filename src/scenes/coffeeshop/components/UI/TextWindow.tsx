@@ -26,27 +26,36 @@ const TextWindow: React.FC = () => {
   const customerOrder = useOrder();
 
   useEffect(() => {
+    // Don't proceed if not in sales mode
+    if (gameState.gameMode != GameMode.sales) return () => {}; // Return empty cleanup function
+
     if (customer?.getActive()) {
       setLoadingMessage(false);
     } else {
       setLoadingMessage(true);
 
-      // Artificial delay to simulate message loading in UI
-      const timer = setTimeout(() => {
+      // First timer for message loading
+      const loadingTimer = setTimeout(() => {
         customer?.activateMessage();
-        updateGameState({ ...gameState }); // Update game state to reflect message activation
-        // Transition to the next customer message after a delay
-        setTimeout(() => {
-          // Logic to move to the next customer message
-          // For example, update the game state to the next customer
+        updateGameState({ ...gameState });
+
+        // Second timer for next customer message
+        const transitionTimer = setTimeout(() => {
           if (customerOrder.prevOrderState !== PrevOrderState.none) {
             customerOrder.prevOrderState = PrevOrderState.none;
-            updateGameState({ ...gameState }); // Update game state to reflect the next customer message
+            updateGameState({ ...gameState });
           }
-        }, 700); // .7s delay for the result message
+        }, 700);
+
+        // Return cleanup function that clears both timers
+        return () => {
+          clearTimeout(loadingTimer);
+          clearTimeout(transitionTimer);
+        };
       }, 700);
 
-      return () => clearTimeout(timer);
+      // Cleanup function for the loading timer
+      return () => clearTimeout(loadingTimer);
     }
   }, [customer, customerOrder, gameState, updateGameState]);
 

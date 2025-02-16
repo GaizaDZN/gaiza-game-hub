@@ -1,7 +1,6 @@
-import { useContext, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { GameContext } from "../../../../context/game/GameContext";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { ResourceState } from "../../game/game";
 import React from "react";
 
@@ -39,7 +38,6 @@ const Ingredients: React.FC<IngredientProps> = ({
   position = [0, 0, 0], // Default to center if not provided
 }) => {
   const meshRef = useRef<THREE.InstancedMesh>(null);
-  const { viewport } = useThree();
   const color = ingredientColor(iName);
 
   // Configuration

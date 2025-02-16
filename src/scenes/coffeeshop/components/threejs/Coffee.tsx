@@ -1,10 +1,8 @@
-import { useContext, useRef } from "react";
+import { useRef } from "react";
 import * as THREE from "three";
-import { GameContext } from "../../../../context/game/GameContext";
 import { useFrame } from "@react-three/fiber";
 
 const Coffee: React.FC = () => {
-  const { gameState } = useContext(GameContext);
   const coffeeRef = useRef<THREE.Mesh>(null);
   const coffeeSize = 1;
 

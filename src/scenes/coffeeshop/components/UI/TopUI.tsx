@@ -19,21 +19,26 @@ const TopUI = () => {
     [incrementActiveBar, playSound]
   );
 
-  const clickBtn = (classname: string, resource: keyof ResourceState) => {
-    const btn = document.querySelector(classname) as HTMLElement;
-    handleIncrement(resource);
-    if (btn) {
-      btn.classList.add("btn-click");
-      // listen for animationend event
-      btn.addEventListener(
-        "animationend",
-        () => {
-          btn.classList.remove("btn-click");
-        },
-        { once: true }
-      );
-    }
-  };
+  const clickBtn = useCallback(
+    (classname: string, resource: keyof ResourceState) => {
+      // increment resource
+      handleIncrement(resource);
+
+      const btn = document.querySelector(classname) as HTMLElement;
+      if (btn) {
+        btn.classList.add("btn-click");
+        // listen for animationend event
+        btn.addEventListener(
+          "animationend",
+          () => {
+            btn.classList.remove("btn-click");
+          },
+          { once: true }
+        );
+      }
+    },
+    [handleIncrement]
+  );
 
   useEffect(() => {
     const handleKeyPress = (key: string) => {
@@ -59,12 +64,12 @@ const TopUI = () => {
     return () => {
       inputDispatcher.unsubscribe("keyPress", handleKeyPress);
     };
-  }, [handleIncrement]);
+  }, [clickBtn, handleIncrement]);
 
   return (
     <ul className="top-ui">
       <div className="coffee-button-group">
-        <QuantityBars quantity={gameState.activeBars["beans"]} />
+        <QuantityBars quantity={gameState.activeBars.beans} />
         <Hoverable tooltip="Beans [Q]">
           <Button
             classname="beans-button"
@@ -75,7 +80,7 @@ const TopUI = () => {
         </Hoverable>
       </div>
       <div className="coffee-button-group">
-        <QuantityBars quantity={gameState.activeBars["water"]} />
+        <QuantityBars quantity={gameState.activeBars.water} />
         <Hoverable tooltip="Water [W]">
           <Button
             classname="water-button"
@@ -86,7 +91,7 @@ const TopUI = () => {
         </Hoverable>
       </div>
       <div className="coffee-button-group">
-        <QuantityBars quantity={gameState.activeBars["milk"]} />
+        <QuantityBars quantity={gameState.activeBars.milk} />
         <Hoverable tooltip="Milk [E]">
           <Button
             classname="milk-button"
@@ -97,7 +102,7 @@ const TopUI = () => {
         </Hoverable>
       </div>
       <div className="coffee-button-group">
-        <QuantityBars quantity={gameState.activeBars["sugar"]} />
+        <QuantityBars quantity={gameState.activeBars.sugar} />
         <Hoverable tooltip="Sugar [R]">
           <Button
             classname="sugar-button"

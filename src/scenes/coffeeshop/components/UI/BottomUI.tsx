@@ -95,7 +95,7 @@ const BottomUI = () => {
       inputDispatcher.unsubscribe("confirm", handleKeyPress);
       inputDispatcher.unsubscribe("cancel", handleKeyPress);
     };
-  }, [confirmCheck]);
+  }, []);
 
   return (
     <div className="bottom-ui">

@@ -16,7 +16,7 @@ export const InputProvider: React.FC<{ children: React.ReactNode }> = ({
         if (Object.values(keybinds.coffeeshop).includes(e.key)) {
           e.preventDefault();
 
-          console.log("key pressed: ", e.key);
+          // console.log("key pressed: ", e.key);
           if (!pressedKeys.current.has(e.key)) {
             pressedKeys.current.add(e.key);
             inputDispatcher.dispatch("keyPress", e.key);

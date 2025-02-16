@@ -4,7 +4,7 @@ import TextWindow from "./components/UI/TextWindow";
 import Info from "./components/UI/Info";
 import MiddleButtons from "./components/UI/MiddleButtons";
 import Title from "./components/UI/Title";
-import { useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { GameContext } from "../../context/game/GameContext";
 import { GameMode } from "./game/game";
 import Overlay from "./components/UI/overlay/Overlay";
@@ -16,11 +16,16 @@ const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
 }) => {
   const { gameState, setGameMode } = useContext(GameContext);
 
-  useEffect(() => {
-    if (gameState.gameMode === GameMode.init) {
+  const initGame = useCallback(() => {
+    const mode = gameState.gameMode;
+    if (mode === GameMode.init) {
       setGameMode(GameMode.opening);
     }
   }, [gameState.gameMode, setGameMode]);
+
+  useEffect(() => {
+    initGame();
+  }, [initGame]);
 
   return (
     <div className="canvas-container-coffee">

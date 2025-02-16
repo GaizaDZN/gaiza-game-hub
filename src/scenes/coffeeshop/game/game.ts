@@ -248,25 +248,26 @@ export class Game {
     resource: keyof ResourceState,
     onSuccess: () => void
   ): void {
+    // do nothing if already at max
     if (this.state.activeBars[resource] >= 10) return;
+
+    // console.log(resource);
     // play sound
     onSuccess();
 
-    // const newActiveBar = (state.activeBars[resource] ?? 0) + 1,
-
-    // first increment coffee to get state with updated activity bars
-    const newBars = (this.state.activeBars = {
+    // increment resource in activeBars
+    const newBars = {
       ...this.state.activeBars,
       [resource]: (this.state.activeBars[resource] ?? 0) + 1,
-    });
+    };
+
+    // check if coffee is brewable based on newBars
     const coffee = this.recipeCheck(newBars);
-    // then check if a coffee is brewable based on changes in newState
 
     this.setState((state) => ({
       ...state,
-      activeBars: {
-        ...newBars,
-      },
+      activeBars: newBars,
+
       brewState: {
         ...state.brewState,
         coffeeName: coffee ?? "latte",
