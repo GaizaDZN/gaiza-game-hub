@@ -14,16 +14,16 @@ interface IngredientProps {
 const Ingredients: React.FC<IngredientProps> = ({
   iName,
   count,
-  position = [0, 0, 0], // Default to center if not provided
+  position = [0, 0, 0],
 }) => {
   const meshRef = useRef<THREE.InstancedMesh>(null);
-  const axisHelperRef = useRef<THREE.AxesHelper>(null); // Ref for the AxesHelper
+  const axisHelperRef = useRef<THREE.AxesHelper>(null);
   const color = ingredientColor(iName);
   const [visible, setVisible] = useState(false);
+  const [prevCount, setPrevCount] = useState(count);
 
-  // Configuration
-  const size = 0.7; // Size of cube
-  const radius = 0.3; // Radius of the circle/polygon
+  const size = 0.7;
+  const radius = 0.3;
 
   const tempObject = useMemo(() => new THREE.Object3D(), []);
   const rotations = useMemo(
@@ -34,96 +34,83 @@ const Ingredients: React.FC<IngredientProps> = ({
     [count]
   );
 
-  // Calculate positions based on count
-  const getPositions = (
-    count: number,
-    axis: THREE.Vector3 = new THREE.Vector3(0, 0, 0)
-  ) => {
-    // Default axis
+  // Calculate final positions for the instances
+  const getFinalPositions = (count: number) => {
     const positions = [];
     for (let i = 0; i < count; i++) {
-      const angle = (i * 2 * Math.PI) / count; // No need to subtract Math.PI / 2 unless you have a specific starting point in mind.
-      const pointOnCircle = new THREE.Vector3(
-        Math.cos(angle) * radius,
-        Math.sin(angle) * radius,
-        0
-      );
-
-      // Rotate around the specified axis:
-      pointOnCircle.applyAxisAngle(axis, 0); // Start with no rotation.  Rotations will be applied in useFrame.
-
+      const angle = (i * 2 * Math.PI) / count;
       positions.push({
-        x: pointOnCircle.x,
-        y: pointOnCircle.y,
-        z: pointOnCircle.z,
+        x: Math.cos(angle) * radius,
+        y: Math.sin(angle) * radius,
+        z: 0,
       });
     }
     return positions;
   };
 
-  const [rotationAxis, setRotationAxis] = useState(new THREE.Vector3(0, 0, 0)); // State for the rotation axis
+  // Spring animation for the blooming effect
+  const { progress } = useSpring({
+    progress: visible ? 1 : 0,
+    from: { progress: 0 },
+    config: { tension: 180, friction: 12 },
+    reset: !visible,
+    immediate: !visible,
+  });
 
-  const positions = useMemo(
-    () => getPositions(count, rotationAxis),
-    [count, rotationAxis]
-  );
+  const finalPositions = useMemo(() => getFinalPositions(count), [count]);
 
   useEffect(() => {
     if (!meshRef.current) return;
 
-    setVisible(true);
+    if (prevCount !== count) {
+      setVisible(false);
+      setPrevCount(count);
 
-    positions.forEach((pos, i) => {
-      tempObject.position.set(
-        pos.x + position[0],
-        pos.y + position[1],
-        pos.z + position[2]
-      );
-      tempObject.rotation.set(position[0], position[1], position[2]);
-      tempObject.updateMatrix();
-      meshRef.current!.setMatrixAt(i, tempObject.matrix);
-    });
-
-    // Add AxesHelper to visualize rotation axis.
-    if (axisHelperRef.current) {
-      meshRef.current.add(axisHelperRef.current); // Add it to the instanced mesh
+      // Start blooming animation after a short delay
+      setTimeout(() => {
+        setVisible(true);
+      }, 100);
+    } else {
+      setVisible(true);
     }
-
-    meshRef.current.instanceMatrix.needsUpdate = true;
-  }, [count, positions, position, tempObject]);
+  }, [count, prevCount]);
 
   useFrame((_, delta) => {
     if (!meshRef.current) return;
 
-    if (count === 1) {
-      // Rotate the single instance:
-      tempObject.position.set(position[0], position[1], position[2]); // Local position
-      tempObject.rotation.x += delta / 2;
+    // Set the center position of the instanced mesh
+    meshRef.current.position.set(position[0], position[1], position[2]);
+    // Rotate the entire group
+    meshRef.current.rotation.z += delta / 2;
+
+    const currentProgress = progress.get();
+
+    finalPositions.forEach((finalPos, i) => {
+      // Interpolate position from center (0,0,0) to final position
+      const currentX = finalPos.x * currentProgress;
+      const currentY = finalPos.y * currentProgress;
+      const currentZ = finalPos.z * currentProgress;
+
+      tempObject.position.set(currentX, currentY, currentZ);
+      tempObject.rotation.set(rotations[i].x, rotations[i].y, 0);
+
+      // Scale based on progress to add a "blooming" effect
+      const scale = 0.3 + currentProgress * 0.7; // Start at 30% size, grow to 100%
+      tempObject.scale.set(scale, scale, scale);
+
       tempObject.updateMatrix();
-      meshRef.current!.setMatrixAt(0, tempObject.matrix);
-      meshRef.current.instanceMatrix.needsUpdate = true;
-    } else if (count > 1) {
-      // 1. Set the rotation point of the instanced mesh to center:
-      meshRef.current.position.set(position[0], position[1], position[2]);
-      // 2. Rotate the instanced mesh:
-      meshRef.current.rotation.z += delta / 2;
-      // 3. IMPORTANT: Reset the position of the individual instances.
-      //    This is needed because rotating the instanced mesh moves the instances.
-      positions.forEach((pos, i) => {
-        tempObject.position.set(pos.x, pos.y, pos.z); // Just the *local* position
-        tempObject.rotation.set(rotations[i].x, rotations[i].y, 0);
-        tempObject.updateMatrix();
-        meshRef.current!.setMatrixAt(i, tempObject.matrix);
-      });
-      meshRef.current.instanceMatrix.needsUpdate = true;
-    }
+      meshRef.current!.setMatrixAt(i, tempObject.matrix);
+    });
+
+    meshRef.current.instanceMatrix.needsUpdate = true;
   });
 
   const { scale, x, y, z } = useSpring({
     scale: visible ? 1 : 0,
-    x: visible ? position[0] : position[0] - 2,
-    y: visible ? position[1] : position[1] - 2,
+    x: visible ? position[0] : position[0] - 5,
+    y: visible ? position[1] : position[1] - 5,
     z: visible ? position[1] : position[1] - 2,
+    config: { tension: 250, friction: 20 },
   });
 
   const adjustedSize = size / count;
