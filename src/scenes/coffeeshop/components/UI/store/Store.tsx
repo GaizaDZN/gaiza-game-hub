@@ -48,7 +48,7 @@ const Store: React.FC = () => {
 
   return (
     <div className="store__container">
-      <div className="store__items-container">
+      <div className="store__items-container ui-open">
         <ul className="store__items">
           <StoreItem itemName="beans" quantity={gameState.storeState.beans} />
           <StoreItem itemName="water" quantity={gameState.storeState.water} />

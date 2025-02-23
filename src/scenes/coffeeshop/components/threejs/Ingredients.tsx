@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import { ResourceState } from "../../game/game";
 import React from "react";
 import { animated, useSpring } from "@react-spring/three";
+import { coffeeConstants } from "../../game/common";
 
 interface IngredientProps {
   iName: keyof ResourceState;
@@ -79,28 +80,37 @@ const Ingredients: React.FC<IngredientProps> = ({
     if (!meshRef.current) return;
 
     // Set the center position of the instanced mesh
-    meshRef.current.position.set(position[0], position[1], position[2]);
+    meshRef.current.position.set(...position);
     // Rotate the entire group
-    meshRef.current.rotation.z += delta / 2;
+    // meshRef.current.rotation.z += delta * count;
 
     const currentProgress = progress.get();
 
     finalPositions.forEach((finalPos, i) => {
-      // Interpolate position from center (0,0,0) to final position
       const currentX = finalPos.x * currentProgress;
       const currentY = finalPos.y * currentProgress;
       const currentZ = finalPos.z * currentProgress;
 
       tempObject.position.set(currentX, currentY, currentZ);
-      tempObject.rotation.set(rotations[i].x, rotations[i].y, 0);
 
-      // Scale based on progress to add a "blooming" effect
-      const scale = 0.3 + currentProgress * 0.7; // Start at 30% size, grow to 100%
+      // For single instance, apply rotation to the instance itself
+      if (count === 1) {
+        tempObject.rotation.z += delta;
+      } else {
+        tempObject.rotation.set(rotations[i].x, rotations[i].y, 0);
+      }
+
+      const scale = 0.3 + currentProgress * 0.7;
       tempObject.scale.set(scale, scale, scale);
 
       tempObject.updateMatrix();
       meshRef.current!.setMatrixAt(i, tempObject.matrix);
     });
+
+    // Only rotate the entire mesh when there are multiple instances
+    if (count > 1) {
+      meshRef.current.rotation.z += delta * Math.sqrt(count);
+    }
 
     meshRef.current.instanceMatrix.needsUpdate = true;
   });
@@ -132,18 +142,19 @@ const ingredientColor = (iName: keyof ResourceState): string => {
 
   switch (iName) {
     case "beans":
-      color = "#cc701a";
+      color = coffeeConstants.colors.ingredients.beans;
       break;
     case "water":
-      color = "#4e93ec";
+      color = coffeeConstants.colors.ingredients.water;
       break;
     case "milk":
-      color = "#d6faff";
+      color = coffeeConstants.colors.ingredients.milk;
       break;
     case "sugar":
-      color = "#ffde4c";
+      color = coffeeConstants.colors.ingredients.sugar;
       break;
     default:
+      color = coffeeConstants.colors.unknown;
       break;
   }
   return color;

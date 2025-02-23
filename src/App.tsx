@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Main from "./pages/Main";
 import "./App.css";
-import "./scenes/coffeeshop/coffee-styles.css";
 import { SceneConfig, SceneIds, scenes } from "./scenes/common";
 
 const App: React.FC = () => {

@@ -63,6 +63,8 @@ interface OrderState {
   currentOrder: Order | undefined;
   prevOrderState: PrevOrderState;
   orderSuccess: boolean;
+  checkList: Map<keyof CoffeeState, number>;
+  orderSize: number;
 }
 
 interface CustomerState {
@@ -104,6 +106,8 @@ export class Game {
         currentOrder: undefined,
         orderSuccess: false,
         prevOrderState: PrevOrderState.none,
+        checkList: new Map(),
+        orderSize: 0,
       },
       coffeeState: {
         latte: 0,
@@ -194,6 +198,8 @@ export class Game {
           currentOrder: undefined,
           orderSuccess: false,
           prevOrderState: PrevOrderState.none,
+          checkList: new Map(),
+          orderSize: 0,
         },
         coffeeState: {
           latte: 0,
@@ -333,11 +339,16 @@ export class Game {
           ["Bad combination. Check the recipe book."],
           TerminalLine.system
         );
+
         return {
           ...state,
           terminalLog: {
             ...state.terminalLog,
             content: newTerminalContent,
+          },
+          orderState: {
+            ...state.orderState,
+            checkList: this.updateChecklist(coffeeType),
           },
         };
       }
@@ -431,6 +442,8 @@ export class Game {
             orderState: {
               ...state.orderState,
               currentOrder: firstCustomer.getOrder(),
+              checkList: this.populateChecklist(firstCustomer),
+              orderSize: this.getOrderSize(firstCustomer),
             },
             messageLog: {
               messages: [
@@ -583,11 +596,14 @@ export class Game {
           ],
         },
         orderState: {
+          ...state.orderState,
           currentOrder: nextCustomer?.getOrder(),
           orderSuccess: false,
           prevOrderState: orderSuccess
             ? PrevOrderState.success
             : PrevOrderState.fail,
+          checkList: this.populateChecklist(nextCustomer),
+          orderSize: this.getOrderSize(nextCustomer),
         },
         coffeeState: {
           latte: 0,
@@ -818,6 +834,48 @@ export class Game {
     for (const line of newcontent) {
       terminalLog.push(`${lineType} ${line}`);
     }
+  }
+
+  private populateChecklist(
+    customer: Customer | undefined
+  ): Map<keyof CoffeeState, number> {
+    const newChecklist = new Map();
+    if (!customer) return newChecklist;
+
+    const drinks = customer.getOrder()?.getDrinks() ?? {};
+
+    for (const [drink] of drinks.entries()) {
+      const coffeeType = drink as keyof CoffeeState;
+      const currentCount = newChecklist.get(coffeeType) ?? 0;
+      newChecklist.set(coffeeType, currentCount + 1);
+    }
+
+    return newChecklist;
+  }
+
+  private updateChecklist(
+    coffeeType: keyof CoffeeState | undefined
+  ): Map<keyof CoffeeState, number> {
+    const newChecklist = new Map(this.getOrder().checkList);
+
+    if (!coffeeType) return newChecklist;
+
+    // increment the coffee type by 1
+    if (newChecklist.has(coffeeType)) {
+      const coffeeNum = newChecklist.get(coffeeType) ?? 0;
+      newChecklist.set(coffeeType, coffeeNum + 1);
+    }
+    return newChecklist;
+  }
+
+  // determine the size of the current order
+  private getOrderSize(customer: Customer | undefined): number {
+    if (!customer) return 0;
+    const order = customer.getOrder();
+    const drinks = order?.getDrinks(); //Map<string, Coffee>
+    if (!drinks) return 0;
+
+    return drinks.size;
   }
 }
 

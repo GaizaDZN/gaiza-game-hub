@@ -12,10 +12,15 @@ export interface Message {
   active: boolean;
 }
 
+interface OrderItem {
+  name: keyof CoffeeState;
+  complete: boolean;
+}
 // Order contains all order information for a customer
 export class Order {
   private totalPrice: number;
   private drinks: Map<string, Coffee>;
+  // private drink: OrderItem
 
   public constructor() {
     this.totalPrice = 0;
