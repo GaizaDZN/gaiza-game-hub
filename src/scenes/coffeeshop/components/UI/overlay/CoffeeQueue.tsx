@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useOrder } from "../../../../../context/game/GameContext";
-import { CoffeeState } from "../../../game/coffeeshop.types";
+import { useCustomer } from "../../../../../context/game/GameContext";
+import { Coffee } from "../../../game/coffeeshop.types";
 
-const CoffeeQueueItem: React.FC<{ coffeeType: keyof CoffeeState }> = ({
+const CoffeeQueueItem: React.FC<{ coffeeType: string; coffee: Coffee }> = ({
   coffeeType,
+  coffee,
 }) => {
   // determine render based on coffeeType
   const handleCoffeeType = () => {
@@ -22,6 +23,14 @@ const CoffeeQueueItem: React.FC<{ coffeeType: keyof CoffeeState }> = ({
         break;
     }
   };
+  const handleCoffeeState = (): string => {
+    let result = "◼";
+    if (coffee.complete) {
+      result = "✔";
+    }
+    return result;
+  };
+
   return (
     <div className="order__container">
       <div className="orders">
@@ -29,35 +38,38 @@ const CoffeeQueueItem: React.FC<{ coffeeType: keyof CoffeeState }> = ({
           <div className="coffee-item">{handleCoffeeType()}</div>
         </div>
         <div className="order-state__container">
-          <span className="order-state">✅</span>
+          <span className="order-state">{handleCoffeeState()}</span>
         </div>
       </div>
     </div>
   );
 };
 const CoffeeQueue: React.FC = () => {
-  const [checklist, setChecklist] = useState<(keyof CoffeeState)[]>([]);
-  const orderState = useOrder();
+  const [checklist, setChecklist] = useState<Map<string, Coffee>>(new Map());
+
+  const customer = useCustomer();
 
   useEffect(() => {
     // convert map to array of coffeeTypes
-    const items: (keyof CoffeeState)[] = [];
-    orderState.checkList.forEach((val, key) => {
-      if (val > 0) {
-        for (let i = 0; i < val; i++) {
-          items.push(key);
-        }
-      }
-    });
-    setChecklist(items);
-  }, [orderState.checkList]);
+    const drinks = customer?.getOrder().getDrinks();
+    if (drinks) {
+      setChecklist(drinks);
+    }
+  }, [customer]);
 
   return (
     <div className="coffee-queue__container">
       <div className="coffee-queue">
-        {checklist.map((coffee, idx) => (
-          <CoffeeQueueItem key={`${coffee}-${idx}`} coffeeType={coffee} />
-        ))}
+        {checklist &&
+          Array.from(checklist).flatMap(([coffeeName, coffee], coffeeIdx) =>
+            Array.from({ length: coffee.getQuantity() }).map((_, qtyIdx) => (
+              <CoffeeQueueItem
+                key={`${coffeeName}-${coffeeIdx}-${qtyIdx}`}
+                coffeeType={coffeeName}
+                coffee={coffee}
+              />
+            ))
+          )}
       </div>
     </div>
   );

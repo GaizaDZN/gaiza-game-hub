@@ -12,15 +12,10 @@ export interface Message {
   active: boolean;
 }
 
-interface OrderItem {
-  name: keyof CoffeeState;
-  complete: boolean;
-}
 // Order contains all order information for a customer
 export class Order {
   private totalPrice: number;
   private drinks: Map<string, Coffee>;
-  // private drink: OrderItem
 
   public constructor() {
     this.totalPrice = 0;
@@ -43,6 +38,10 @@ export class Order {
 
   getDrinks(): Map<string, Coffee> {
     return this.drinks;
+  }
+
+  setDrinks(newDrinks: Map<string, Coffee>) {
+    this.drinks = newDrinks;
   }
 
   addDrink(coffee: Coffee) {
@@ -237,12 +236,13 @@ interface CoffeeIngredients {
   sugar: number;
 }
 
-class Coffee extends Resource {
+export class Coffee extends Resource {
   coffeeType: CoffeeName;
   size: number;
   ingredientsCost: number;
   private ingredients: CoffeeIngredients;
   markupPrice: number;
+  complete: boolean;
 
   public constructor(
     name: ResourceName,
@@ -257,6 +257,7 @@ class Coffee extends Resource {
     this.ingredients = this.setCoffeeIngredients(); // get ingredients from preexisting object (probably a JSON in the future)
     this.ingredientsCost = this.calculateIngredientsCost();
     this.markupPrice = 1.5;
+    this.complete = false;
   }
 
   getType(): string {
@@ -316,6 +317,10 @@ class Coffee extends Resource {
 
   setPrice(price: number) {
     this.price = price;
+  }
+
+  setComplete() {
+    this.complete = true;
   }
 
   // setCoffeeIngredients sets the ingredients depending on the coffee type
@@ -430,6 +435,11 @@ export class Customer {
 
   getId(): string {
     return this.id;
+  }
+
+  setDrinks(newDrinks: Map<string, Coffee> | undefined) {
+    if (!newDrinks) return;
+    this.getOrder().setDrinks(newDrinks);
   }
 
   // creates a random coffee - add some additional rules

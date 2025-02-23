@@ -364,6 +364,24 @@ export class Game {
         TerminalLine.system
       );
 
+      // mark 1 drink that matches the coffeeType (as a string) as complete
+      const newDrinks = state.customerState.currentCustomer
+        ?.getOrder()
+        .getDrinks();
+
+      if (newDrinks) {
+        for (const [drink, coffee] of newDrinks.entries()) {
+          if (drink === coffeeType) {
+            coffee.complete = true;
+            break;
+          }
+        }
+      }
+
+      // update the current customer in customer state
+      const newCustomer = state.customerState.currentCustomer;
+      newCustomer?.setDrinks(newDrinks);
+
       return {
         ...state,
         resources: newResources,
@@ -379,6 +397,10 @@ export class Game {
         brewState: {
           ...state.brewState,
           brewable: false,
+        },
+        customerState: {
+          ...state.customerState,
+          currentCustomer: newCustomer,
         },
       };
     });
