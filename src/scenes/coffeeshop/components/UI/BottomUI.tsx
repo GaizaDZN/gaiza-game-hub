@@ -1,5 +1,5 @@
 import { useCallback, useContext, useEffect } from "react";
-import { GameContext, useOrder } from "../../../../context/game/GameContext";
+import { GameContext, useCustomer } from "../../../../context/game/GameContext";
 import { GameMode } from "../../game/game";
 import classNames from "classnames";
 import { Hoverable } from "../../../../context/tooltip/Hoverable";
@@ -15,8 +15,7 @@ const BottomUI = () => {
   const { gameState, resetActiveBars, brewCoffee, setGameMode, completeSale } =
     useContext(GameContext);
   const { playSound } = useContext(AudioContext);
-  const currentOrder = useOrder();
-
+  const currentCustomer = useCustomer();
   const handleBrewCoffee = useCallback(() => {
     brewCoffee(() => playSound(brewSFX));
   }, [brewCoffee, playSound]);
@@ -27,15 +26,18 @@ const BottomUI = () => {
       case GameMode.opening:
         setGameMode(GameMode.sales);
         break;
-      case GameMode.sales:
+      case GameMode.sales: {
         // if customer order full or incorrect completeSale() else brew()
-
-        completeSale();
-        // if (currentOrder.checkList.size === currentOrder.orderSize) {
-        // } else {
-        //   handleBrewCoffee();
-        // }
+        const orderSuccess = currentCustomer
+          ?.getOrder()
+          .isCorrectOrder(gameState.coffeeState);
+        if (orderSuccess) {
+          completeSale();
+        } else {
+          handleBrewCoffee();
+        }
         break;
+      }
       case GameMode.dayEnd:
         setGameMode(GameMode.opening);
         break;
@@ -44,10 +46,10 @@ const BottomUI = () => {
     }
   }, [
     completeSale,
-    currentOrder.checkList.size,
-    currentOrder.orderSize,
+    currentCustomer,
+    gameState.coffeeState,
     gameState.gameMode,
-    // handleBrewCoffee,
+    handleBrewCoffee,
     setGameMode,
   ]);
 

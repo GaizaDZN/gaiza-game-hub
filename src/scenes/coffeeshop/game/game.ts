@@ -369,6 +369,7 @@ export class Game {
         ?.getOrder()
         .getDrinks();
 
+      // TODO: Error with quantities greater than 1 (marks both of them)
       if (newDrinks) {
         for (const [drink, coffee] of newDrinks.entries()) {
           if (drink === coffeeType) {
