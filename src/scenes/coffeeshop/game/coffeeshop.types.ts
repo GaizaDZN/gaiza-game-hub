@@ -16,14 +16,30 @@ export interface Message {
 export class Order {
   private totalPrice: number;
   private drinks: Map<string, Coffee>;
+  private orderItems: OrderItem[];
+  private orderID: string;
 
   public constructor() {
     this.totalPrice = 0;
     this.drinks = new Map<string, Coffee>();
+    this.orderItems = [];
+    this.orderID = `order_${generateRandomId()}`;
+  }
+
+  getID(): string {
+    return this.orderID;
   }
 
   getTotalPrice(): number {
     return this.totalPrice;
+  }
+
+  getDrinks(): Map<string, Coffee> {
+    return this.drinks;
+  }
+
+  getItems(): OrderItem[] {
+    return this.orderItems;
   }
 
   updateTotalPrice(): void {
@@ -36,16 +52,25 @@ export class Order {
     this.totalPrice = sum;
   }
 
-  getDrinks(): Map<string, Coffee> {
-    return this.drinks;
-  }
-
   setDrinks(newDrinks: Map<string, Coffee>) {
     this.drinks = newDrinks;
   }
 
-  addDrink(coffee: Coffee) {
+  setItems(newItems: OrderItem[]): void {
+    this.orderItems = newItems;
+  }
+
+  addItem(item: OrderItem): void {
+    this.orderItems.push(item);
+  }
+
+  addDrink(coffee: Coffee): void {
     const c = this.drinks.get(coffee.getType());
+
+    const itemName = coffee.getType();
+    const newItem = new OrderItem(this.orderID, itemName);
+    this.addItem(newItem);
+
     if (c) {
       c.increment();
     } else {
@@ -96,6 +121,40 @@ export class Order {
       }
     }
     return true;
+  }
+}
+
+export class OrderItem {
+  private orderID: string;
+  private itemName: string;
+  private id: string;
+  private complete: boolean;
+
+  public constructor(orderID: string, itemName: string) {
+    this.orderID = orderID;
+    this.itemName = itemName;
+    this.id = `${itemName}_${generateRandomId()}`;
+    this.complete = false;
+  }
+
+  getOrderID(): string {
+    return this.orderID;
+  }
+
+  getComplete(): boolean {
+    return this.complete;
+  }
+
+  getName(): string {
+    return this.itemName;
+  }
+
+  getID(): string {
+    return this.id;
+  }
+
+  setComplete(complete: boolean): void {
+    this.complete = complete;
   }
 }
 

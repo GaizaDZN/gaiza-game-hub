@@ -90,6 +90,14 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
     setGame(new Game(game.getState()));
   }, [game]);
 
+  const setTextPrinting = useCallback(
+    (textPrinting: boolean) => {
+      game.setTextPrinting(textPrinting);
+      setGame(new Game(game.getState()));
+    },
+    [game]
+  );
+
   const updateGameState = useCallback(
     (gameState: GameState) => {
       game.setState(() => {
@@ -115,6 +123,7 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       purchaseItems,
       updateGameState,
       resetGame,
+      setTextPrinting,
     }),
     [
       gameState,
@@ -129,6 +138,7 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       purchaseItems,
       resetGame,
       updateGameState,
+      setTextPrinting,
     ]
   );
 

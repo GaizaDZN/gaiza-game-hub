@@ -1,5 +1,6 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { AudioContext } from "../../../../context/audio/AudioContext";
+import { GameContext } from "../../../../context/game/GameContext";
 
 const typingSound = "typing_sound.mp3";
 interface TypewriterEffectProps {
@@ -15,7 +16,7 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
 }) => {
   const [printedMessage, setPrintedMessage] = useState("");
   const [currentCharacterIndex, setCurrentCharacterIndex] = useState(0);
-
+  const { setTextPrinting, gameState } = useContext(GameContext);
   const { playSound } = useContext(AudioContext);
 
   const handleUpdate = useCallback(() => {
@@ -27,14 +28,25 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
   useEffect(() => {
     const intervalId = setInterval(() => {
       if (currentCharacterIndex < message.length) {
+        if (gameState.textState.textFinished) {
+          setTextPrinting(true);
+        }
         handleUpdate();
       } else {
         clearInterval(intervalId); // Stop the interval when finished
+        setTextPrinting(false);
       }
     }, delay);
 
     return () => clearInterval(intervalId); // Cleanup on component unmount
-  }, [message, delay, currentCharacterIndex, handleUpdate]);
+  }, [
+    currentCharacterIndex,
+    delay,
+    gameState.textState.textFinished,
+    handleUpdate,
+    message.length,
+    setTextPrinting,
+  ]);
 
   if (tag === "p") {
     return <p>{printedMessage}</p>;

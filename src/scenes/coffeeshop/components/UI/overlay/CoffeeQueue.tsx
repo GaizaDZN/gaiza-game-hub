@@ -1,31 +1,11 @@
-import { useEffect, useState } from "react";
-import { useCustomer } from "../../../../../context/game/GameContext";
-import { Coffee } from "../../../game/coffeeshop.types";
+import { useContext, useEffect, useState } from "react";
+import { GameContext, useOrder } from "../../../../../context/game/GameContext";
+import { OrderItem } from "../../../game/coffeeshop.types";
 
-const CoffeeQueueItem: React.FC<{ coffeeType: string; coffee: Coffee }> = ({
-  coffeeType,
-  coffee,
-}) => {
-  // determine render based on coffeeType
-  const handleCoffeeType = () => {
-    switch (coffeeType) {
-      case "latte":
-        return "Latte";
-      case "black":
-        return "Black";
-      case "americano":
-        return "Americano";
-      case "espresso":
-        return "Espresso";
-      case "cappuccino":
-        return "Cappuccino";
-      default:
-        break;
-    }
-  };
+const CoffeeQueueItem: React.FC<{ orderItem: OrderItem }> = ({ orderItem }) => {
   const handleCoffeeState = (): string => {
     let result = "◼";
-    if (coffee.complete) {
+    if (orderItem.getComplete()) {
       result = "✔";
     }
     return result;
@@ -35,7 +15,10 @@ const CoffeeQueueItem: React.FC<{ coffeeType: string; coffee: Coffee }> = ({
     <div className="order__container">
       <div className="orders">
         <div className="coffee-item__container">
-          <div className="coffee-item">{handleCoffeeType()}</div>
+          <div className="coffee-item">
+            {orderItem.getName()[0].toUpperCase() +
+              orderItem.getName().slice(1)}
+          </div>
         </div>
         <div className="order-state__container">
           <span className="order-state">{handleCoffeeState()}</span>
@@ -44,32 +27,20 @@ const CoffeeQueueItem: React.FC<{ coffeeType: string; coffee: Coffee }> = ({
     </div>
   );
 };
+
 const CoffeeQueue: React.FC = () => {
-  const [checklist, setChecklist] = useState<Map<string, Coffee>>(new Map());
-
-  const customer = useCustomer();
-
-  useEffect(() => {
-    // convert map to array of coffeeTypes
-    const drinks = customer?.getOrder().getDrinks();
-    if (drinks) {
-      setChecklist(drinks);
-    }
-  }, [customer]);
+  const items = useOrder().currentOrder?.getItems();
+  const { gameState } = useContext(GameContext);
+  const finished = gameState.textState.textFinished;
 
   return (
-    <div className="coffee-queue__container">
+    <div className={`coffee-queue__container ${finished ? "fade-in" : ""}`}>
       <div className="coffee-queue">
-        {checklist &&
-          Array.from(checklist).flatMap(([coffeeName, coffee], coffeeIdx) =>
-            Array.from({ length: coffee.getQuantity() }).map((_, qtyIdx) => (
-              <CoffeeQueueItem
-                key={`${coffeeName}-${coffeeIdx}-${qtyIdx}`}
-                coffeeType={coffeeName}
-                coffee={coffee}
-              />
-            ))
-          )}
+        {items &&
+          finished &&
+          items.map((item) => (
+            <CoffeeQueueItem key={item.getID()} orderItem={item} />
+          ))}
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ export interface GameState {
   customerState: CustomerState;
   terminalLog: TerminalLog;
   messageLog: MessageLog;
+  textState: TextState;
   salesState: SalesState;
   brewState: BrewState;
   storeState: StoreState;
@@ -93,6 +94,11 @@ interface BrewState {
   brewable: boolean;
 }
 
+interface TextState {
+  textPrinting: boolean;
+  textFinished: boolean;
+}
+
 // Game class with clear state management
 export class Game {
   private state: GameState;
@@ -122,9 +128,13 @@ export class Game {
         completedCustomers: [],
       },
       messageLog: { messages: [] },
+      textState: {
+        textPrinting: false,
+        textFinished: false,
+      },
       terminalLog: {
         content: [],
-        maxLines: 50, // might reduce this later who knows.
+        maxLines: 50,
         maxCharacters: 46,
       },
       salesState: {
@@ -185,6 +195,11 @@ export class Game {
   public getTerminalLog = (): readonly string[] => [
     ...this.state.terminalLog.content,
   ];
+
+  getTextPrinting(): boolean {
+    return this.state.textState.textPrinting;
+  }
+
   public getVersion = (): number => this.state.version;
 
   // Reset to initial state
@@ -214,6 +229,10 @@ export class Game {
           completedCustomers: [],
         },
         messageLog: { messages: [] },
+        textState: {
+          textPrinting: false,
+          textFinished: false,
+        },
         terminalLog: {
           content: [],
           maxLines: 50, // might reduce this later who knows.
@@ -353,9 +372,6 @@ export class Game {
         };
       }
 
-      // PLAY SFX
-      onSuccess();
-
       const brewMsg = "Beverage Module: ENGAGED";
       const brewMsg2 = `Brewing ${coffeeType}...`;
       this.addToTerminal(
@@ -364,24 +380,26 @@ export class Game {
         TerminalLine.system
       );
 
-      // mark 1 drink that matches the coffeeType (as a string) as complete
-      const newDrinks = state.customerState.currentCustomer
+      // set order item as complete
+      const orderItems = state.customerState.currentCustomer
         ?.getOrder()
-        .getDrinks();
-
-      // TODO: Error with quantities greater than 1 (marks both of them)
-      if (newDrinks) {
-        for (const [drink, coffee] of newDrinks.entries()) {
-          if (drink === coffeeType) {
-            coffee.complete = true;
+        .getItems();
+      if (orderItems) {
+        for (let i = 0; i < orderItems.length; i++) {
+          if (
+            orderItems[i].getName() === coffeeType &&
+            !orderItems[i].getComplete()
+          ) {
+            orderItems[i].setComplete(true);
             break;
           }
         }
       }
+      const newOrderState = state.orderState;
+      if (orderItems) newOrderState.currentOrder?.setItems(orderItems);
 
-      // update the current customer in customer state
-      const newCustomer = state.customerState.currentCustomer;
-      newCustomer?.setDrinks(newDrinks);
+      // PLAY SFX
+      onSuccess();
 
       return {
         ...state,
@@ -399,10 +417,7 @@ export class Game {
           ...state.brewState,
           brewable: false,
         },
-        customerState: {
-          ...state.customerState,
-          currentCustomer: newCustomer,
-        },
+        orderState: newOrderState,
       };
     });
   }
@@ -635,6 +650,10 @@ export class Game {
           americano: 0,
           black: 0,
         },
+        textState: {
+          ...state.textState,
+          textFinished: false,
+        },
         terminalLog: {
           ...state.terminalLog,
           content: newTerminalContent,
@@ -797,7 +816,19 @@ export class Game {
     });
   }
 
-  // Helper Methods
+  setTextPrinting(textPrinting: boolean): void {
+    this.setState((state) => {
+      return {
+        ...state,
+        textState: {
+          textPrinting,
+          textFinished: textPrinting ? false : true,
+        },
+      };
+    });
+  }
+
+  // Helper Methods ///////////////////////////////////////
   private generateCustomers(): Customer[] {
     const customerCount = Math.ceil(RandRange(4, 8));
     return Array.from(
@@ -900,52 +931,6 @@ export class Game {
 
     return drinks.size;
   }
-}
-
-export interface GameState {
-  gameMode: GameMode;
-  player: PlayerState;
-  resources: ResourceState;
-  coffeeState: CoffeeState;
-  orderState: OrderState;
-  customerState: CustomerState;
-  terminalLog: TerminalLog;
-  messageLog: MessageLog;
-  activeBars: ResourceState;
-  version: number;
-}
-
-interface PlayerState {
-  reputation: number;
-  money: number;
-}
-
-interface TerminalLog {
-  content: string[];
-  maxLines: number;
-  maxCharacters: number;
-}
-
-interface MessageLog {
-  messages: Message[];
-}
-
-interface OrderState {
-  currentOrder: Order | undefined;
-  orderSuccess: boolean;
-}
-
-interface CustomerState {
-  currentCustomer: Customer | undefined;
-  customers: Customer[];
-  completedCustomers: Customer[];
-}
-
-export interface ResourceState {
-  beans: number;
-  water: number;
-  milk: number;
-  sugar: number;
 }
 
 // ENUMS ////////////////////////////////////////////////

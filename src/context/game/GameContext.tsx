@@ -20,6 +20,7 @@ interface GameContextType {
   resetStore: () => void;
   purchaseItems: () => void;
   updateGameState: (game: GameState) => void;
+  setTextPrinting: (textPrinting: boolean) => void;
   resetGame: () => void;
 }
 
@@ -35,6 +36,7 @@ export const GameContext = createContext<GameContextType>({
   resetStore: () => {},
   purchaseItems: () => {},
   updateGameState: () => {},
+  setTextPrinting: () => {},
   resetGame: () => {},
 });
 
