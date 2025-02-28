@@ -17,13 +17,24 @@ export class Order {
   private totalPrice: number;
   private drinks: Map<string, Coffee>;
   private orderItems: OrderItem[];
+  private itemsComplete: number;
   private orderID: string;
+  private orderMap: Map<string, number>;
+  private failed: boolean; // order is failed if incorrect coffee is made.
 
   public constructor() {
     this.totalPrice = 0;
     this.drinks = new Map<string, Coffee>();
     this.orderItems = [];
+    this.itemsComplete = 0;
+    this.failed = false;
     this.orderID = `order_${generateRandomId()}`;
+    this.orderMap = new Map<string, number>();
+    this.orderMap.set("black", 0);
+    this.orderMap.set("latte", 0);
+    this.orderMap.set("americano", 0);
+    this.orderMap.set("cappuccino", 0);
+    this.orderMap.set("espresso", 0);
   }
 
   getID(): string {
@@ -40,6 +51,22 @@ export class Order {
 
   getItems(): OrderItem[] {
     return this.orderItems;
+  }
+
+  getItemsComplete(): number {
+    return this.itemsComplete;
+  }
+
+  getOrderMap(): Map<string, number> {
+    return this.orderMap;
+  }
+
+  incrementItemsComplete(): void {
+    this.itemsComplete++;
+  }
+
+  hasFailed(): boolean {
+    return this.failed;
   }
 
   updateTotalPrice(): void {
@@ -60,8 +87,19 @@ export class Order {
     this.orderItems = newItems;
   }
 
+  setOrderMap(newMap: Map<string, number>): void {
+    this.orderMap = newMap;
+  }
+
+  setFailed(): void {
+    this.failed = true;
+  }
+
   addItem(item: OrderItem): void {
     this.orderItems.push(item);
+
+    const itemVal = this.orderMap.get(item.getName());
+    this.orderMap.set(item.getName(), (itemVal ?? 0) + 1);
   }
 
   addDrink(coffee: Coffee): void {
@@ -103,24 +141,24 @@ export class Order {
   }
 
   isCorrectOrder(coffeeState: CoffeeState): boolean {
-    for (const [coffeeType, coffee] of this.drinks.entries()) {
-      // Ensure `.entries()` if it's a Map
-      const stateKey = coffeeTypeToStateKey[coffeeType as CoffeeName];
+    // Ensure it's not comparing the initial map values
+    if ([...this.orderMap.values()].every((value) => value === 0)) return false;
 
-      if (!stateKey || !(stateKey in coffeeState)) {
-        console.error(
-          "Invalid coffee type or state key:",
-          coffeeType,
-          stateKey
-        );
-        return false;
-      }
+    const coffeeMap = new Map<string, number>(
+      Object.entries(coffeeState).filter(([key]) => key !== "total")
+    );
 
-      if (coffeeState[stateKey] < coffee.getQuantity()) {
+    // if coffeeMap val > orderMap val set this.failed = true
+    for (const [key, val] of coffeeMap.entries()) {
+      const orderMapValue = this.orderMap.get(key);
+      if (orderMapValue !== undefined && val > orderMapValue) {
+        this.failed = true;
         return false;
       }
     }
-    return true;
+    return [...coffeeMap.entries()].every(
+      ([key, val]) => this.orderMap.get(key) === val
+    );
   }
 }
 
@@ -230,6 +268,7 @@ export interface CoffeeState {
   cappuccino: number;
   americano: number;
   black: number;
+  total: number;
 }
 
 export const coffeeTypeToStateKey: Record<CoffeeName, keyof CoffeeState> = {

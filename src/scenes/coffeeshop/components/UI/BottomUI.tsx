@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { GameContext, useCustomer } from "../../../../context/game/GameContext";
 import { GameMode } from "../../game/game";
 import classNames from "classnames";
@@ -14,11 +14,22 @@ const brewSFX = "brew.mp3";
 const BottomUI = () => {
   const { gameState, resetActiveBars, brewCoffee, setGameMode, completeSale } =
     useContext(GameContext);
+  const [justBrewed, setJustBrewed] = useState(false);
   const { playSound } = useContext(AudioContext);
   const currentCustomer = useCustomer();
+
   const handleBrewCoffee = useCallback(() => {
     brewCoffee(() => playSound(brewSFX));
+    setJustBrewed(true);
   }, [brewCoffee, playSound]);
+
+  const checkOrderComplete = useCallback((): boolean => {
+    const orderSuccessful = currentCustomer
+      ?.getOrder()
+      .isCorrectOrder(gameState.coffeeState);
+    if (orderSuccessful || currentCustomer?.getOrder().hasFailed()) return true;
+    return false;
+  }, [currentCustomer, gameState.coffeeState]);
 
   const confirmCheck = useCallback(() => {
     const mode = gameState.gameMode;
@@ -27,13 +38,7 @@ const BottomUI = () => {
         setGameMode(GameMode.sales);
         break;
       case GameMode.sales: {
-        // if customer order full or incorrect completeSale() else brew()
-        const orderSuccess = currentCustomer
-          ?.getOrder()
-          .isCorrectOrder(gameState.coffeeState);
-        if (orderSuccess) {
-          completeSale();
-        } else {
+        if (!justBrewed) {
           handleBrewCoffee();
         }
         break;
@@ -44,14 +49,7 @@ const BottomUI = () => {
       default:
         break;
     }
-  }, [
-    completeSale,
-    currentCustomer,
-    gameState.coffeeState,
-    gameState.gameMode,
-    handleBrewCoffee,
-    setGameMode,
-  ]);
+  }, [gameState.gameMode, handleBrewCoffee, justBrewed, setGameMode]);
 
   const handleConfirm = () => {
     playSound(confirmSFX);
@@ -84,6 +82,14 @@ const BottomUI = () => {
   };
 
   useEffect(() => {
+    // complete the sale if conditions are correct
+    if (justBrewed) {
+      if (checkOrderComplete()) completeSale();
+      setTimeout(() => {
+        setJustBrewed(false);
+      }, 0);
+    }
+
     const handleKeyPress = (key: string) => {
       switch (key) {
         case keybinds.coffeeshop.enter:
@@ -111,7 +117,7 @@ const BottomUI = () => {
       inputDispatcher.unsubscribe("confirm", handleKeyPress);
       inputDispatcher.unsubscribe("cancel", handleKeyPress);
     };
-  }, []);
+  }, [checkOrderComplete, completeSale, justBrewed]);
 
   return (
     <div className="bottom-ui">

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { GameContext, useOrder } from "../../../../../context/game/GameContext";
 import { OrderItem } from "../../../game/coffeeshop.types";
 

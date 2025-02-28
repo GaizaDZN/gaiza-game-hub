@@ -64,7 +64,6 @@ interface OrderState {
   currentOrder: Order | undefined;
   prevOrderState: PrevOrderState;
   orderSuccess: boolean;
-  checkList: Map<keyof CoffeeState, number>;
   orderSize: number;
 }
 
@@ -112,7 +111,6 @@ export class Game {
         currentOrder: undefined,
         orderSuccess: false,
         prevOrderState: PrevOrderState.none,
-        checkList: new Map(),
         orderSize: 0,
       },
       coffeeState: {
@@ -121,6 +119,7 @@ export class Game {
         cappuccino: 0,
         americano: 0,
         black: 0,
+        total: 0,
       },
       customerState: {
         currentCustomer: undefined,
@@ -213,7 +212,6 @@ export class Game {
           currentOrder: undefined,
           orderSuccess: false,
           prevOrderState: PrevOrderState.none,
-          checkList: new Map(),
           orderSize: 0,
         },
         coffeeState: {
@@ -222,6 +220,7 @@ export class Game {
           cappuccino: 0,
           americano: 0,
           black: 0,
+          total: 0,
         },
         customerState: {
           currentCustomer: undefined,
@@ -367,11 +366,17 @@ export class Game {
           },
           orderState: {
             ...state.orderState,
-            checkList: this.updateChecklist(coffeeType),
           },
         };
       }
 
+      // update coffeeState
+      const newCoffeeState = {
+        ...state.coffeeState,
+        [coffeeType]: (state.coffeeState[coffeeType] ?? 0) + 1,
+        total: state.coffeeState.total + 1,
+      };
+      // update terminal
       const brewMsg = "Beverage Module: ENGAGED";
       const brewMsg2 = `Brewing ${coffeeType}...`;
       this.addToTerminal(
@@ -380,6 +385,7 @@ export class Game {
         TerminalLine.system
       );
 
+      const newOrderState = state.orderState;
       // set order item as complete
       const orderItems = state.customerState.currentCustomer
         ?.getOrder()
@@ -391,24 +397,23 @@ export class Game {
             !orderItems[i].getComplete()
           ) {
             orderItems[i].setComplete(true);
+            newOrderState.currentOrder?.incrementItemsComplete();
             break;
           }
         }
       }
-      const newOrderState = state.orderState;
+
       if (orderItems) newOrderState.currentOrder?.setItems(orderItems);
 
       // PLAY SFX
       onSuccess();
 
+      // default return if addition to order does not match the length of orderItems
       return {
         ...state,
         resources: newResources,
         activeBars: { beans: 0, water: 0, milk: 0, sugar: 0 },
-        coffeeState: {
-          ...state.coffeeState,
-          [coffeeType]: (state.coffeeState[coffeeType] ?? 0) + 1,
-        },
+        coffeeState: newCoffeeState,
         terminalLog: {
           ...state.terminalLog,
           content: newTerminalContent,
@@ -480,7 +485,6 @@ export class Game {
             orderState: {
               ...state.orderState,
               currentOrder: firstCustomer.getOrder(),
-              checkList: this.populateChecklist(firstCustomer),
               orderSize: this.getOrderSize(firstCustomer),
             },
             messageLog: {
@@ -640,7 +644,6 @@ export class Game {
           prevOrderState: orderSuccess
             ? PrevOrderState.success
             : PrevOrderState.fail,
-          checkList: this.populateChecklist(nextCustomer),
           orderSize: this.getOrderSize(nextCustomer),
         },
         coffeeState: {
@@ -649,6 +652,7 @@ export class Game {
           cappuccino: 0,
           americano: 0,
           black: 0,
+          total: 0,
         },
         textState: {
           ...state.textState,
@@ -890,46 +894,11 @@ export class Game {
     }
   }
 
-  private populateChecklist(
-    customer: Customer | undefined
-  ): Map<keyof CoffeeState, number> {
-    const newChecklist = new Map();
-    if (!customer) return newChecklist;
-
-    const drinks = customer.getOrder()?.getDrinks() ?? {};
-
-    for (const [drink] of drinks.entries()) {
-      const coffeeType = drink as keyof CoffeeState;
-      const currentCount = newChecklist.get(coffeeType) ?? 0;
-      newChecklist.set(coffeeType, currentCount + 1);
-    }
-
-    return newChecklist;
-  }
-
-  private updateChecklist(
-    coffeeType: keyof CoffeeState | undefined
-  ): Map<keyof CoffeeState, number> {
-    const newChecklist = new Map(this.getOrder().checkList);
-
-    if (!coffeeType) return newChecklist;
-
-    // increment the coffee type by 1
-    if (newChecklist.has(coffeeType)) {
-      const coffeeNum = newChecklist.get(coffeeType) ?? 0;
-      newChecklist.set(coffeeType, coffeeNum + 1);
-    }
-    return newChecklist;
-  }
-
   // determine the size of the current order
   private getOrderSize(customer: Customer | undefined): number {
     if (!customer) return 0;
-    const order = customer.getOrder();
-    const drinks = order?.getDrinks(); //Map<string, Coffee>
-    if (!drinks) return 0;
-
-    return drinks.size;
+    const order = customer.getOrder().getItems();
+    return order.length;
   }
 }
 
