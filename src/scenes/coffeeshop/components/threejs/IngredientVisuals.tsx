@@ -3,10 +3,12 @@ import Ingredients from "./Ingredients";
 
 const IngredientVisuals: React.FC = () => {
   const activeBars = useActiveBars();
-  const posX = -3.2;
+  const posX = -3.3;
   const posY = -2;
   const posZ = 0;
-  const distMod = 1;
+  const size = 0.5;
+  const radius = 0.25;
+  const distMod = 0.7;
   const calcDiff = (index: number) => {
     return posX + index * distMod;
   };
@@ -18,6 +20,8 @@ const IngredientVisuals: React.FC = () => {
           iName="beans"
           count={activeBars.beans}
           position={[posX, posY, posZ]}
+          size={size}
+          radius={radius}
         />
       )}
 
@@ -26,6 +30,8 @@ const IngredientVisuals: React.FC = () => {
           iName="water"
           count={activeBars.water}
           position={[calcDiff(1), posY, posZ]}
+          size={size}
+          radius={radius}
         />
       )}
 
@@ -34,6 +40,8 @@ const IngredientVisuals: React.FC = () => {
           iName="milk"
           count={activeBars.milk}
           position={[calcDiff(2), posY, posZ]}
+          size={size}
+          radius={radius}
         />
       )}
 
@@ -42,6 +50,8 @@ const IngredientVisuals: React.FC = () => {
           iName="sugar"
           count={activeBars.sugar}
           position={[calcDiff(3), posY, posZ]}
+          size={size}
+          radius={radius}
         />
       )}
     </>

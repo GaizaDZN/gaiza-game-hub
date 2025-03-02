@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-type InputEvent = "keyPress" | "confirm" | "cancel";
+type InputEvent = "keyPress" | "mousePress" | "mouseUp" | "confirm" | "cancel";
 
 class InputDispatcher {
   private listeners: { [key in InputEvent]?: ((e: any) => void)[] } = {};

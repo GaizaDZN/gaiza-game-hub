@@ -10,21 +10,22 @@ interface IngredientProps {
   iName: keyof ResourceState;
   count: number;
   position?: [number, number, number]; // Optional position prop with default
+  size: number;
+  radius: number;
 }
 
 const Ingredients: React.FC<IngredientProps> = ({
   iName,
   count,
   position = [0, 0, 0],
+  size = 0.7,
+  radius = 0.3,
 }) => {
   const meshRef = useRef<THREE.InstancedMesh>(null);
-  const axisHelperRef = useRef<THREE.AxesHelper>(null);
+  // const axisHelperRef = useRef<THREE.AxesHelper>(null);
   const color = ingredientColor(iName);
   const [visible, setVisible] = useState(false);
   const [prevCount, setPrevCount] = useState(count);
-
-  const size = 0.7;
-  const radius = 0.3;
 
   const tempObject = useMemo(() => new THREE.Object3D(), []);
   const rotations = useMemo(

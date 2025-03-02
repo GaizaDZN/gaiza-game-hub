@@ -9,13 +9,14 @@ export const InputProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const { gameState } = useContext(GameContext);
   const pressedKeys = useRef<Set<string>>(new Set());
+  const pressedMouseButtons = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     if (gameState.gameMode !== GameMode.init) {
+      // Key handlers
       const keyDownHandler = (e: KeyboardEvent) => {
         if (Object.values(keybinds.coffeeshop).includes(e.key)) {
           e.preventDefault();
-
           // console.log("key pressed: ", e.key);
           if (!pressedKeys.current.has(e.key)) {
             pressedKeys.current.add(e.key);
@@ -39,12 +40,32 @@ export const InputProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       };
 
+      // Mouse handlers
+      const mouseDownHandler = (e: MouseEvent) => {
+        if (!pressedMouseButtons.current.has(e.button)) {
+          pressedMouseButtons.current.add(e.button);
+          inputDispatcher.dispatch("mousePress", e.button);
+        }
+      };
+
+      const mouseUpHandler = (e: MouseEvent) => {
+        if (pressedMouseButtons.current.has(e.button)) {
+          e.preventDefault();
+          pressedMouseButtons.current.delete(e.button);
+          inputDispatcher.dispatch("mouseUp", e.button);
+        }
+      };
+
+      // Event listeners
       document.addEventListener("keydown", keyDownHandler);
       document.addEventListener("keyup", keyUpHandler);
-
+      document.addEventListener("mousedown", mouseDownHandler);
+      document.addEventListener("mouseup", mouseUpHandler);
       return () => {
         document.removeEventListener("keydown", keyDownHandler);
         document.removeEventListener("keyup", keyUpHandler);
+        document.removeEventListener("mousedown", mouseDownHandler);
+        document.removeEventListener("mouseup", mouseUpHandler);
       };
     }
   }, [gameState.gameMode]);

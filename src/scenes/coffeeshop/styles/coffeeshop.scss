@@ -83,7 +83,7 @@
 
 .coffee-ui-title:before {
   content: "";
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAG0lEQVQYV2P8//+/FCMj4zMGJMCIzIGxKRQEAJgPBAbJqUVTAAAAAElFTkSuQmCC);
+  background-image: url("/src/assets/img/dot.png");
   opacity: 0.8;
   position: absolute;
   width: 100%;
@@ -114,7 +114,7 @@
 }
 .coffee-ui-buttons::before {
   content: "";
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAG0lEQVQYV2P8//+/FCMj4zMGJMCIzIGxKRQEAJgPBAbJqUVTAAAAAElFTkSuQmCC);
+  background-image: url("/src/assets/img/dot.png");
   opacity: 0.8;
   position: absolute;
   width: 100%;
@@ -136,7 +136,7 @@
 
 .coffee-ui-buttons .top-ui:before {
   content: "";
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAG0lEQVQYV2P8//+/FCMj4zMGJMCIzIGxKRQEAJgPBAbJqUVTAAAAAElFTkSuQmCC);
+  background-image: url("/src/assets/img/dot.png");
   opacity: 0.8;
   position: absolute;
   width: 100%;
@@ -730,7 +730,7 @@
 
 .textContainer::before {
   content: "";
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAG0lEQVQYV2P8//+/FCMj4zMGJMCIzIGxKRQEAJgPBAbJqUVTAAAAAElFTkSuQmCC);
+  background-image: url("/src/assets/img/dot.png");
   position: absolute;
   width: 100%;
   height: 100%;
@@ -838,7 +838,7 @@
 
 .tool-tip-bg:after {
   content: "";
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAG0lEQVQYV2P8//+/FCMj4zMGJMCIzIGxKRQEAJgPBAbJqUVTAAAAAElFTkSuQmCC);
+  background-image: url("/src/assets/img/dot.png");
   opacity: 0.8;
   position: absolute;
   width: 100%;

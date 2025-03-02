@@ -1,24 +1,20 @@
 import { useContext } from "react";
 import { ResourceState } from "../../../game/game";
 import { GameContext } from "../../../../../context/game/GameContext";
+import { resourceCost } from "../../../game/coffeeshop.types";
 
 interface StoreItemProps {
   quantity: number;
-  price?: number;
   itemName: keyof ResourceState;
 }
 
-const StoreItem: React.FC<StoreItemProps> = ({
-  itemName,
-  price = 1,
-  quantity,
-}) => {
+const StoreItem: React.FC<StoreItemProps> = ({ itemName, quantity }) => {
   const capitalized = itemName.charAt(0).toUpperCase() + itemName.slice(1);
   const { incrementStoreItem } = useContext(GameContext);
-
   const handleItemClick = (item: keyof ResourceState) => {
     incrementStoreItem(item);
   };
+  const itemPrice = resourceCost[itemName];
 
   return (
     <li className="store__item" onClick={() => handleItemClick(itemName)}>
@@ -26,7 +22,7 @@ const StoreItem: React.FC<StoreItemProps> = ({
         <span>{capitalized}</span>
       </div>
       <div className="store__item-price">
-        <span>{price}G</span>
+        <span>{itemPrice}G</span>
       </div>
       <div className="store__item-quantity">
         <span>{quantity}</span>
