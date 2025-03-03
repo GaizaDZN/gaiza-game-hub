@@ -44,6 +44,10 @@
   animation: fade-in 0.8s forwards;
 }
 
+.canvas-container-coffee {
+  user-select: none;
+}
+
 .coffee-ui-title {
   grid-area: 1 / 1 / 2 / 2;
   background-color: var(--coffeeUI);
@@ -131,7 +135,6 @@
   background-color: var(--coffeeUI);
   box-shadow: 1px 9px 18px -2px rgba(0, 0, 0, 0.521);
   position: relative;
-  user-select: none;
 }
 
 .coffee-ui-buttons .top-ui:before {
@@ -264,7 +267,6 @@
   padding: 0;
   overflow-y: hidden;
   overflow-x: hidden;
-  user-select: text;
 }
 .terminal .lines-container {
   width: 100%;
@@ -312,7 +314,6 @@
 .brew-button {
   position: absolute;
   right: -20px;
-  user-select: none;
 }
 
 .brew-btn-prompt .btn-body,
@@ -353,7 +354,6 @@
 
 .small-buttons {
   display: flex;
-  user-select: none;
 }
 
 .small-buttons .btn {
@@ -460,7 +460,6 @@
   grid-template-columns: 360px 1fr;
   grid-template-rows: auto 1fr 1fr;
   position: relative;
-  user-select: none;
 }
 
 .coffee-ui-info .top-info {

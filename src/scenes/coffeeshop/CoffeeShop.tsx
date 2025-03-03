@@ -1,5 +1,5 @@
 import { SceneProps } from "../common";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import IngredientVisuals from "./components/threejs/IngredientVisuals";
 import Cursor from "./components/threejs/Cursor";
 import { useThree } from "@react-three/fiber";
@@ -11,7 +11,6 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
   gui.hide();
   const [isMouseOnCanvas, setIsMouseOnCanvas] = useState(false);
   const [mouseHeld, setMouseHeld] = useState(false);
-  const mousePosition = useRef({ x: 0, y: 0 });
   const { gl, size } = useThree();
 
   const handleMouseDown = (mouseButton: number) => {
@@ -31,6 +30,7 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
 
     const handleMouseLeave = () => {
       setIsMouseOnCanvas(false);
+      setMouseHeld(false);
       canvas.style.cursor = "default";
     };
 
