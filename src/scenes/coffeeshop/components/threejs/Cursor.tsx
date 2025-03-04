@@ -3,7 +3,46 @@ import React, { useRef, useState, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Mesh } from "three";
-import { CursorBullets } from "./Bullets"; // Make sure path is correct
+import Bullets, { BulletsHandle } from "./bullet/Bullets";
+
+// Define CursorBullets component - this is a persistent component
+// that manages bullet rendering regardless of firing state
+interface CursorBulletProps {
+  cursorPosition: THREE.Vector3;
+  count?: number;
+  bulletColor?: string;
+  isActive: boolean;
+  spawnTrigger: number; // Add a trigger to force bullet spawning
+}
+
+const CursorBullets: React.FC<CursorBulletProps> = ({
+  cursorPosition,
+  count = 10,
+  bulletColor = "yellow",
+  isActive,
+  spawnTrigger,
+}) => {
+  // Correctly type the ref
+  const bulletsRef = useRef<BulletsHandle | null>(null);
+
+  useEffect(() => {
+    if (isActive && spawnTrigger > 0) {
+      bulletsRef.current?.spawnBullet();
+    }
+  }, [isActive, spawnTrigger]);
+
+  return (
+    <Bullets
+      ref={bulletsRef}
+      origin={cursorPosition}
+      target={new THREE.Vector3(0, 0, 0)}
+      count={count}
+      bulletSize={0.1}
+      bulletColor={bulletColor}
+      maxLifetime={2000}
+    />
+  );
+};
 
 interface cursorProps {
   mouseHeld: boolean;
@@ -19,13 +58,13 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   // Bullet spawning state
   const [isFiring, setIsFiring] = useState(false);
   const lastBulletTime = useRef(0);
-  const bulletInterval = useRef(300); // Milliseconds between bullet spawns - increased for debugging
+  const bulletInterval = useRef(200); // Milliseconds between bullet spawns
 
   // Create a reference for cursor position that doesn't change with renders
   const cursorPosition = useRef(new THREE.Vector3());
 
-  // Create a state to force re-renders when we want to spawn a new bullet
-  const [bulletKey, setBulletKey] = useState(0);
+  // Create a counter to trigger new bullet spawns
+  const [bulletSpawnTrigger, setBulletSpawnTrigger] = useState(0);
 
   const isWithinTolerance = (
     pos1: THREE.Vector3,
@@ -72,7 +111,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
         worldX = Math.max(-maxX, Math.min(worldX, maxX));
         worldY = Math.max(-maxY, Math.min(worldY, maxY));
 
-        // Update the target position but only if mouse is held
+        // Update the target position
         if (mouseHeld) {
           targetPosition.current.set(worldX, worldY, 0);
         }
@@ -107,8 +146,9 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
               cursorPosition.current.clone()
             );
 
-            // Force a re-render of the CursorBullets component to spawn a new bullet
-            setBulletKey((prev) => prev + 1);
+            // Increment the spawn trigger to cause a new bullet to spawn
+            // without affecting existing bullets
+            setBulletSpawnTrigger((prev) => prev + 1);
           }
         }
       }
@@ -122,13 +162,13 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
         <coneGeometry args={[0.2, 0.5, 6]} />
       </mesh>
 
-      {/* The key prop forces re-creation of the component */}
+      {/* Persistent bullet component */}
       <CursorBullets
-        key={bulletKey}
         cursorPosition={cursorPosition.current}
-        count={20} // Increased pool size
+        count={20}
         bulletColor="yellow"
         isActive={isFiring}
+        spawnTrigger={bulletSpawnTrigger} // Pass the trigger to force spawning
       />
     </>
   );
