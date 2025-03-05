@@ -70,13 +70,13 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
           }));
 
         initializedRef.current = true;
-        console.log(`Initialized ${count} bullets in pool`);
       }
     }, [bulletSize, count, origin, velocity]);
 
     // Function to spawn a bullet
     const spawnBullet = useCallback(() => {
       const inactiveBullet = bullets.current.find((b) => !b.active);
+      console.log(inactiveBullet);
       if (inactiveBullet) {
         const direction = new THREE.Vector3()
           .subVectors(target, origin)
@@ -87,14 +87,8 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         inactiveBullet.active = true;
         inactiveBullet.createdAt = Date.now();
 
-        console.log("Bullet spawned", {
-          from: origin.clone(),
-          velocity: inactiveBullet.velocity.clone(),
-        });
-
         return true;
       }
-      console.log("No inactive bullets available");
       return false;
     }, [origin, target]);
 
@@ -103,33 +97,48 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       spawnBullet,
     }));
 
+    const bulletOffScreen = (
+      bullet: Bullet,
+      maxX: number,
+      maxY: number
+    ): boolean => {
+      return (
+        bullet.position.x < -maxX ||
+        bullet.position.x > maxX ||
+        bullet.position.y < -maxY ||
+        bullet.position.y > maxY
+      );
+    };
+
+    const bulletExpired = (bullet: Bullet): boolean | 0 | undefined => {
+      const currentTime = Date.now();
+      return bullet.createdAt && currentTime - bullet.createdAt > maxLifetime;
+    };
+
     useFrame(() => {
       if (!meshRef.current) return;
       const maxX = viewport.width / 2;
       const maxY = viewport.height / 2;
-      const currentTime = Date.now();
 
+      const dummy = new THREE.Object3D();
       bullets.current.forEach((bullet, index) => {
-        if (!bullet.active) return;
+        if (!bullet.active) {
+          // Skip rendering inactive bullets by setting their matrix to identity
+          dummy.position.set(0, 0, 0); // Move off-screen
+          dummy.scale.set(0, 0, 0); // Scale to zero to make it invisible
+          dummy.updateMatrix();
+          meshRef.current?.setMatrixAt(index, dummy.matrix);
+          return;
+        }
 
         bullet.position.add(bullet.velocity);
 
-        const isOffScreen =
-          bullet.position.x < -maxX ||
-          bullet.position.x > maxX ||
-          bullet.position.y < -maxY ||
-          bullet.position.y > maxY;
-
-        const exceededLifetime =
-          bullet.createdAt && currentTime - bullet.createdAt > maxLifetime;
-
-        if (isOffScreen || exceededLifetime) {
+        // Deactivate bullet
+        if (bulletOffScreen(bullet, maxX, maxY) || bulletExpired(bullet)) {
           bullet.active = false;
-          bullet.position.x = 1000;
-          bullet.position.y = 1000;
+          return;
         }
 
-        const dummy = new THREE.Object3D();
         dummy.position.copy(bullet.position);
         dummy.scale.set(
           bullet.bulletSize,

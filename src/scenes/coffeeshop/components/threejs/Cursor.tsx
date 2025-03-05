@@ -37,7 +37,7 @@ const CursorBullets: React.FC<CursorBulletProps> = ({
       origin={cursorPosition}
       target={new THREE.Vector3(0, 0, 0)}
       count={count}
-      bulletSize={0.1}
+      bulletSize={0.15}
       bulletColor={bulletColor}
       maxLifetime={2000}
     />
@@ -66,6 +66,13 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   // Create a counter to trigger new bullet spawns
   const [bulletSpawnTrigger, setBulletSpawnTrigger] = useState(0);
 
+  // Define the outer movement bounds
+  const maxX = (viewport.width / 2) * 0.9;
+  const maxY = (viewport.height / 2) * 0.9;
+
+  // Inner dead zone radius
+  const minRadius = (Math.min(viewport.width, viewport.height) / 2) * 0.35;
+
   const isWithinTolerance = (
     pos1: THREE.Vector3,
     pos2: THREE.Vector3,
@@ -74,16 +81,23 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
     return pos1.distanceTo(pos2) <= tolerance;
   };
 
+  const fireRateElapsed = (
+    currentTime: number,
+    lastBulletTime: number,
+    bulletInterval: number
+  ): boolean => {
+    return currentTime - lastBulletTime > bulletInterval;
+  };
+
   // Effect to control bullet spawning based on mouse state
   useEffect(() => {
-    if (mouseHeld) {
+    if (mouseHeld && isMouseOnCanvas) {
       setIsFiring(true);
-      console.log("Mouse held - firing enabled");
     } else {
       setIsFiring(false);
-      console.log("Mouse released - firing disabled");
+      setBulletSpawnTrigger(0);
     }
-  }, [mouseHeld]);
+  }, [mouseHeld, isMouseOnCanvas]);
 
   useFrame(({ clock }) => {
     if (cursorRef.current) {
@@ -94,7 +108,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
         tolerance
       );
 
-      if ((isMouseOnCanvas && mouseHeld) || !cursorOnTarget) {
+      if (isMouseOnCanvas || !cursorOnTarget) {
         const normalizedX = pointer.x;
         const normalizedY = pointer.y;
         const currentPosition = cursorRef.current.position;
@@ -103,18 +117,22 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
         let worldX = (normalizedX * viewport.width) / 2;
         let worldY = (normalizedY * viewport.height) / 2;
 
-        // Calculate 90% of the canvas bounds
-        const maxX = (viewport.width / 2) * 0.9;
-        const maxY = (viewport.height / 2) * 0.9;
+        // Compute distance from the center
+        const distanceFromCenter = Math.sqrt(worldX ** 2 + worldY ** 2);
+
+        // If the cursor is inside the dead zone, push it outward
+        if (distanceFromCenter < minRadius) {
+          const scale = minRadius / distanceFromCenter;
+          worldX *= scale;
+          worldY *= scale;
+        }
 
         // Always clamp to ensure the cursor stays within bounds
         worldX = Math.max(-maxX, Math.min(worldX, maxX));
         worldY = Math.max(-maxY, Math.min(worldY, maxY));
 
         // Update the target position
-        if (mouseHeld) {
-          targetPosition.current.set(worldX, worldY, 0);
-        }
+        targetPosition.current.set(worldX, worldY, 0);
         const distanceToTarget = currentPosition.distanceTo(
           targetPosition.current
         );
@@ -137,17 +155,15 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
         // Handle bullet spawning when mouse is held
         if (mouseHeld && isFiring) {
           const currentTime = clock.getElapsedTime() * 1000; // Convert to milliseconds
-
           // Check if enough time has passed since last bullet
-          if (currentTime - lastBulletTime.current > bulletInterval.current) {
+          if (
+            fireRateElapsed(
+              currentTime,
+              lastBulletTime.current,
+              bulletInterval.current
+            )
+          ) {
             lastBulletTime.current = currentTime;
-            console.log(
-              "Time to spawn a bullet!",
-              cursorPosition.current.clone()
-            );
-
-            // Increment the spawn trigger to cause a new bullet to spawn
-            // without affecting existing bullets
             setBulletSpawnTrigger((prev) => prev + 1);
           }
         }
@@ -158,7 +174,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   return (
     <>
       <mesh ref={cursorRef} position={[0, 0, 0]}>
-        <meshBasicMaterial color={mouseHeld ? "#ff9900" : "#e2a115"} />
+        <meshBasicMaterial color={mouseHeld ? "#f7b80c" : "#dd8b0f"} />
         <coneGeometry args={[0.2, 0.5, 6]} />
       </mesh>
 
@@ -168,7 +184,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
         count={20}
         bulletColor="yellow"
         isActive={isFiring}
-        spawnTrigger={bulletSpawnTrigger} // Pass the trigger to force spawning
+        spawnTrigger={bulletSpawnTrigger}
       />
     </>
   );
