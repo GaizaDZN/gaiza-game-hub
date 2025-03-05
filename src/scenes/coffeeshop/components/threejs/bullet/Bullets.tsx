@@ -7,6 +7,8 @@ import {
 } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { coreBuffer } from "../Core";
+import { collisionEventDispatcher } from "../../../../../context/events/eventListener";
 
 // Bullets.tsx
 
@@ -76,7 +78,6 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
     // Function to spawn a bullet
     const spawnBullet = useCallback(() => {
       const inactiveBullet = bullets.current.find((b) => !b.active);
-      console.log(inactiveBullet);
       if (inactiveBullet) {
         const direction = new THREE.Vector3()
           .subVectors(target, origin)
@@ -115,6 +116,10 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       return bullet.createdAt && currentTime - bullet.createdAt > maxLifetime;
     };
 
+    // Dead zone within coreBuffer - if a bullet enters this position it hits the core.
+    const coreRadius =
+      (Math.min(viewport.width, viewport.height) / 2) * coreBuffer;
+
     useFrame(() => {
       if (!meshRef.current) return;
       const maxX = viewport.width / 2;
@@ -136,6 +141,19 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         // Deactivate bullet
         if (bulletOffScreen(bullet, maxX, maxY) || bulletExpired(bullet)) {
           bullet.active = false;
+          return;
+        }
+
+        // Handle collisions
+
+        // Compute distance from the core
+        const distanceFromCore = Math.sqrt(
+          bullet.position.x ** 2 + bullet.position.y ** 2
+        );
+
+        if (distanceFromCore < coreRadius) {
+          bullet.active = false;
+          collisionEventDispatcher.dispatch("coreHit");
           return;
         }
 

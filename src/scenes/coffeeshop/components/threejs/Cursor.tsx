@@ -4,6 +4,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Mesh } from "three";
 import Bullets, { BulletsHandle } from "./bullet/Bullets";
+import { coreBuffer } from "./Core";
 
 // Define CursorBullets component - this is a persistent component
 // that manages bullet rendering regardless of firing state
@@ -44,6 +45,7 @@ const CursorBullets: React.FC<CursorBulletProps> = ({
   );
 };
 
+const cursorBuffer = 0.18;
 interface cursorProps {
   mouseHeld: boolean;
   isMouseOnCanvas: boolean;
@@ -71,7 +73,9 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   const maxY = (viewport.height / 2) * 0.9;
 
   // Inner dead zone radius
-  const minRadius = (Math.min(viewport.width, viewport.height) / 2) * 0.35;
+  const minRadius =
+    (Math.min(viewport.width, viewport.height) / 2) *
+    (coreBuffer + cursorBuffer);
 
   const isWithinTolerance = (
     pos1: THREE.Vector3,

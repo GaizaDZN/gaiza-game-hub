@@ -97,3 +97,11 @@ export function stringToLines(str: string, charsPerLine: number): string[] {
 
   return lines;
 }
+
+export function intervalElapsed(
+  currentTime: number,
+  lastTime: number,
+  intervalTime: number
+): boolean {
+  return currentTime - lastTime > intervalTime;
+}
