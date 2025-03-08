@@ -8,4 +8,8 @@ export const commonValues = {
     postEffects: 2,
     background: -8,
   },
+  camera: {
+    zPosition: 5,
+    far: 200,
+  },
 };

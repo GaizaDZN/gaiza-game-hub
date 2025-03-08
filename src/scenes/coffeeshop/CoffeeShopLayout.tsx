@@ -11,6 +11,7 @@ import { GameMode } from "./game/game";
 import Overlay from "./components/UI/overlay/Overlay";
 import "./styles/coffeeshop.scss";
 import { OrthographicCamera, PerspectiveCamera } from "@react-three/drei";
+import { commonValues } from "./components/threejs/common";
 
 const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
   currentScene,
@@ -62,9 +63,9 @@ const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
             75, // fov (field of view) - default: 75
             window.innerWidth / window.innerHeight, // aspect - default: window.innerWidth / window.innerHeight
             0.1, // near - default: 0.1
-            1000, // far - default: 1000
+            commonValues.camera.far, // far - default: 1000
           ]}
-          position={[0, 0, 5]}
+          position={[0, 0, commonValues.camera.zPosition]}
         />
       </Canvas>
       <Title />

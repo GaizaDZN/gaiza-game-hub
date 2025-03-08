@@ -212,7 +212,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   return (
     <>
       <mesh ref={cursorRef} position={[0, 0, 0]}>
-        <meshBasicMaterial color={mouseHeld ? "#f7b80c" : "#dd8b0f"} />
+        <meshBasicMaterial color={mouseHeld ? "#f7b80c" : "#0fdd0f"} />
         <coneGeometry args={[0.1, 0.3, 6]} />
       </mesh>
 
