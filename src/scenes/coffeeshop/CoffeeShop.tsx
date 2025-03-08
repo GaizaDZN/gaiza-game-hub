@@ -5,6 +5,7 @@ import Cursor from "./components/threejs/Cursor";
 import { useThree } from "@react-three/fiber";
 import { inputDispatcher } from "../../context/input/InputDispatcher";
 import Core from "./components/threejs/Core";
+import Tunnel from "./components/aesthetics/Tunnel";
 
 const cursor = "/src/assets/img/cursor.png";
 
@@ -53,6 +54,7 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
       <IngredientVisuals />
       <Cursor mouseHeld={mouseHeld} isMouseOnCanvas={isMouseOnCanvas} />
       <Core />
+      <Tunnel />
     </>
   );
 };

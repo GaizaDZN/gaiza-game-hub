@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { Mesh } from "three";
 import Bullets, { BulletsHandle } from "./bullet/Bullets";
 import { coreBuffer } from "./Core";
+import { commonValues } from "./common";
 
 // Define CursorBullets component - this is a persistent component
 // that manages bullet rendering regardless of firing state
@@ -46,6 +47,8 @@ const CursorBullets: React.FC<CursorBulletProps> = ({
 };
 
 const cursorBuffer = 0.18;
+const canvasBuffer = 0.6; // cursor distance from canvas edges.
+
 interface cursorProps {
   mouseHeld: boolean;
   isMouseOnCanvas: boolean;
@@ -53,7 +56,9 @@ interface cursorProps {
 
 const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   const cursorRef = useRef<Mesh>(null);
-  const targetPosition = useRef(new THREE.Vector3());
+  const targetPosition = useRef(
+    new THREE.Vector3(0, 0, commonValues.layer.game)
+  );
   const { viewport, pointer } = useThree();
   const lerpFactor = 0.07;
 
@@ -69,8 +74,8 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   const [bulletSpawnTrigger, setBulletSpawnTrigger] = useState(0);
 
   // Define the outer movement bounds
-  const maxX = (viewport.width / 2) * 0.9;
-  const maxY = (viewport.height / 2) * 0.9;
+  const maxX = (viewport.width / 2) * canvasBuffer;
+  const maxY = (viewport.height / 2) * canvasBuffer;
 
   // Inner dead zone radius
   const minRadius =
@@ -117,32 +122,55 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
         const normalizedY = pointer.y;
         const currentPosition = cursorRef.current.position;
 
-        // Convert normalized coordinates to world space
-        let worldX = (normalizedX * viewport.width) / 2;
-        let worldY = (normalizedY * viewport.height) / 2;
+        // Calculate raw world position
+        const rawWorldX = (normalizedX * viewport.width) / 2;
+        const rawWorldY = (normalizedY * viewport.height) / 2;
 
-        // Compute distance from the center
-        const distanceFromCenter = Math.sqrt(worldX ** 2 + worldY ** 2);
+        // Check distance from center using the raw coordinates
+        const distanceFromCenter = Math.sqrt(rawWorldX ** 2 + rawWorldY ** 2);
 
-        // If the cursor is inside the dead zone, push it outward
+        // Calculate scale and z-level adjustment based on distance from center
+        // These values can be tuned to get the desired effect
+        const maxDistance = Math.sqrt(maxX ** 2 + maxY ** 2);
+        const distanceRatio = distanceFromCenter / maxDistance;
+
+        // Scale: increase size as cursor moves away from center (e.g., 1.0 at center, up to 1.5 at edges)
+        const minScale = 1.0;
+        const maxScale = 1.5;
+        const scaleAdjustment =
+          minScale + (maxScale - minScale) * distanceRatio;
+
+        // Z-level: bring cursor forward as it moves toward edges
+        // Assuming commonValues.layer.game is your base z-level
+        const minZ = commonValues.layer.game;
+        const maxZ = commonValues.layer.game + 1; // Adjust value as needed
+        const zAdjustment = minZ + (maxZ - minZ) * distanceRatio;
+
+        // Calculate final world coordinates with dead zone enforcement
+        let worldX, worldY;
+
         if (distanceFromCenter < minRadius) {
-          const scale = minRadius / distanceFromCenter;
-          worldX *= scale;
-          worldY *= scale;
+          // If would be in dead zone, project to the edge of the dead zone
+          const angle = Math.atan2(rawWorldY, rawWorldX);
+          worldX = minRadius * Math.cos(angle);
+          worldY = minRadius * Math.sin(angle);
+        } else {
+          // Otherwise use the raw position
+          worldX = rawWorldX;
+          worldY = rawWorldY;
         }
 
-        // Always clamp to ensure the cursor stays within bounds
+        // Apply max bounds
         worldX = Math.max(-maxX, Math.min(worldX, maxX));
         worldY = Math.max(-maxY, Math.min(worldY, maxY));
 
-        // Update the target position
-        targetPosition.current.set(worldX, worldY, 0);
+        // Update target position with adjusted z-level
+        targetPosition.current.set(worldX, worldY, zAdjustment);
         const distanceToTarget = currentPosition.distanceTo(
           targetPosition.current
         );
 
-        // Lerp the current position toward the target
-        // Scale lerp factor with distance to targetPosition (faster when further away)
+        // Lerp position toward target
         const adjustedLerp = Math.min(
           (1 - Math.exp(-distanceToTarget)) * lerpFactor + 0.1,
           lerpFactor
@@ -152,14 +180,20 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
         // Store current position for bullets
         cursorPosition.current.copy(currentPosition);
 
+        // Apply scale based on distance
+        cursorRef.current.scale.set(
+          scaleAdjustment,
+          scaleAdjustment,
+          scaleAdjustment
+        );
+
         // Ensure cursor always looks toward the center
-        cursorRef.current.lookAt(0, 0, 0);
+        cursorRef.current.lookAt(0, 0, commonValues.layer.game);
         cursorRef.current.rotateX(Math.PI / 2);
 
-        // Handle bullet spawning when mouse is held
+        // Handle bullet spawning
         if (mouseHeld && isFiring) {
-          const currentTime = clock.getElapsedTime() * 1000; // Convert to milliseconds
-          // Check if enough time has passed since last bullet
+          const currentTime = clock.getElapsedTime() * 1000;
           if (
             fireRateElapsed(
               currentTime,
@@ -179,7 +213,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
     <>
       <mesh ref={cursorRef} position={[0, 0, 0]}>
         <meshBasicMaterial color={mouseHeld ? "#f7b80c" : "#dd8b0f"} />
-        <coneGeometry args={[0.2, 0.5, 6]} />
+        <coneGeometry args={[0.1, 0.3, 6]} />
       </mesh>
 
       {/* Persistent bullet component */}

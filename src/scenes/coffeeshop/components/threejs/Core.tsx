@@ -1,8 +1,7 @@
 import { useFrame } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
-import { Mesh } from "three";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Mesh, Vector3 } from "three";
 import { collisionEventDispatcher } from "../../../../context/events/eventListener";
-import { intervalElapsed } from "../../../../helpers/helpers";
 import { commonValues } from "./common";
 
 const coreStates = {
@@ -23,7 +22,7 @@ const Core: React.FC = () => {
   const hitTimeout = useRef<NodeJS.Timeout | null>(null);
   const coreHitInterval = commonValues.hit.interval;
 
-  const handleCoreHit = () => {
+  const handleCoreHit = useCallback(() => {
     setCoreState(coreStates.hit);
     if (hitTimeout.current) {
       clearTimeout(hitTimeout.current); // Clear any existing timeout
@@ -32,7 +31,7 @@ const Core: React.FC = () => {
       setCoreState(coreStates.idle);
       hitTimeout.current = null;
     }, coreHitInterval);
-  };
+  }, [coreHitInterval]);
 
   useEffect(() => {
     collisionEventDispatcher.subscribe("coreHit", handleCoreHit);
@@ -42,18 +41,17 @@ const Core: React.FC = () => {
         clearTimeout(hitTimeout.current);
       }
     };
-  }, []);
+  }, [handleCoreHit]);
 
   useFrame(() => {
-    if (coreRef.current) {
-      const core = coreRef.current;
-      core.rotation.y += 0.005;
-    }
+    if (!coreRef.current) return;
+    const core = coreRef.current;
+    core.rotation.y += 0.005;
   });
 
   return (
-    <mesh ref={coreRef}>
-      <sphereGeometry args={[1, 4, 2]} />
+    <mesh ref={coreRef} position={new Vector3(0, 0, commonValues.layer.game)}>
+      <sphereGeometry args={[0.5, 4, 2]} />
       <meshBasicMaterial color={coreState.color} wireframe={true} />
     </mesh>
   );

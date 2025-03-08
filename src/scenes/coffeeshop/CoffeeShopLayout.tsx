@@ -10,7 +10,7 @@ import { GameContext } from "../../context/game/GameContext";
 import { GameMode } from "./game/game";
 import Overlay from "./components/UI/overlay/Overlay";
 import "./styles/coffeeshop.scss";
-import { OrthographicCamera } from "@react-three/drei";
+import { OrthographicCamera, PerspectiveCamera } from "@react-three/drei";
 
 const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
   currentScene,
@@ -47,13 +47,24 @@ const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
           currentView={currentView}
         />
 
-        <OrthographicCamera
+        {/* <OrthographicCamera
           makeDefault
           ref={cameraRef}
           zoom={45}
           position={[0, 0, 10]} // Camera position
           near={0.1} // Near clipping plane
           far={20} // Far clipping plane
+        /> */}
+        {/* Perspective camera required for tunnel visualisation */}
+        <PerspectiveCamera
+          makeDefault
+          args={[
+            75, // fov (field of view) - default: 75
+            window.innerWidth / window.innerHeight, // aspect - default: window.innerWidth / window.innerHeight
+            0.1, // near - default: 0.1
+            1000, // far - default: 1000
+          ]}
+          position={[0, 0, 5]}
         />
       </Canvas>
       <Title />
