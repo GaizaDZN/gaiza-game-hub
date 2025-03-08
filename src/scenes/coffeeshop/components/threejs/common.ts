@@ -4,7 +4,8 @@ export const commonValues = {
   },
   layer: {
     game: 0,
-    postEffects: 3,
+    ui: 3,
+    postEffects: 2,
     background: -8,
   },
 };

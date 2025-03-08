@@ -5,6 +5,7 @@ import { ResourceState } from "../../game/game";
 import React from "react";
 import { animated, useSpring } from "@react-spring/three";
 import { coffeeConstants } from "../../game/common";
+import { commonValues } from "./common";
 
 interface IngredientProps {
   iName: keyof ResourceState;
@@ -17,7 +18,7 @@ interface IngredientProps {
 const Ingredients: React.FC<IngredientProps> = ({
   iName,
   count,
-  position = [0, 0, 0],
+  position = [0, 0, commonValues.layer.ui],
   size = 0.7,
   radius = 0.3,
 }) => {

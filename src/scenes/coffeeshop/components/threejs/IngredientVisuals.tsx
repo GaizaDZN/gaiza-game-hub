@@ -1,14 +1,15 @@
 import { useActiveBars } from "../../../../context/game/GameContext";
+import { commonValues } from "./common";
 import Ingredients from "./Ingredients";
 
 const IngredientVisuals: React.FC = () => {
   const activeBars = useActiveBars();
-  const posX = -3.3;
-  const posY = -2;
-  const posZ = 0;
-  const size = 0.5;
-  const radius = 0.25;
-  const distMod = 0.7;
+  const posX = -1.5;
+  const posY = -0.9;
+  const posZ = commonValues.layer.ui;
+  const size = 0.15;
+  const radius = 0.12;
+  const distMod = 0.25;
   const calcDiff = (index: number) => {
     return posX + index * distMod;
   };
