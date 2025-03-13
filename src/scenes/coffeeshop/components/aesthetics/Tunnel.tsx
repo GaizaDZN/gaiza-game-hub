@@ -1,39 +1,31 @@
-import React, { useRef, useEffect, useMemo, useCallback } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+  useState,
+} from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { commonValues } from "../threejs/common";
 
-type TunnelSegment = THREE.Object3D & {
-  localDirection: number;
-  targetPosition: {
-    x: number;
-    y: number;
-    rotX: number;
-    rotY: number;
-    rotZ: number;
-  };
-  pathType: PathType;
-};
-
-// Define path types
-type PathType = "straight" | "sinusoidal" | "spiral" | "zigzag" | "eightShape";
-
 const Tunnel = () => {
   const { camera } = useThree();
   const linesRef = useRef<THREE.Group>(null);
-  const tunnelCount = 50;
+  const tunnelCount = 60;
   const width = 8;
   const height = 5;
-  const baseSpacing = tunnelCount / 6; // Base spacing value
+  const baseSpacing = tunnelCount / 8; // Base spacing value
   const tunnelSpeed = baseSpacing / 80;
   const fadeSpeed = baseSpacing / 1000;
   const initialOpacity = useRef(1);
   const globalDirection = useRef(1);
+  const [pathUpdating, setPathUpdating] = useState(true);
 
   // make this state-driven to change paths dynamically
 
   const allPathTypes: PathType[] = useMemo(
-    () => ["straight", "sinusoidal", "spiral", "zigzag", "eightShape"],
+    () => ["straight", "sinusoidal", "spiral", "zigzag"],
     []
   );
 
@@ -43,12 +35,14 @@ const Tunnel = () => {
         (type) => type !== currentPathType
       );
       const randomIndex = Math.floor(Math.random() * availablePathTypes.length);
-      return availablePathTypes[randomIndex];
+      const newPathType = availablePathTypes[randomIndex];
+      console.log("New Path:", newPathType);
+      return newPathType;
     },
     [allPathTypes]
   );
 
-  const currentPath = useRef<PathType>("straight");
+  const currentPath = useRef<PathType>("sinusoidal");
   const nextPath = useRef<PathType>(getRandomPathType(currentPath.current));
 
   // Path calculation functions - memoized for performance
@@ -66,7 +60,7 @@ const Tunnel = () => {
 
       // Sinusoidal curve (left/right)
       sinusoidal: (z: number) => {
-        const amplitude = 10;
+        const amplitude = -60; // -60 to 60 looks good at .02 frequency
         const frequency = 0.02;
         const x = amplitude * Math.sin(z * frequency);
         // Calculate rotation to face along the path tangent
@@ -87,17 +81,34 @@ const Tunnel = () => {
 
       // Spiral path
       spiral: (z: number) => {
-        const angle = z * 0.05;
-        // Spiral always has a curve
-        const curveFactor = 0.6;
+        const angle = z * 0.1; // Adjusted for smoother rotation
+        const baseCurveFactor = tunnelCount / 4;
+        const cameraPos = camera.position;
+
+        // Calculate distance from camera and blend factor
+        const distanceFromCamera = Math.abs(z - cameraPos.z);
+        const maxBlendDistance = 50; // Start blending when within this distance
+        const blendFactor =
+          1 - Math.min(distanceFromCamera / maxBlendDistance, 1);
+
+        // Reduce spiral radius as we approach the camera
+        const adjustedCurveFactor = baseCurveFactor * (1 - 0.8 * blendFactor);
+
+        // Base spiral position
+        const spiralX = Math.cos(angle) * adjustedCurveFactor;
+        const spiralY = Math.sin(angle) * adjustedCurveFactor;
+
+        // Smoothly blend towards camera position
+        const x = THREE.MathUtils.lerp(spiralX, cameraPos.x, blendFactor);
+        const y = THREE.MathUtils.lerp(spiralY, cameraPos.y, blendFactor);
 
         return {
-          x: 0,
-          y: 0,
+          x,
+          y,
           rotX: 0,
           rotY: 0,
-          rotZ: angle,
-          curveFactor,
+          rotZ: 0,
+          curveFactor: adjustedCurveFactor,
         };
       },
 
@@ -128,40 +139,8 @@ const Tunnel = () => {
           curveFactor,
         };
       },
-
-      // Figure-eight shape
-      eightShape: (z: number) => {
-        const scale = 6;
-        const frequency = 0.01;
-        const t = z * frequency;
-
-        // Parametric figure-eight
-        const x = scale * Math.sin(t * 2);
-        const y = scale * Math.sin(t) * Math.cos(t);
-
-        // Calculate rotation to face along the path
-        const dx = 2 * scale * Math.cos(t * 2) * frequency;
-        const dy =
-          scale *
-          (Math.cos(t) * Math.cos(t) - Math.sin(t) * Math.sin(t)) *
-          frequency;
-        const rotY = Math.atan2(-dx, 1); // x-axis rotation based on path tangent
-        const rotX = Math.atan2(dy, 1); // y-axis rotation based on path tangent
-
-        // Calculate curve factor based on combined rate of change in x and y
-        const curveFactor = Math.min(0.8, Math.sqrt(dx * dx + dy * dy) * 0.5);
-
-        return {
-          x,
-          y,
-          rotX,
-          rotY,
-          rotZ: 0,
-          curveFactor,
-        };
-      },
     };
-  }, [tunnelCount]);
+  }, [camera.position]);
 
   // Function to get dynamic spacing based on curve factor
   const getDynamicSpacing = useCallback(
@@ -203,8 +182,13 @@ const Tunnel = () => {
   const calculateOpacityByDistance = useMemo(() => {
     return (child: THREE.Object3D) => {
       const distanceFromCamera = child.position.distanceTo(camera.position);
-      const maxDistance = (commonValues.camera.far / baseSpacing) * 2;
+      const maxDistance =
+        (commonValues.camera.far / baseSpacing) *
+        pathConfigs[currentPath.current].maxDistanceMultiplier;
       const minDistance = 0;
+      const modifier = pathConfigs[currentPath.current].modifier;
+
+      // adjust modifier and maxDistoance for current path
 
       const opacityFactor =
         1 -
@@ -216,7 +200,7 @@ const Tunnel = () => {
           )
         );
 
-      return 0.08 + opacityFactor * 0.9;
+      return modifier + opacityFactor;
     };
   }, [camera.position, baseSpacing]);
 
@@ -231,6 +215,7 @@ const Tunnel = () => {
         const furthestZ = Math.min(
           ...linesRef.current.children.map((c) => c.position.z)
         );
+        if (i === 0) console.log("Furthest:", furthestZ);
         const furthestSegInfo = getPathPosition(furthestZ);
 
         const dynamicSpacing = getDynamicSpacing(furthestSegInfo.curveFactor);
@@ -241,7 +226,9 @@ const Tunnel = () => {
           : -1;
 
         // Assign nextPath only to newly spawned segments
-        child.pathType = nextPath.current;
+        if (pathUpdating) {
+          child.pathType = nextPath.current;
+        }
         const targetPos = getPathPosition(
           newZ,
           child.localDirection,
@@ -252,19 +239,39 @@ const Tunnel = () => {
 
         material.opacity = 0;
 
-        // Once the last segment is reset, update currentPath
-        if (i === tunnelCount - 1) {
-          currentPath.current = nextPath.current;
-          nextPath.current = getRandomPathType(currentPath.current);
+        // update segment tunnel pattern
+        if (pathUpdating) {
+          if (i === tunnelCount - 1) {
+            currentPath.current = nextPath.current;
+            nextPath.current = getRandomPathType(currentPath.current);
+          }
         }
       }
     },
-    [getDynamicSpacing, getPathPosition, getRandomPathType]
+    [getDynamicSpacing, getPathPosition, getRandomPathType, pathUpdating]
+  );
+
+  const updateChildPosition = useCallback(
+    (child: TunnelSegment) => {
+      const pathInfo = getPathPosition(
+        child.position.z,
+        child.localDirection,
+        child.pathType
+      );
+      // Apply position and rotation
+      child.position.x = pathInfo.x;
+      child.position.y = pathInfo.y;
+      child.rotation.x = pathInfo.rotX;
+      child.rotation.y = pathInfo.rotY;
+      child.rotation.z = pathInfo.rotZ;
+    },
+    [getPathPosition]
   );
 
   // Initialize tunnel segments
   useEffect(() => {
     if (!linesRef.current) return;
+
     // First, position all segments with dynamic spacing
     let currentZ = 0;
 
@@ -287,18 +294,19 @@ const Tunnel = () => {
       child.position.z = currentZ;
 
       // Apply path position and rotation
-      const pathPosition = getPathPosition(currentZ, child.localDirection);
-      child.position.x = pathPosition.x;
-      child.position.y = pathPosition.y;
-      child.rotation.x = pathPosition.rotX;
-      child.rotation.y = pathPosition.rotY;
-      child.rotation.z = pathPosition.rotZ;
+      updateChildPosition(child);
 
+      // Calculate and set the initial opacity based on the segment's position
       const material = (child as unknown as THREE.LineSegments)
         .material as THREE.LineBasicMaterial;
-      initialOpacity.current = material.opacity;
+      material.opacity = calculateOpacityByDistance(child);
     }
-  }, [getDynamicSpacing, getPathPosition]);
+  }, [
+    calculateOpacityByDistance,
+    getDynamicSpacing,
+    getPathPosition,
+    updateChildPosition,
+  ]);
 
   useFrame(() => {
     if (!linesRef.current) return;
@@ -309,23 +317,10 @@ const Tunnel = () => {
         .material as THREE.LineBasicMaterial;
 
       // Move segment forward
-      child.position.z += tunnelSpeed;
+      child.position.z += pathConfigs[currentPath.current].tunnelSpeed;
 
       try {
-        // Use the segment’s own `pathType` for smooth transition
-        const pathInfo = getPathPosition(
-          child.position.z,
-          child.localDirection,
-          child.pathType
-        );
-
-        // Apply position and rotation
-        child.position.x = pathInfo.x;
-        child.position.y = pathInfo.y;
-        child.rotation.x = pathInfo.rotX;
-        child.rotation.y = pathInfo.rotY;
-        child.rotation.z = pathInfo.rotZ;
-
+        updateChildPosition(child);
         // Reset when too close to the camera
         if (child.position.z > commonValues.camera.zPosition) {
           resetTunnelChild(linesRef, child, i, material);
@@ -359,3 +354,45 @@ const Tunnel = () => {
 };
 
 export default Tunnel;
+
+const pathConfigs = {
+  straight: {
+    modifier: 0.02,
+    maxDistanceMultiplier: 2,
+    tunnelSpeed: 0.12,
+    fadeSpeed: 0.025,
+  },
+  sinusoidal: {
+    modifier: 0.05,
+    maxDistanceMultiplier: 4,
+    tunnelSpeed: 0.12,
+    fadeSpeed: 0.025,
+  },
+  spiral: {
+    modifier: 0.02,
+    maxDistanceMultiplier: 3,
+    tunnelSpeed: 0.12,
+    fadeSpeed: 0.025,
+  },
+  zigzag: {
+    modifier: 0.04,
+    maxDistanceMultiplier: 3,
+    tunnelSpeed: 0.12,
+    fadeSpeed: 0.025,
+  },
+};
+
+type TunnelSegment = THREE.Object3D & {
+  localDirection: number;
+  targetPosition: {
+    x: number;
+    y: number;
+    rotX: number;
+    rotY: number;
+    rotZ: number;
+  };
+  pathType: PathType;
+};
+
+// Define path types
+type PathType = "straight" | "sinusoidal" | "spiral" | "zigzag";
