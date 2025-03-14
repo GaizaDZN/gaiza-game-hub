@@ -105,3 +105,14 @@ export function intervalElapsed(
 ): boolean {
   return currentTime - lastTime > intervalTime;
 }
+
+export function scaleByPosition(
+  ref: THREE.Mesh<
+    THREE.BufferGeometry<THREE.NormalBufferAttributes>,
+    THREE.Material | THREE.Material[],
+    THREE.Object3DEventMap
+  >,
+  scaleAdjustment: number
+): void {
+  ref.scale.set(scaleAdjustment, scaleAdjustment, scaleAdjustment);
+}

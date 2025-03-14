@@ -24,6 +24,7 @@ export interface GameState {
   salesState: SalesState;
   brewState: BrewState;
   storeState: StoreState;
+  timers: Map<string, TimerState>;
   priceModifier: number;
   activeBars: ResourceState;
   version: number;
@@ -98,6 +99,12 @@ interface TextState {
   textFinished: boolean;
 }
 
+interface TimerState {
+  startTime: number; // milliseconds
+  allottedTime: number; // seconds
+  active: boolean;
+}
+
 // Game class with clear state management
 export class Game {
   private state: GameState;
@@ -143,7 +150,7 @@ export class Game {
         moneyEnd: 0,
       },
       brewState: {
-        coffeeName: "latte",
+        coffeeName: "latte" as keyof CoffeeState,
         brewable: false,
       },
       storeState: {
@@ -154,6 +161,7 @@ export class Game {
         totalPrice: 0,
         storeOpen: false,
       },
+      timers: this.initTimers(),
       priceModifier: 3,
       activeBars: { beans: 0, water: 0, milk: 0, sugar: 0 },
       version: 0,
@@ -244,7 +252,7 @@ export class Game {
           moneyEnd: 0,
         },
         brewState: {
-          coffeeName: "latte",
+          coffeeName: "latte" as keyof CoffeeState,
           brewable: false,
         },
         storeState: {
@@ -255,6 +263,7 @@ export class Game {
           totalPrice: 0,
           storeOpen: false,
         },
+        timers: this.initTimers(),
         priceModifier: 3,
         activeBars: { beans: 0, water: 0, milk: 0, sugar: 0 },
         version: 0,
@@ -474,6 +483,12 @@ export class Game {
             ],
             TerminalLine.system
           );
+
+          // Start sales mode timer
+          const salesTimer = this.getTimer("sales");
+          if (salesTimer && !salesTimer.active) {
+            this.startTimer("sales");
+          }
 
           updates = {
             ...updates,
@@ -832,6 +847,86 @@ export class Game {
     });
   }
 
+  // Timer ///////////////////////////////////////
+  private addTimer(timerName: string): void {
+    const timers = this.state.timers;
+    if (timers.has(timerName)) {
+      console.log(`timer ${timerName} already added.`);
+      return;
+    }
+
+    const endTime =
+      gameConsts.timer[timerName as keyof typeof gameConsts.timer];
+    const newTimer: TimerState = {
+      startTime: 0,
+      allottedTime: endTime,
+      active: false,
+    };
+
+    const newTimers = new Map(this.state.timers);
+    newTimers.set(timerName, newTimer);
+
+    this.setState((state) => {
+      return {
+        ...state,
+        timers: newTimers,
+      };
+    });
+  }
+
+  getTimer(timerName: string): TimerState | undefined {
+    const timers = this.state.timers;
+    if (!timers.has(timerName)) {
+      console.log(`timerName ${timerName} not found in timers.`);
+      return undefined;
+    }
+    return timers.get(timerName);
+  }
+
+  startTimer(timerName: string): void {
+    const timer = this.getTimer(timerName);
+    const endTime =
+      gameConsts.timer[timerName as keyof typeof gameConsts.timer];
+
+    if (!timer) return;
+    timer.startTime = Date.now();
+    timer.active = true;
+    timer.allottedTime = endTime;
+
+    this.setState((state) => {
+      const newTimers = new Map(state.timers);
+      newTimers.set(timerName, timer);
+      return {
+        ...state,
+        timers: newTimers,
+      };
+    });
+  }
+
+  endTimer(timerName: string): void {
+    const timer = this.getTimer(timerName);
+    if (!timer) return;
+    timer.active = false;
+
+    this.setState((state) => {
+      const newTimers = new Map(state.timers);
+      newTimers.set(timerName, timer);
+      return {
+        ...state,
+        timers: newTimers,
+      };
+    });
+  }
+
+  private timeElapsed(timer: TimerState): boolean {
+    if (timer.startTime === 0) {
+      throw new Error("timer checked before it was started");
+    }
+    const timeNow = Date.now();
+    const elapsed = timeNow - timer.startTime;
+    return elapsed >= timer.allottedTime * 1000; // convert to milliseconds
+  }
+
   // Helper Methods ///////////////////////////////////////
   private generateCustomers(): Customer[] {
     const customerCount = Math.ceil(RandRange(4, 8));
@@ -900,7 +995,25 @@ export class Game {
     const order = customer.getOrder().getItems();
     return order.length;
   }
+
+  private initTimers(): Map<string, TimerState> {
+    const newTimers = new Map<string, TimerState>();
+
+    // sales timer
+    newTimers.set("sales", {
+      startTime: 0,
+      active: false,
+      allottedTime: gameConsts.timer.sales,
+    });
+    return newTimers;
+  }
 }
+
+const gameConsts = {
+  timer: {
+    sales: 60,
+  },
+};
 
 // ENUMS ////////////////////////////////////////////////
 

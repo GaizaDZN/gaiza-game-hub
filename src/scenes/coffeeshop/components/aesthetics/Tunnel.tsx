@@ -16,9 +16,7 @@ const Tunnel = () => {
   const width = 8;
   const height = 5;
   const baseSpacing = tunnelCount / 8; // Base spacing value
-  const tunnelSpeed = baseSpacing / 80;
   const fadeSpeed = baseSpacing / 1000;
-  const initialOpacity = useRef(1);
   const globalDirection = useRef(1);
   const [pathUpdating, setPathUpdating] = useState(true);
 
@@ -36,7 +34,6 @@ const Tunnel = () => {
       );
       const randomIndex = Math.floor(Math.random() * availablePathTypes.length);
       const newPathType = availablePathTypes[randomIndex];
-      console.log("New Path:", newPathType);
       return newPathType;
     },
     [allPathTypes]
@@ -215,7 +212,6 @@ const Tunnel = () => {
         const furthestZ = Math.min(
           ...linesRef.current.children.map((c) => c.position.z)
         );
-        if (i === 0) console.log("Furthest:", furthestZ);
         const furthestSegInfo = getPathPosition(furthestZ);
 
         const dynamicSpacing = getDynamicSpacing(furthestSegInfo.curveFactor);

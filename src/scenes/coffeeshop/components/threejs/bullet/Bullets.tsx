@@ -146,23 +146,30 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
 
         // Handle collisions
 
-        // Compute distance from the core
-        const distanceFromCore = Math.sqrt(
+        // Compute distance from the center
+        const distanceFromCenter = Math.sqrt(
           bullet.position.x ** 2 + bullet.position.y ** 2
         );
+        const maxDistance = Math.sqrt(maxX ** 2 + maxY ** 2);
+        const distanceRatio = distanceFromCenter / maxDistance;
 
-        if (distanceFromCore < coreRadius) {
+        if (distanceFromCenter < coreRadius) {
           bullet.active = false;
           collisionEventDispatcher.dispatch("coreHit");
           return;
         }
 
         dummy.position.copy(bullet.position);
-        dummy.scale.set(
-          bullet.bulletSize,
-          bullet.bulletSize,
-          bullet.bulletSize
-        );
+
+        // Scale: increase size as cursor moves away from center (e.g., 1.0 at center, up to 1.5 at edges)
+        const minScale = 0.6;
+        const maxScale = 1;
+        const scaleAdjustment =
+          bullet.bulletSize *
+          (minScale + (maxScale - minScale) * distanceRatio);
+        // Apply scale based on distance from center
+
+        dummy.scale.set(scaleAdjustment, scaleAdjustment, scaleAdjustment);
         dummy.updateMatrix();
         meshRef.current?.setMatrixAt(index, dummy.matrix);
       });

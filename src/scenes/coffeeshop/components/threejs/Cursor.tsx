@@ -6,6 +6,7 @@ import { Mesh } from "three";
 import Bullets, { BulletsHandle } from "./bullet/Bullets";
 import { coreBuffer } from "./Core";
 import { commonValues } from "./common";
+import { scaleByPosition } from "../../../../helpers/helpers";
 
 // Define CursorBullets component - this is a persistent component
 // that manages bullet rendering regardless of firing state
@@ -134,12 +135,6 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
         const maxDistance = Math.sqrt(maxX ** 2 + maxY ** 2);
         const distanceRatio = distanceFromCenter / maxDistance;
 
-        // Scale: increase size as cursor moves away from center (e.g., 1.0 at center, up to 1.5 at edges)
-        const minScale = 1.0;
-        const maxScale = 1.5;
-        const scaleAdjustment =
-          minScale + (maxScale - minScale) * distanceRatio;
-
         // Z-level: bring cursor forward as it moves toward edges
         // Assuming commonValues.layer.game is your base z-level
         const minZ = commonValues.layer.game;
@@ -180,12 +175,13 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
         // Store current position for bullets
         cursorPosition.current.copy(currentPosition);
 
-        // Apply scale based on distance
-        cursorRef.current.scale.set(
-          scaleAdjustment,
-          scaleAdjustment,
-          scaleAdjustment
-        );
+        // Scale: increase size as cursor moves away from center (e.g., 1.0 at center, up to 1.5 at edges)
+        const minScale = 0.8;
+        const maxScale = 1.2;
+        const scaleAdjustment =
+          minScale + (maxScale - minScale) * distanceRatio;
+        // Apply scale based on distance from center
+        scaleByPosition(cursorRef.current, scaleAdjustment);
 
         // Ensure cursor always looks toward the center
         cursorRef.current.lookAt(0, 0, commonValues.layer.game);
