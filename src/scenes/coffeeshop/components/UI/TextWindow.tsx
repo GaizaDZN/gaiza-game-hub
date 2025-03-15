@@ -29,7 +29,7 @@ const TextWindow: React.FC = () => {
     // Don't proceed if not in sales mode
     if (gameState.gameMode != GameMode.sales) return () => {}; // Return empty cleanup function
 
-    if (customer?.getActive()) {
+    if (customer?.isActive()) {
       setLoadingMessage(false);
     } else {
       setLoadingMessage(true);
@@ -63,7 +63,7 @@ const TextWindow: React.FC = () => {
     <div className="coffee-ui-textWindow">
       <div className="textBG">
         <ul className="textContainer blink-subtle">
-          {customer?.getActive ? (
+          {customer?.isActive() ? (
             loadingMessage ? (
               <Diamonds />
             ) : customerOrder.prevOrderState != PrevOrderState.none ? (

@@ -503,7 +503,7 @@ export class Customer {
   private portrait: string;
   private id: string;
 
-  public constructor(customerType: CustomerType) {
+  public constructor(customerType: CustomerType = CustomerType.Patient) {
     this.customerType = customerType;
     this.customerName = this.generateName();
     this.patience = this.setPatience();
@@ -573,7 +573,7 @@ export class Customer {
     return new Coffee(coffeeName, 1, 1, randSize, realCoffee);
   }
 
-  getActive(): boolean {
+  isActive(): boolean {
     return this.message.active;
   }
   activateMessage(): void {

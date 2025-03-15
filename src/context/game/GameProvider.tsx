@@ -48,13 +48,18 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
     setGame(new Game(game.getState()));
   }, [game]);
 
-  const setGameMode = useCallback(
+  const queueGameMode = useCallback(
     (mode: GameMode) => {
-      game.setGameMode(mode);
+      game.queueGameMode(mode);
       setGame(new Game(game.getState()));
     },
     [game]
   );
+
+  const setGameMode = useCallback(() => {
+    game.setGameMode();
+    setGame(new Game(game.getState()));
+  }, [game]);
 
   const completeSale = useCallback(() => {
     game.completeSale();
@@ -116,6 +121,7 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       incrementActiveBar,
       resetActiveBars,
       setGameMode,
+      queueGameMode,
       completeSale,
       checkRecipes,
       incrementStoreItem,
@@ -131,6 +137,7 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       incrementActiveBar,
       resetActiveBars,
       setGameMode,
+      queueGameMode,
       completeSale,
       checkRecipes,
       incrementStoreItem,

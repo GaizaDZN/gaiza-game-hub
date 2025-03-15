@@ -4,13 +4,12 @@ import TextWindow from "./components/UI/TextWindow";
 import Info from "./components/UI/Info";
 import MiddleButtons from "./components/UI/MiddleButtons";
 import Title from "./components/UI/Title";
-import { useCallback, useContext, useEffect, useRef } from "react";
-import * as THREE from "three";
+import { useCallback, useContext, useEffect } from "react";
 import { GameContext } from "../../context/game/GameContext";
 import { GameMode } from "./game/game";
 import Overlay from "./components/UI/overlay/Overlay";
 import "./styles/coffeeshop.scss";
-import { OrthographicCamera, PerspectiveCamera } from "@react-three/drei";
+import { PerspectiveCamera } from "@react-three/drei";
 import { commonValues } from "./components/threejs/common";
 
 const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
@@ -18,14 +17,13 @@ const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
   currentView,
   gui,
 }) => {
-  const { gameState, setGameMode } = useContext(GameContext);
-  const cameraRef = useRef<THREE.OrthographicCamera>(null);
+  const { gameState, queueGameMode } = useContext(GameContext);
   const initGame = useCallback(() => {
     const mode = gameState.gameMode;
     if (mode === GameMode.init) {
-      setGameMode(GameMode.opening);
+      queueGameMode(GameMode.opening);
     }
-  }, [gameState.gameMode, setGameMode]);
+  }, [gameState.gameMode, queueGameMode]);
 
   useEffect(() => {
     initGame();

@@ -12,8 +12,13 @@ const cancelSFX = "stop-13692.mp3";
 const brewSFX = "brew.mp3";
 
 const BottomUI = () => {
-  const { gameState, resetActiveBars, brewCoffee, setGameMode, completeSale } =
-    useContext(GameContext);
+  const {
+    gameState,
+    resetActiveBars,
+    brewCoffee,
+    queueGameMode,
+    completeSale,
+  } = useContext(GameContext);
   const [justBrewed, setJustBrewed] = useState(false);
   const { playSound } = useContext(AudioContext);
   const currentCustomer = useCustomer();
@@ -35,7 +40,7 @@ const BottomUI = () => {
     const mode = gameState.gameMode;
     switch (mode) {
       case GameMode.opening:
-        setGameMode(GameMode.sales);
+        queueGameMode(GameMode.sales);
         break;
       case GameMode.sales: {
         if (!justBrewed) {
@@ -44,12 +49,12 @@ const BottomUI = () => {
         break;
       }
       case GameMode.dayEnd:
-        setGameMode(GameMode.opening);
+        queueGameMode(GameMode.opening);
         break;
       default:
         break;
     }
-  }, [gameState.gameMode, handleBrewCoffee, justBrewed, setGameMode]);
+  }, [gameState.gameMode, handleBrewCoffee, justBrewed, queueGameMode]);
 
   const handleConfirm = () => {
     playSound(confirmSFX);

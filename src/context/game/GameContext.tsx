@@ -13,7 +13,8 @@ interface GameContextType {
     onSuccess: () => void
   ) => void;
   resetActiveBars: () => void;
-  setGameMode: (mode: GameMode) => void;
+  setGameMode: () => void;
+  queueGameMode: (mode: GameMode) => void;
   completeSale: () => void;
   checkRecipes: () => void;
   incrementStoreItem: (item: keyof ResourceState) => void;
@@ -30,6 +31,7 @@ export const GameContext = createContext<GameContextType>({
   incrementActiveBar: () => {},
   resetActiveBars: () => {},
   setGameMode: () => {},
+  queueGameMode: () => {},
   completeSale: () => {},
   checkRecipes: () => {},
   incrementStoreItem: () => {},

@@ -43,7 +43,7 @@ const TimeBar: React.FC = () => {
 
   return (
     <div className="timebar__container">
-      <div className={`timebar ${animateTimer ? "animate" : ""}`}></div>
+      <div className={`timebar ui-open ${animateTimer ? "animate" : ""}`}></div>
       {timer && (
         <div className="timebar-text__container">
           <span className="timebar-text">{timeLeft}</span>

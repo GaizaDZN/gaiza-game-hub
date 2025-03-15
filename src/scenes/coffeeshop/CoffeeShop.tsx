@@ -1,16 +1,18 @@
 import { SceneProps } from "../common";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import IngredientVisuals from "./components/threejs/IngredientVisuals";
 import Cursor from "./components/threejs/Cursor";
 import { useThree } from "@react-three/fiber";
 import { inputDispatcher } from "../../context/input/InputDispatcher";
 import Core from "./components/threejs/Core";
 import Tunnel from "./components/aesthetics/Tunnel";
+import { GameContext } from "../../context/game/GameContext";
 
 const cursor = "/src/assets/img/cursor.png";
 
 const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
   gui.hide();
+  const { gameState, setGameMode } = useContext(GameContext);
   const [isMouseOnCanvas, setIsMouseOnCanvas] = useState(false);
   const [mouseHeld, setMouseHeld] = useState(false);
   const { gl, size } = useThree();
@@ -25,6 +27,12 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
 
   useEffect(() => {
     const canvas = gl.domElement;
+
+    // Trigger new game mode state
+    if (gameState.gameMode != gameState.newGameMode) {
+      setGameMode();
+    }
+
     const handleMouseEnter = () => {
       setIsMouseOnCanvas(true);
       canvas.style.cursor = `url(${cursor}), auto`;
@@ -47,7 +55,7 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
       inputDispatcher.unsubscribe("mousePress", handleMouseDown);
       inputDispatcher.unsubscribe("mouseUp", handleMouseUp);
     };
-  }, [gl, size]);
+  }, [gameState.gameMode, gameState.newGameMode, gl.domElement, setGameMode]);
 
   return (
     <>

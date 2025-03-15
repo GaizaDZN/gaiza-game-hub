@@ -13,6 +13,7 @@ import {
 // Core types
 export interface GameState {
   gameMode: GameMode;
+  newGameMode: GameMode;
   player: PlayerState;
   resources: ResourceState;
   coffeeState: CoffeeState;
@@ -72,6 +73,8 @@ interface CustomerState {
   currentCustomer: Customer | undefined;
   customers: Customer[];
   completedCustomers: Customer[];
+  extraCustomers: Customer[];
+  quota: number;
 }
 
 export interface ResourceState {
@@ -112,6 +115,7 @@ export class Game {
   constructor(initialState?: Partial<GameState>) {
     this.state = {
       gameMode: GameMode.init,
+      newGameMode: GameMode.init,
       player: { money: 100, reputation: 100 },
       resources: { beans: 20, water: 20, milk: 20, sugar: 20 },
       orderState: {
@@ -132,6 +136,8 @@ export class Game {
         currentCustomer: undefined,
         customers: [],
         completedCustomers: [],
+        extraCustomers: [],
+        quota: 0,
       },
       messageLog: { messages: [] },
       textState: {
@@ -214,6 +220,7 @@ export class Game {
     if (this.state.gameMode !== GameMode.init) {
       this.state = {
         gameMode: GameMode.init,
+        newGameMode: GameMode.init,
         player: { money: 100, reputation: 100 },
         resources: { beans: 20, water: 20, milk: 20, sugar: 20 },
         orderState: {
@@ -234,6 +241,8 @@ export class Game {
           currentCustomer: undefined,
           customers: [],
           completedCustomers: [],
+          extraCustomers: [],
+          quota: 0,
         },
         messageLog: { messages: [] },
         textState: {
@@ -437,18 +446,35 @@ export class Game {
   }
 
   // Game Mode Management
-  public setGameMode(newMode: GameMode): void {
+
+  // Prepare game mode change without triggering logic.
+  public queueGameMode(newMode: GameMode): void {
+    if (newMode === this.state.gameMode) return;
+    this.setState((state) => {
+      return {
+        ...state,
+        newGameMode: newMode,
+      };
+    });
+  }
+
+  public setGameMode(): void {
+    const newMode = this.state.newGameMode;
     if (newMode === this.state.gameMode) return;
 
     this.setState((state) => {
-      let updates: Partial<GameState> = { gameMode: newMode };
+      let updates: Partial<GameState> = {
+        gameMode: newMode,
+        newGameMode: newMode,
+      };
       let newTerminalContent = [
         ...state.terminalLog.content,
         `:: Game mode: ${newMode}`,
       ];
 
       switch (newMode) {
-        case GameMode.opening:
+        case GameMode.opening: {
+          const newCustomers = this.generateCustomers();
           this.addToTerminal(
             newTerminalContent,
             ["Welcome to the cafe!", 'Press "Confirm" to start the day.'],
@@ -458,8 +484,9 @@ export class Game {
             ...updates,
             customerState: {
               ...state.customerState,
-              customers: this.generateCustomers(),
+              customers: newCustomers,
               completedCustomers: [],
+              quota: newCustomers.length,
             },
             salesState: {
               ...state.salesState,
@@ -467,6 +494,7 @@ export class Game {
             },
           };
           break;
+        }
 
         case GameMode.sales: {
           const firstCustomer = state.customerState.customers[0];
@@ -512,8 +540,16 @@ export class Game {
           break;
         }
         case GameMode.dayEnd: {
-          newTerminalContent.push("The day has ended.", "Consider restocking.");
-
+          // add ascii art
+          this.addToTerminal(
+            newTerminalContent,
+            [
+              "The day has ended...",
+              "Consider restocking.",
+              ...stringToLines(asciiCat, state.terminalLog.maxCharacters),
+            ],
+            TerminalLine.system
+          );
           updates = {
             ...updates,
             orderState: {
@@ -617,36 +653,39 @@ export class Game {
       // deactivate current customer message
       currentCustomer.deactivateMessage();
 
+      const newCustomers = [...state.customerState.customers].slice(1);
+
+      // add more customers without adjusting quota
+      if (newCustomers.length <= 1) {
+        const extraCustomers = this.generateCustomers();
+        newCustomers.push(...extraCustomers);
+      }
+
       // get next customer
       const nextCustomer = state.customerState.customers[0];
-      const newGameMode =
-        state.customerState.customers.length === 0
-          ? GameMode.dayEnd
-          : state.gameMode;
 
-      if (newGameMode === GameMode.dayEnd) {
-        // add ascii art
-        this.addToTerminal(
-          newTerminalContent,
-          [
-            "The day has ended...",
-            "Consider restocking.",
-            ...stringToLines(asciiCat, state.terminalLog.maxCharacters),
-          ],
-          TerminalLine.system
-        );
+      let newGameMode = state.gameMode;
+
+      // change to dayEnd if sales timer has elapsed
+      const timer = this.getTimer("sales");
+      if (timer) {
+        if (this.timeElapsed(timer)) {
+          newGameMode = GameMode.dayEnd;
+          this.endTimer("sales");
+        }
       }
 
       return {
         ...state,
-        gameMode: newGameMode,
+        newGameMode,
         player: {
           money: state.player.money + moneyChange,
           reputation: state.player.reputation + reputationChange,
         },
         customerState: {
+          ...state.customerState,
           currentCustomer: nextCustomer,
-          customers: state.customerState.customers.slice(1),
+          customers: newCustomers,
           completedCustomers: [
             ...state.customerState.completedCustomers,
             currentCustomer,
@@ -848,31 +887,31 @@ export class Game {
   }
 
   // Timer ///////////////////////////////////////
-  private addTimer(timerName: string): void {
-    const timers = this.state.timers;
-    if (timers.has(timerName)) {
-      console.log(`timer ${timerName} already added.`);
-      return;
-    }
+  // private addTimer(timerName: string): void {
+  //   const timers = this.state.timers;
+  //   if (timers.has(timerName)) {
+  //     console.log(`timer ${timerName} already added.`);
+  //     return;
+  //   }
 
-    const endTime =
-      gameConsts.timer[timerName as keyof typeof gameConsts.timer];
-    const newTimer: TimerState = {
-      startTime: 0,
-      allottedTime: endTime,
-      active: false,
-    };
+  //   const endTime =
+  //     gameConsts.timer[timerName as keyof typeof gameConsts.timer];
+  //   const newTimer: TimerState = {
+  //     startTime: 0,
+  //     allottedTime: endTime,
+  //     active: false,
+  //   };
 
-    const newTimers = new Map(this.state.timers);
-    newTimers.set(timerName, newTimer);
+  //   const newTimers = new Map(this.state.timers);
+  //   newTimers.set(timerName, newTimer);
 
-    this.setState((state) => {
-      return {
-        ...state,
-        timers: newTimers,
-      };
-    });
-  }
+  //   this.setState((state) => {
+  //     return {
+  //       ...state,
+  //       timers: newTimers,
+  //     };
+  //   });
+  // }
 
   getTimer(timerName: string): TimerState | undefined {
     const timers = this.state.timers;
@@ -929,7 +968,7 @@ export class Game {
 
   // Helper Methods ///////////////////////////////////////
   private generateCustomers(): Customer[] {
-    const customerCount = Math.ceil(RandRange(4, 8));
+    const customerCount = Math.ceil(RandRange(4, 6));
     return Array.from(
       { length: customerCount },
       () => new Customer(CustomerType.Normal)
