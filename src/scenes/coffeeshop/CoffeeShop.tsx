@@ -7,6 +7,7 @@ import { inputDispatcher } from "../../context/input/InputDispatcher";
 import Core from "./components/threejs/Core";
 import Tunnel from "./components/aesthetics/Tunnel";
 import { GameContext } from "../../context/game/GameContext";
+import { GameMode } from "./game/game";
 
 const cursor = "/src/assets/img/cursor.png";
 
@@ -62,9 +63,13 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
       <IngredientVisuals />
       <Cursor mouseHeld={mouseHeld} isMouseOnCanvas={isMouseOnCanvas} />
       <Core />
-      <Tunnel />
+      {gameState.gameMode === GameMode.sales && <SalesMode />}
     </>
   );
 };
 
 export default CoffeeShop;
+
+const SalesMode = () => {
+  return <Tunnel />;
+};

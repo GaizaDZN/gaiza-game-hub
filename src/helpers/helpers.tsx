@@ -116,3 +116,11 @@ export function scaleByPosition(
 ): void {
   ref.scale.set(scaleAdjustment, scaleAdjustment, scaleAdjustment);
 }
+
+export function fireRateElapsed(
+  currentTime: number,
+  lastBulletTime: number,
+  bulletInterval: number
+): boolean {
+  return currentTime - lastBulletTime > bulletInterval;
+}

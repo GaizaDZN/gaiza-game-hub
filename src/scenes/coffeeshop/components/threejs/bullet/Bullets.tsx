@@ -4,11 +4,13 @@ import {
   useEffect,
   forwardRef,
   useImperativeHandle,
+  useContext,
 } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { coreBuffer } from "../Core";
 import { collisionEventDispatcher } from "../../../../../context/events/eventListener";
+import { GameContext } from "../../../../../context/game/GameContext";
 
 // Bullets.tsx
 
@@ -16,7 +18,13 @@ export interface BulletsHandle {
   spawnBullet: () => boolean;
 }
 
+export enum BulletSource {
+  player = 0,
+  enemy = 1,
+}
+
 export interface BulletProps {
+  bulletSource: BulletSource;
   origin: THREE.Vector3;
   target?: THREE.Vector3;
   velocity?: THREE.Vector3;
@@ -32,13 +40,25 @@ interface Bullet {
   bulletSize: number;
   active: boolean;
   createdAt?: number;
+  bulletSource: BulletSource;
 }
 
-const bulletDefaults = {
-  count: 10,
-  size: 0.2,
-  color: "red",
-  maxLifetime: 2000,
+export const bulletConsts = {
+  player: {
+    count: 20,
+    size: 0.2,
+    color: "yellow",
+    maxLifetime: 2500,
+    speed: 0.1,
+  },
+
+  enemy: {
+    count: 20,
+    size: 0.15,
+    color: "red",
+    maxLifetime: 4000,
+    speed: 0.03,
+  },
 };
 
 const Bullets = forwardRef<BulletsHandle, BulletProps>(
@@ -46,17 +66,19 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
     {
       origin,
       target = new THREE.Vector3(0, 0, 0),
-      velocity = new THREE.Vector3(0, 0.2, 0),
-      count = bulletDefaults.count,
-      bulletSize = bulletDefaults.size,
-      bulletColor = bulletDefaults.color,
-      maxLifetime = bulletDefaults.maxLifetime,
+      velocity = new THREE.Vector3(0, bulletConsts.enemy.speed, 0),
+      count = bulletConsts.enemy.count,
+      bulletSize = bulletConsts.enemy.size,
+      bulletColor = bulletConsts.enemy.color,
+      maxLifetime = bulletConsts.enemy.maxLifetime,
+      bulletSource,
     },
     ref
   ) => {
     const meshRef = useRef<THREE.InstancedMesh>(null);
     const bullets = useRef<Bullet[]>([]);
     const initializedRef = useRef(false);
+    const { cursorState, cursorPosition } = useContext(GameContext);
     const { viewport } = useThree();
 
     // Initialize bullet pool
@@ -69,11 +91,12 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
             velocity: velocity.clone(),
             bulletSize: bulletSize,
             active: false,
+            bulletSource,
           }));
 
         initializedRef.current = true;
       }
-    }, [bulletSize, count, origin, velocity]);
+    }, [bulletSize, bulletSource, count, origin, velocity]);
 
     // Function to spawn a bullet
     const spawnBullet = useCallback(() => {
@@ -83,8 +106,12 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
           .subVectors(target, origin)
           .normalize();
 
+        const bulletSpeed =
+          inactiveBullet.bulletSource === BulletSource.player
+            ? bulletConsts.player.speed
+            : bulletConsts.enemy.speed;
         inactiveBullet.position.copy(origin);
-        inactiveBullet.velocity.copy(direction.multiplyScalar(0.1));
+        inactiveBullet.velocity.copy(direction.multiplyScalar(bulletSpeed));
         inactiveBullet.active = true;
         inactiveBullet.createdAt = Date.now();
 
@@ -136,6 +163,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
           return;
         }
 
+        // Move bullet
         bullet.position.add(bullet.velocity);
 
         // Deactivate bullet
@@ -153,23 +181,47 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         const maxDistance = Math.sqrt(maxX ** 2 + maxY ** 2);
         const distanceRatio = distanceFromCenter / maxDistance;
 
-        if (distanceFromCenter < coreRadius) {
-          bullet.active = false;
-          collisionEventDispatcher.dispatch("coreHit");
-          return;
+        // Player bullets
+        if (bullet.bulletSource === BulletSource.player) {
+          if (distanceFromCenter < coreRadius) {
+            bullet.active = false;
+            collisionEventDispatcher.dispatch("coreHit");
+            return;
+          }
+        }
+
+        // Enemy bullets
+        if (
+          bullet.bulletSource === BulletSource.enemy &&
+          cursorState != "hit"
+        ) {
+          const distanceFromCursor = bullet.position.distanceTo(cursorPosition);
+          if (distanceFromCursor < 0.15) {
+            // TODO: change this to cursor size
+            bullet.active = false;
+            collisionEventDispatcher.dispatch("playerHit");
+            return;
+          }
         }
 
         dummy.position.copy(bullet.position);
 
-        // Scale: increase size as cursor moves away from center (e.g., 1.0 at center, up to 1.5 at edges)
-        const minScale = 0.6;
-        const maxScale = 1;
-        const scaleAdjustment =
-          bullet.bulletSize *
-          (minScale + (maxScale - minScale) * distanceRatio);
-        // Apply scale based on distance from center
+        if (bullet.bulletSource === BulletSource.player) {
+          const minScale = 0.6;
+          const maxScale = 1;
+          const scaleAdjustment =
+            bullet.bulletSize *
+            (minScale + (maxScale - minScale) * distanceRatio);
+          // Apply scale based on distance from center
+          dummy.scale.set(scaleAdjustment, scaleAdjustment, scaleAdjustment);
+        } else {
+          dummy.scale.set(
+            bullet.bulletSize,
+            bullet.bulletSize,
+            bullet.bulletSize
+          );
+        }
 
-        dummy.scale.set(scaleAdjustment, scaleAdjustment, scaleAdjustment);
         dummy.updateMatrix();
         meshRef.current?.setMatrixAt(index, dummy.matrix);
       });

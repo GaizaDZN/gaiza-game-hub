@@ -1,9 +1,11 @@
-import { createContext, useContext } from "react";
+import { createContext, Dispatch, SetStateAction, useContext } from "react";
 import {
   GameState,
   ResourceState,
   GameMode,
 } from "../../scenes/coffeeshop/game/game";
+import { Vector3 } from "three";
+import { CursorStateKey } from "../../scenes/coffeeshop/components/threejs/Cursor";
 
 interface GameContextType {
   gameState: GameState;
@@ -23,6 +25,11 @@ interface GameContextType {
   updateGameState: (game: GameState) => void;
   setTextPrinting: (textPrinting: boolean) => void;
   resetGame: () => void;
+
+  cursorState: CursorStateKey;
+  setCursorState: Dispatch<SetStateAction<CursorStateKey>>;
+  cursorPosition: Vector3;
+  setCursorPosition: (position: Vector3) => void;
 }
 
 export const GameContext = createContext<GameContextType>({
@@ -40,6 +47,11 @@ export const GameContext = createContext<GameContextType>({
   updateGameState: () => {},
   setTextPrinting: () => {},
   resetGame: () => {},
+
+  cursorState: "idle",
+  setCursorState: () => {},
+  cursorPosition: new Vector3(),
+  setCursorPosition: () => {},
 });
 
 // Custom hooks for accessing game state and actions

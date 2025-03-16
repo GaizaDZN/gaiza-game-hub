@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, {
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { GameContext } from "./GameContext";
 
 import {
@@ -7,6 +13,8 @@ import {
   ResourceState,
   GameMode,
 } from "../../scenes/coffeeshop/game/game";
+import { Vector3 } from "three";
+import { CursorStateKey } from "../../scenes/coffeeshop/components/threejs/Cursor";
 
 interface GameProviderProps {
   children: React.ReactNode;
@@ -113,6 +121,21 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
     [game]
   );
 
+  // Cursor
+  const [cursorPosition, setCursorPosition] = useState<Vector3>(new Vector3());
+  const [cursorState, setCursorState] = useState<CursorStateKey>("idle");
+
+  const handleCursorState = useCallback(
+    (newState: SetStateAction<CursorStateKey>) => {
+      setCursorState(newState);
+    },
+    []
+  );
+
+  const handleSetCursorPosition = useCallback((position: Vector3) => {
+    setCursorPosition(new Vector3().copy(position));
+  }, []);
+
   // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(
     () => ({
@@ -130,6 +153,12 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       updateGameState,
       resetGame,
       setTextPrinting,
+
+      cursorState,
+      setCursorState: handleCursorState,
+      cursorPosition,
+      setCursorPosition: handleSetCursorPosition,
+      handleSetCursorPosition,
     }),
     [
       gameState,
@@ -146,6 +175,11 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       resetGame,
       updateGameState,
       setTextPrinting,
+
+      cursorState,
+      handleCursorState,
+      cursorPosition,
+      handleSetCursorPosition,
     ]
   );
 

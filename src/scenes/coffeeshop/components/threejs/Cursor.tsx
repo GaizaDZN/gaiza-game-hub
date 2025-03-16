@@ -1,12 +1,20 @@
 // Cursor.tsx
-import React, { useRef, useState, useEffect } from "react";
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+} from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Mesh } from "three";
-import Bullets, { BulletsHandle } from "./bullet/Bullets";
+import Bullets, { BulletsHandle, BulletSource } from "./bullet/Bullets";
 import { coreBuffer } from "./Core";
 import { commonValues } from "./common";
-import { scaleByPosition } from "../../../../helpers/helpers";
+import { fireRateElapsed, scaleByPosition } from "../../../../helpers/helpers";
+import { GameContext } from "../../../../context/game/GameContext";
+import { collisionEventDispatcher } from "../../../../context/events/eventListener";
 
 // Define CursorBullets component - this is a persistent component
 // that manages bullet rendering regardless of firing state
@@ -43,9 +51,32 @@ const CursorBullets: React.FC<CursorBulletProps> = ({
       bulletSize={0.15}
       bulletColor={bulletColor}
       maxLifetime={2000}
+      bulletSource={BulletSource.player}
     />
   );
 };
+
+export interface CursorState {
+  color: string;
+  opacity: number;
+}
+
+export const cursorStates = {
+  idle: {
+    color: "#dd8b0f",
+    opacity: 1,
+  },
+  firing: {
+    color: "#f7b80c",
+    opacity: 1,
+  },
+  hit: {
+    color: "#ca822f",
+    opacity: 0.3,
+  },
+};
+
+export type CursorStateKey = keyof typeof cursorStates;
 
 const cursorBuffer = 0.18;
 const canvasBuffer = 0.6; // cursor distance from canvas edges.
@@ -57,6 +88,9 @@ interface cursorProps {
 
 const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   const cursorRef = useRef<Mesh>(null);
+  const { cursorState, setCursorState, cursorPosition, setCursorPosition } =
+    useContext(GameContext);
+  const currentState = cursorStates[cursorState];
   const targetPosition = useRef(
     new THREE.Vector3(0, 0, commonValues.layer.game)
   );
@@ -67,9 +101,11 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   const [isFiring, setIsFiring] = useState(false);
   const lastBulletTime = useRef(0);
   const bulletInterval = useRef(200); // Milliseconds between bullet spawns
+  const hitTimeout = useRef<NodeJS.Timeout | null>(null);
+  const playerHitInterval = 2000;
 
   // Create a reference for cursor position that doesn't change with renders
-  const cursorPosition = useRef(new THREE.Vector3());
+  // const cursorPosition = useRef(new THREE.Vector3());
 
   // Create a counter to trigger new bullet spawns
   const [bulletSpawnTrigger, setBulletSpawnTrigger] = useState(0);
@@ -91,23 +127,36 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
     return pos1.distanceTo(pos2) <= tolerance;
   };
 
-  const fireRateElapsed = (
-    currentTime: number,
-    lastBulletTime: number,
-    bulletInterval: number
-  ): boolean => {
-    return currentTime - lastBulletTime > bulletInterval;
-  };
+  const handlePlayerHit = useCallback(() => {
+    setCursorState("hit");
+    if (hitTimeout.current) {
+      clearTimeout(hitTimeout.current); // Clear any existing timeout
+    }
+    hitTimeout.current = setTimeout(() => {
+      setCursorState("idle");
+      hitTimeout.current = null;
+    }, playerHitInterval);
+  }, [setCursorState]);
 
   // Effect to control bullet spawning based on mouse state
   useEffect(() => {
+    collisionEventDispatcher.subscribe("playerHit", handlePlayerHit);
+
     if (mouseHeld && isMouseOnCanvas) {
       setIsFiring(true);
+      setCursorState("firing");
     } else {
       setIsFiring(false);
       setBulletSpawnTrigger(0);
+      setCursorState("idle");
     }
-  }, [mouseHeld, isMouseOnCanvas]);
+    return () => {
+      collisionEventDispatcher.unSubscribe("playerHit", handlePlayerHit);
+      if (hitTimeout.current) {
+        clearTimeout(hitTimeout.current);
+      }
+    };
+  }, [mouseHeld, isMouseOnCanvas, handlePlayerHit, setCursorState]);
 
   useFrame(({ clock }) => {
     if (cursorRef.current) {
@@ -173,7 +222,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
         currentPosition.lerp(targetPosition.current, adjustedLerp);
 
         // Store current position for bullets
-        cursorPosition.current.copy(currentPosition);
+        setCursorPosition(currentPosition);
 
         // Scale: increase size as cursor moves away from center (e.g., 1.0 at center, up to 1.5 at edges)
         const minScale = 0.8;
@@ -208,13 +257,17 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   return (
     <>
       <mesh ref={cursorRef} position={[0, 0, 0]}>
-        <meshBasicMaterial color={mouseHeld ? "#f7b80c" : "#0fdd0f"} />
+        <meshBasicMaterial
+          color={currentState.color}
+          opacity={currentState.opacity}
+          transparent={true}
+        />
         <coneGeometry args={[0.1, 0.3, 6]} />
       </mesh>
 
       {/* Persistent bullet component */}
       <CursorBullets
-        cursorPosition={cursorPosition.current}
+        cursorPosition={cursorPosition}
         count={20}
         bulletColor="yellow"
         isActive={isFiring}
