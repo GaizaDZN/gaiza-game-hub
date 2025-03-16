@@ -121,6 +121,11 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
     [game]
   );
 
+  const playerHit = useCallback(() => {
+    game.decrementPlayerHealth();
+    return setGame(new Game(game.getState()));
+  }, [game]);
+
   // Cursor
   const [cursorPosition, setCursorPosition] = useState<Vector3>(new Vector3());
   const [cursorState, setCursorState] = useState<CursorStateKey>("idle");
@@ -153,6 +158,7 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       updateGameState,
       resetGame,
       setTextPrinting,
+      playerHit,
 
       cursorState,
       setCursorState: handleCursorState,
@@ -175,6 +181,7 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       resetGame,
       updateGameState,
       setTextPrinting,
+      playerHit,
 
       cursorState,
       handleCursorState,

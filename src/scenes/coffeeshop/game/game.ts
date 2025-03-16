@@ -39,6 +39,7 @@ interface StoreState extends ResourceState {
 interface PlayerState {
   reputation: number;
   money: number;
+  health: number;
 }
 
 enum TerminalLine {
@@ -116,7 +117,7 @@ export class Game {
     this.state = {
       gameMode: GameMode.init,
       newGameMode: GameMode.init,
-      player: { money: 100, reputation: 100 },
+      player: { money: 100, reputation: 100, health: 3 },
       resources: { beans: 20, water: 20, milk: 20, sugar: 20 },
       orderState: {
         currentOrder: undefined,
@@ -221,7 +222,7 @@ export class Game {
       this.state = {
         gameMode: GameMode.init,
         newGameMode: GameMode.init,
-        player: { money: 100, reputation: 100 },
+        player: { money: 100, reputation: 100, health: 3 },
         resources: { beans: 20, water: 20, milk: 20, sugar: 20 },
         orderState: {
           currentOrder: undefined,
@@ -525,6 +526,10 @@ export class Game {
               currentCustomer: firstCustomer,
               customers: state.customerState.customers.slice(1),
             },
+            player: {
+              ...state.player,
+              health: 3,
+            },
             orderState: {
               ...state.orderState,
               currentOrder: firstCustomer.getOrder(),
@@ -584,24 +589,9 @@ export class Game {
       throw new Error("Invalid game mode for sale completion");
     }
 
-    const newTerminalContent = [...this.state.terminalLog.content];
     // Do nothing if no coffee has been made
-    if (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      Object.entries(this.state.coffeeState).every(([_, value]) => value === 0)
-    ) {
-      this.addToTerminal(
-        newTerminalContent,
-        ["No coffee brewed.", "Enter ingredients using the buttons above!"],
-        TerminalLine.system
-      );
-      this.setState((state) => ({
-        ...state,
-        terminalLog: {
-          ...state.terminalLog,
-          content: newTerminalContent,
-        },
-      }));
+    if (this.isCoffeeEmpty()) {
+      this.handleEmptyCoffee();
       return;
     }
 
@@ -609,76 +599,39 @@ export class Game {
       const { currentCustomer } = state.customerState;
       if (!currentCustomer) throw new Error("No current customer");
 
-      // check if the order is correct
-      const orderSuccess = currentCustomer
-        .getOrder()
-        .isCorrectOrder(state.coffeeState);
-      const moneyChange = orderSuccess
-        ? currentCustomer.getOrder().getTotalPrice() * state.priceModifier
-        : 0;
-      const reputationChange = orderSuccess
-        ? currentCustomer.getRepValue()
-        : -currentCustomer.getRepValue();
-      const newTerminalContent = [...this.state.terminalLog.content];
-      if (orderSuccess) {
-        this.addToTerminal(
-          newTerminalContent,
-          [
-            ...stringToLines(
-              salesAscii.saleSuccess,
-              state.terminalLog.maxCharacters
-            ),
-            `${
-              currentCustomer.getCustomerMessage().customerName
-            } paid $${+moneyChange.toFixed(2)}`,
-          ],
-          TerminalLine.result
-        );
-      } else {
-        this.addToTerminal(
-          newTerminalContent,
-          [
-            ...stringToLines(
-              salesAscii.saleFail,
-              state.terminalLog.maxCharacters
-            ),
-            `${
-              currentCustomer.getCustomerMessage().customerName
-            } left without paying...`,
-          ],
-          TerminalLine.result
-        );
-      }
+      // check for sale success and update money / rep
+      const orderSuccess = this.checkOrderSuccess(currentCustomer, state);
+      const moneyChange = this.calculateMoneyChange(
+        orderSuccess,
+        currentCustomer,
+        state
+      );
+      const reputationChange = this.calculateReputationChange(
+        orderSuccess,
+        currentCustomer
+      );
 
-      // deactivate current customer message
+      // update terminal with sale result
+      const newTerminalContent = this.terminalSalesResult(
+        state.terminalLog.content,
+        orderSuccess,
+        currentCustomer,
+        moneyChange,
+        state.terminalLog.maxCharacters
+      );
+
+      // deactivate the current customer and cycle to the next one - add customers if low.
       currentCustomer.deactivateMessage();
+      const { newCustomers, nextCustomer } = this.updateCustomers(state);
 
-      const newCustomers = [...state.customerState.customers].slice(1);
-
-      // add more customers without adjusting quota
-      if (newCustomers.length <= 1) {
-        const extraCustomers = this.generateCustomers();
-        newCustomers.push(...extraCustomers);
-      }
-
-      // get next customer
-      const nextCustomer = state.customerState.customers[0];
-
-      let newGameMode = state.gameMode;
-
-      // change to dayEnd if sales timer has elapsed
-      const timer = this.getTimer("sales");
-      if (timer) {
-        if (this.timeElapsed(timer)) {
-          newGameMode = GameMode.dayEnd;
-          this.endTimer("sales");
-        }
-      }
+      // transition to dayEnd state if the sales timer has expired (last sale)
+      const newGameMode = this.checkSalesTimer(state.gameMode);
 
       return {
         ...state,
         newGameMode,
         player: {
+          ...state.player,
           money: state.player.money + moneyChange,
           reputation: state.player.reputation + reputationChange,
         },
@@ -966,7 +919,132 @@ export class Game {
     return elapsed >= timer.allottedTime * 1000; // convert to milliseconds
   }
 
+  decrementPlayerHealth() {
+    this.setState((state) => {
+      return {
+        ...state,
+        player: {
+          ...state.player,
+          health: state.player.health - 1,
+        },
+      };
+    });
+  }
+
   // Helper Methods ///////////////////////////////////////
+  private checkSalesTimer(currentGameMode: GameMode): GameMode {
+    let newGameMode = currentGameMode;
+
+    // Change to dayEnd if sales timer has elapsed
+    const timer = this.getTimer("sales");
+    if (timer && this.timeElapsed(timer)) {
+      newGameMode = GameMode.dayEnd;
+      this.endTimer("sales");
+    }
+
+    return newGameMode;
+  }
+
+  private checkOrderSuccess(
+    currentCustomer: Customer,
+    state: GameState
+  ): boolean {
+    return currentCustomer.getOrder().isCorrectOrder(state.coffeeState);
+  }
+
+  private calculateMoneyChange(
+    orderSuccess: boolean,
+    currentCustomer: Customer,
+    state: GameState
+  ): number {
+    return orderSuccess
+      ? currentCustomer.getOrder().getTotalPrice() * state.priceModifier
+      : 0;
+  }
+
+  private calculateReputationChange(
+    orderSuccess: boolean,
+    currentCustomer: Customer
+  ): number {
+    return orderSuccess
+      ? currentCustomer.getRepValue()
+      : -currentCustomer.getRepValue();
+  }
+
+  private isCoffeeEmpty(): boolean {
+    return Object.entries(this.state.coffeeState).every(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      ([_, value]) => value === 0
+    );
+  }
+
+  private handleEmptyCoffee(): void {
+    const newTerminalContent = [...this.state.terminalLog.content];
+    this.addToTerminal(
+      newTerminalContent,
+      ["No coffee brewed.", "Enter ingredients using the buttons above!"],
+      TerminalLine.system
+    );
+    this.setState((state) => ({
+      ...state,
+      terminalLog: {
+        ...state.terminalLog,
+        content: newTerminalContent,
+      },
+    }));
+  }
+
+  private terminalSalesResult(
+    currentContent: string[],
+    orderSuccess: boolean,
+    currentCustomer: Customer,
+    moneyChange: number,
+    maxChars: number
+  ): string[] {
+    const newTerminalContent = [...currentContent];
+
+    if (orderSuccess) {
+      this.addToTerminal(
+        newTerminalContent,
+        [
+          ...stringToLines(salesAscii.saleSuccess, maxChars),
+          `${
+            currentCustomer.getCustomerMessage().customerName
+          } paid $${+moneyChange.toFixed(2)}`,
+        ],
+        TerminalLine.result
+      );
+    } else {
+      this.addToTerminal(
+        newTerminalContent,
+        [
+          ...stringToLines(salesAscii.saleFail, maxChars),
+          `${
+            currentCustomer.getCustomerMessage().customerName
+          } left without paying...`,
+        ],
+        TerminalLine.result
+      );
+    }
+
+    return newTerminalContent;
+  }
+
+  private updateCustomers(state: GameState) {
+    const newCustomers = [...state.customerState.customers].slice(1);
+
+    // Add more customers if needed
+    if (newCustomers.length <= 1) {
+      const extraCustomers = this.generateCustomers();
+      newCustomers.push(...extraCustomers);
+    }
+
+    // Get next customer
+    const nextCustomer = newCustomers[0];
+
+    return { newCustomers, nextCustomer };
+  }
+
   private generateCustomers(): Customer[] {
     const customerCount = Math.ceil(RandRange(4, 6));
     return Array.from(

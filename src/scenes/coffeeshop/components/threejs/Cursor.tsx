@@ -88,8 +88,13 @@ interface cursorProps {
 
 const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   const cursorRef = useRef<Mesh>(null);
-  const { cursorState, setCursorState, cursorPosition, setCursorPosition } =
-    useContext(GameContext);
+  const {
+    cursorState,
+    setCursorState,
+    cursorPosition,
+    setCursorPosition,
+    playerHit,
+  } = useContext(GameContext);
   const currentState = cursorStates[cursorState];
   const targetPosition = useRef(
     new THREE.Vector3(0, 0, commonValues.layer.game)
@@ -102,7 +107,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   const lastBulletTime = useRef(0);
   const bulletInterval = useRef(200); // Milliseconds between bullet spawns
   const hitTimeout = useRef<NodeJS.Timeout | null>(null);
-  const playerHitInterval = 2000;
+  const playerHitInterval = 2500;
 
   // Create a reference for cursor position that doesn't change with renders
   // const cursorPosition = useRef(new THREE.Vector3());
@@ -129,6 +134,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
 
   const handlePlayerHit = useCallback(() => {
     setCursorState("hit");
+    playerHit();
     if (hitTimeout.current) {
       clearTimeout(hitTimeout.current); // Clear any existing timeout
     }
@@ -136,7 +142,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
       setCursorState("idle");
       hitTimeout.current = null;
     }, playerHitInterval);
-  }, [setCursorState]);
+  }, [playerHit, setCursorState]);
 
   // Effect to control bullet spawning based on mouse state
   useEffect(() => {

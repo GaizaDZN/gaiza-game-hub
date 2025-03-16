@@ -13,7 +13,7 @@ const cursor = "/src/assets/img/cursor.png";
 
 const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
   gui.hide();
-  const { gameState, setGameMode } = useContext(GameContext);
+  const { gameState, setGameMode, queueGameMode } = useContext(GameContext);
   const [isMouseOnCanvas, setIsMouseOnCanvas] = useState(false);
   const [mouseHeld, setMouseHeld] = useState(false);
   const { gl, size } = useThree();
@@ -32,6 +32,10 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
     // Trigger new game mode state
     if (gameState.gameMode != gameState.newGameMode) {
       setGameMode();
+    }
+
+    if (gameState.player.health === 0) {
+      queueGameMode(GameMode.dayEnd);
     }
 
     const handleMouseEnter = () => {
