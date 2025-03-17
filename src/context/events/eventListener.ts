@@ -19,7 +19,12 @@ class CollisionEventDispatcher {
   }
 }
 
-export type GameEvent = "sale" | "saleFail" | "timeout";
+export type GameEvent =
+  | "sale"
+  | "saleFail"
+  | "timeout"
+  | "playerDeath"
+  | "enterSalesMode";
 class GameEventDispatcher {
   private listeners: { [key in GameEvent]?: ((e: any) => void)[] } = {};
 

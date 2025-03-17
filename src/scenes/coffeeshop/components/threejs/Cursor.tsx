@@ -110,6 +110,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   // Bullet spawning state
   const [canFire, setCanFire] = useState(true);
   const [isFiring, setIsFiring] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
   const lastBulletTime = useRef(0);
   const bulletInterval = useRef(200); // Milliseconds between bullet spawns
   const hitTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -152,17 +153,32 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
 
   const holdFire = useCallback(() => {
     setCanFire(false);
+    setTimedOut(true);
   }, []);
 
-  // Effect to control bullet spawning based on mouse state
+  // reset timeout state when re-entering sales mode
+  const enterSalesMode = useCallback(() => {
+    setTimedOut(false);
+  }, []);
+
+  // Effect to control bullet spawning
   useEffect(() => {
     collisionEventDispatcher.subscribe("playerHit", handlePlayerHit);
     gameEventDispatcher.subscribe("timeout", holdFire);
 
-    if (!canFire && gameState.gameMode != GameMode.sales) setCanFire(true);
+    gameEventDispatcher.subscribe("enterSalesMode", enterSalesMode);
+
+    // Only allow firing in sales mode AND when not timed out
+    if (gameState.gameMode === GameMode.sales && !timedOut && !canFire) {
+      setCanFire(true);
+    } else if ((gameState.gameMode !== GameMode.sales || timedOut) && canFire) {
+      // Disable firing when not in sales mode OR timed out
+      setCanFire(false);
+    }
+
     if (cursorState !== "hit") {
-      // Prevent overwriting "hit" state
-      if (mouseHeld && isMouseOnCanvas && canFire) {
+      // Rest of your cursor state logic remains the same
+      if (isMouseOnCanvas && canFire) {
         setIsFiring(true);
         setCursorState("firing");
       } else {
@@ -175,15 +191,18 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
     return () => {
       collisionEventDispatcher.unsubscribe("playerHit", handlePlayerHit);
       gameEventDispatcher.unsubscribe("timeout", holdFire);
+      gameEventDispatcher.unsubscribe("enterSalesMode", enterSalesMode);
     };
   }, [
-    mouseHeld,
     isMouseOnCanvas,
     cursorState,
     handlePlayerHit,
     setCursorState,
     holdFire,
+    enterSalesMode,
     canFire,
+    timedOut,
+    gameState.gameMode,
   ]);
 
   useFrame(({ clock }) => {
@@ -265,7 +284,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
         cursorRef.current.rotateX(Math.PI / 2);
 
         // Handle bullet spawning
-        if (mouseHeld && isFiring) {
+        if (isFiring) {
           const currentTime = clock.getElapsedTime() * 1000;
           if (
             fireRateElapsed(

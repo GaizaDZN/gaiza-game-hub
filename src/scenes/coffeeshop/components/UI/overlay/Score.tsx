@@ -9,7 +9,7 @@ import {
 import { ScoreEvent, scoreEvents } from "../../../game/game";
 
 const ScoreOverlay = () => {
-  const { gameState } = useContext(GameContext);
+  const { updateScoreState } = useContext(GameContext);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(1);
 
@@ -35,14 +35,19 @@ const ScoreOverlay = () => {
     setCombo(1);
   }, []);
 
+  const handlePlayerDeath = useCallback(() => {
+    updateScoreState(score, combo);
+  }, [combo, score, updateScoreState]);
+
   const eventHandlers = useMemo(
     () => ({
       coreHit: handleCoreHit,
       playerHit: resetCombo,
+      playerDeath: handlePlayerDeath,
       sale: handleSale,
       saleFail: resetCombo,
     }),
-    [handleCoreHit, handleSale, resetCombo]
+    [handleCoreHit, handleSale, resetCombo, handlePlayerDeath]
   );
 
   useEffect(() => {

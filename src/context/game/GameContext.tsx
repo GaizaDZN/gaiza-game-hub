@@ -26,6 +26,7 @@ interface GameContextType {
   setTextPrinting: (textPrinting: boolean) => void;
   resetGame: () => void;
   playerHit: () => void;
+  updateScoreState: (score: number, combo: number) => void;
 
   cursorState: CursorStateKey;
   setCursorState: Dispatch<SetStateAction<CursorStateKey>>;
@@ -49,6 +50,7 @@ export const GameContext = createContext<GameContextType>({
   setTextPrinting: () => {},
   resetGame: () => {},
   playerHit: () => {},
+  updateScoreState: () => {},
 
   cursorState: "idle",
   setCursorState: () => {},

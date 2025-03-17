@@ -126,6 +126,14 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
     return setGame(new Game(game.getState()));
   }, [game]);
 
+  const updateScoreState = useCallback(
+    (score: number, combo: number) => {
+      game.updateScoreState(score, combo);
+      return setGame(new Game(game.getState()));
+    },
+    [game]
+  );
+
   // Cursor
   const [cursorPosition, setCursorPosition] = useState<Vector3>(new Vector3());
   const [cursorState, setCursorState] = useState<CursorStateKey>("idle");
@@ -159,6 +167,7 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       resetGame,
       setTextPrinting,
       playerHit,
+      updateScoreState,
 
       cursorState,
       setCursorState: handleCursorState,
@@ -182,6 +191,7 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       updateGameState,
       setTextPrinting,
       playerHit,
+      updateScoreState,
 
       cursorState,
       handleCursorState,

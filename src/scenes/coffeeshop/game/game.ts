@@ -913,18 +913,18 @@ export class Game {
 
   // SCORE STATE ///////////////////////////////////////
 
-  // triggerScoreEvent(scoreEventType: ScoreEvent): void {
-  //   this.setState((state) => {
-  //     const newScore = this.increaseScore(state, scoreEventType);
-  //     return {
-  //       ...state,
-  //       scoreState: {
-  //         ...state.scoreState,
-  //         score: newScore,
-  //       },
-  //     };
-  //   });
-  // }
+  updateScoreState(score: number, combo: number): void {
+    this.setState((state) => {
+      return {
+        ...state,
+        scoreState: {
+          ...state.scoreState,
+          score,
+          combo,
+        },
+      };
+    });
+  }
 
   // Helper Methods ///////////////////////////////////////
   private initScoreState(): ScoreState {
