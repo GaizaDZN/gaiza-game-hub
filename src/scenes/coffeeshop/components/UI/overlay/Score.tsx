@@ -1,7 +1,9 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { GameContext } from "../../../../../context/game/GameContext";
 import {
+  CollisionEvent,
   collisionEventDispatcher,
+  GameEvent,
   gameEventDispatcher,
 } from "../../../../../context/events/eventListener";
 import { ScoreEvent, scoreEvents } from "../../../game/game";
@@ -26,16 +28,45 @@ const ScoreOverlay = () => {
 
   const handleSale = useCallback(() => {
     increaseScore("sale");
-  }, [increaseScore]);
+    setCombo(combo + 1);
+  }, [increaseScore, combo]);
+
+  const resetCombo = useCallback(() => {
+    setCombo(1);
+  }, []);
+
+  const eventHandlers = useMemo(
+    () => ({
+      coreHit: handleCoreHit,
+      playerHit: resetCombo,
+      sale: handleSale,
+      saleFail: resetCombo,
+    }),
+    [handleCoreHit, handleSale, resetCombo]
+  );
 
   useEffect(() => {
-    collisionEventDispatcher.subscribe("coreHit", handleCoreHit);
-    gameEventDispatcher.subscribe("sale", handleSale);
+    Object.entries(eventHandlers).forEach(([event, handler]) => {
+      if (event.startsWith("core") || event.startsWith("player")) {
+        collisionEventDispatcher.subscribe(event as CollisionEvent, handler);
+      } else {
+        gameEventDispatcher.subscribe(event as GameEvent, handler);
+      }
+    });
+
     return () => {
-      collisionEventDispatcher.unSubscribe("coreHit", handleCoreHit);
-      gameEventDispatcher.unSubscribe("sale", handleSale);
+      Object.entries(eventHandlers).forEach(([event, handler]) => {
+        if (event.startsWith("core") || event.startsWith("player")) {
+          collisionEventDispatcher.unsubscribe(
+            event as CollisionEvent,
+            handler
+          );
+        } else {
+          gameEventDispatcher.unsubscribe(event as GameEvent, handler);
+        }
+      });
     };
-  }, [handleCoreHit, handleSale]);
+  }, [eventHandlers]);
 
   return (
     <div className="score__container">

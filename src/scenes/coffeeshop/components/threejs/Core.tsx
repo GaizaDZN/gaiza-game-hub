@@ -90,7 +90,7 @@ const Core: React.FC = () => {
     setIsFiring(gameState.gameMode === GameMode.sales);
 
     return () => {
-      collisionEventDispatcher.unSubscribe("coreHit", handleCoreHit);
+      collisionEventDispatcher.unsubscribe("coreHit", handleCoreHit);
       if (hitTimeout.current) {
         clearTimeout(hitTimeout.current);
       }

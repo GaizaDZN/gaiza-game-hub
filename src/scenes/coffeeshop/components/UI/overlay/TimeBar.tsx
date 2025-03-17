@@ -1,5 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { GameContext } from "../../../../../context/game/GameContext";
+import { gameEventDispatcher } from "../../../../../context/events/eventListener";
 
 const TimeBar: React.FC = () => {
   const { gameState } = useContext(GameContext);
@@ -29,6 +30,7 @@ const TimeBar: React.FC = () => {
       const elapsed = Math.floor((timeNow - timer.startTime) / 1000); // Convert ms to seconds
       const remaining = Math.max(timer.allottedTime - elapsed, 0);
       setTimeLeft(remaining);
+      if (remaining === 0) gameEventDispatcher.dispatch("timeout");
     };
 
     // Initial calculation

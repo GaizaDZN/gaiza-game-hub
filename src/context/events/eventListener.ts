@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-type CollisionEvent = "coreHit" | "playerHit";
+export type CollisionEvent = "coreHit" | "playerHit";
 
 class CollisionEventDispatcher {
   private listeners: { [key in CollisionEvent]?: ((e: any) => void)[] } = {};
@@ -9,7 +9,7 @@ class CollisionEventDispatcher {
     this.listeners[event]?.push(callback);
   }
 
-  unSubscribe(event: CollisionEvent, callback: (e: any) => void): void {
+  unsubscribe(event: CollisionEvent, callback: (e: any) => void): void {
     this.listeners[event] = this.listeners[event]?.filter(
       (cb) => cb != callback
     );
@@ -19,7 +19,7 @@ class CollisionEventDispatcher {
   }
 }
 
-type GameEvent = "sale";
+export type GameEvent = "sale" | "saleFail" | "timeout";
 class GameEventDispatcher {
   private listeners: { [key in GameEvent]?: ((e: any) => void)[] } = {};
 
@@ -28,7 +28,7 @@ class GameEventDispatcher {
     this.listeners[event]?.push(callback);
   }
 
-  unSubscribe(event: GameEvent, callback: (e: any) => void): void {
+  unsubscribe(event: GameEvent, callback: (e: any) => void): void {
     this.listeners[event] = this.listeners[event]?.filter(
       (cb) => cb != callback
     );

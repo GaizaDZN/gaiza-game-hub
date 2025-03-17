@@ -14,7 +14,11 @@ import { coreBuffer } from "./Core";
 import { commonValues } from "./common";
 import { fireRateElapsed, scaleByPosition } from "../../../../helpers/helpers";
 import { GameContext } from "../../../../context/game/GameContext";
-import { collisionEventDispatcher } from "../../../../context/events/eventListener";
+import {
+  collisionEventDispatcher,
+  gameEventDispatcher,
+} from "../../../../context/events/eventListener";
+import { GameMode } from "../../game/game";
 
 // Define CursorBullets component - this is a persistent component
 // that manages bullet rendering regardless of firing state
@@ -94,6 +98,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
     cursorPosition,
     setCursorPosition,
     playerHit,
+    gameState,
   } = useContext(GameContext);
   const currentState = cursorStates[cursorState];
   const targetPosition = useRef(
@@ -103,6 +108,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   const lerpFactor = 0.07;
 
   // Bullet spawning state
+  const [canFire, setCanFire] = useState(true);
   const [isFiring, setIsFiring] = useState(false);
   const lastBulletTime = useRef(0);
   const bulletInterval = useRef(200); // Milliseconds between bullet spawns
@@ -144,13 +150,19 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
     }, playerHitInterval);
   }, [playerHit, setCursorState]);
 
+  const holdFire = useCallback(() => {
+    setCanFire(false);
+  }, []);
+
   // Effect to control bullet spawning based on mouse state
   useEffect(() => {
     collisionEventDispatcher.subscribe("playerHit", handlePlayerHit);
+    gameEventDispatcher.subscribe("timeout", holdFire);
 
+    if (!canFire && gameState.gameMode != GameMode.sales) setCanFire(true);
     if (cursorState !== "hit") {
       // Prevent overwriting "hit" state
-      if (mouseHeld && isMouseOnCanvas) {
+      if (mouseHeld && isMouseOnCanvas && canFire) {
         setIsFiring(true);
         setCursorState("firing");
       } else {
@@ -161,7 +173,8 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
     }
 
     return () => {
-      collisionEventDispatcher.unSubscribe("playerHit", handlePlayerHit);
+      collisionEventDispatcher.unsubscribe("playerHit", handlePlayerHit);
+      gameEventDispatcher.unsubscribe("timeout", holdFire);
     };
   }, [
     mouseHeld,
@@ -169,6 +182,8 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
     cursorState,
     handlePlayerHit,
     setCursorState,
+    holdFire,
+    canFire,
   ]);
 
   useFrame(({ clock }) => {

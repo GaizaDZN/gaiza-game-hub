@@ -662,6 +662,10 @@ export class Game {
             : state.salesState.badOrders,
           moneyEnd: state.player.money + moneyChange,
         },
+        scoreState: {
+          ...state.scoreState,
+          combo: orderSuccess ? state.scoreState.combo + 1 : 1,
+        },
       };
     });
   }
