@@ -4,12 +4,14 @@ import { GameMode } from "../../../game/game";
 import CustomerQueue from "./CustomerQueue";
 import CoffeeQueue from "./CoffeeQueue";
 import TimeBar from "./TimeBar";
+import ScoreOverlay from "./Score";
 
 const SalesOverlay: React.FC = () => {
   return (
     <div className="canvas__overlay overlay__sales">
       <CustomerQueue />
       <CoffeeQueue />
+      <ScoreOverlay />
       <TimeBar />
     </div>
   );

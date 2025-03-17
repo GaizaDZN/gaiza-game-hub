@@ -3,6 +3,7 @@ import {
   GameState,
   ResourceState,
   GameMode,
+  ScoreEvent,
 } from "../../scenes/coffeeshop/game/game";
 import { Vector3 } from "three";
 import { CursorStateKey } from "../../scenes/coffeeshop/components/threejs/Cursor";
@@ -26,6 +27,7 @@ interface GameContextType {
   setTextPrinting: (textPrinting: boolean) => void;
   resetGame: () => void;
   playerHit: () => void;
+  triggerScoreEvent: (scoreEventType: ScoreEvent) => void;
 
   cursorState: CursorStateKey;
   setCursorState: Dispatch<SetStateAction<CursorStateKey>>;
@@ -49,6 +51,7 @@ export const GameContext = createContext<GameContextType>({
   setTextPrinting: () => {},
   resetGame: () => {},
   playerHit: () => {},
+  triggerScoreEvent: () => {},
 
   cursorState: "idle",
   setCursorState: () => {},

@@ -148,21 +148,28 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   useEffect(() => {
     collisionEventDispatcher.subscribe("playerHit", handlePlayerHit);
 
-    if (mouseHeld && isMouseOnCanvas) {
-      setIsFiring(true);
-      setCursorState("firing");
-    } else {
-      setIsFiring(false);
-      setBulletSpawnTrigger(0);
-      setCursorState("idle");
+    if (cursorState !== "hit") {
+      // Prevent overwriting "hit" state
+      if (mouseHeld && isMouseOnCanvas) {
+        setIsFiring(true);
+        setCursorState("firing");
+      } else {
+        setIsFiring(false);
+        setBulletSpawnTrigger(0);
+        setCursorState("idle");
+      }
     }
+
     return () => {
       collisionEventDispatcher.unSubscribe("playerHit", handlePlayerHit);
-      if (hitTimeout.current) {
-        clearTimeout(hitTimeout.current);
-      }
     };
-  }, [mouseHeld, isMouseOnCanvas, handlePlayerHit, setCursorState]);
+  }, [
+    mouseHeld,
+    isMouseOnCanvas,
+    cursorState,
+    handlePlayerHit,
+    setCursorState,
+  ]);
 
   useFrame(({ clock }) => {
     if (cursorRef.current) {

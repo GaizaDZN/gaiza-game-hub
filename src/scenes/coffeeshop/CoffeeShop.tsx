@@ -61,7 +61,14 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
       inputDispatcher.unsubscribe("mousePress", handleMouseDown);
       inputDispatcher.unsubscribe("mouseUp", handleMouseUp);
     };
-  }, [gameState.gameMode, gameState.newGameMode, gl.domElement, setGameMode]);
+  }, [
+    gameState.gameMode,
+    gameState.newGameMode,
+    gameState.player.health,
+    gl.domElement,
+    queueGameMode,
+    setGameMode,
+  ]);
 
   return (
     <>

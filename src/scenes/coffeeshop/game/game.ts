@@ -27,10 +27,16 @@ export interface GameState {
   salesState: SalesState;
   brewState: BrewState;
   storeState: StoreState;
+  scoreState: ScoreState;
   timers: Map<string, TimerState>;
   priceModifier: number;
   activeBars: ResourceState;
   version: number;
+}
+
+interface ScoreState {
+  score: number;
+  combo: number;
 }
 
 interface StoreState extends ResourceState {
@@ -130,6 +136,7 @@ export class Game {
       textState: this.initTextState(),
       terminalLog: this.initTerminalLog(),
       salesState: this.initSalesState(),
+      scoreState: this.initScoreState(),
       brewState: {
         coffeeName: "latte" as keyof CoffeeState,
         brewable: false,
@@ -200,6 +207,7 @@ export class Game {
         textState: this.initTextState(),
         terminalLog: this.initTerminalLog(),
         salesState: this.initSalesState(),
+        scoreState: this.initScoreState(),
         brewState: {
           coffeeName: "latte" as keyof CoffeeState,
           brewable: false,
@@ -496,7 +504,7 @@ export class Game {
             },
             player: {
               ...state.player,
-              health: 3,
+              health: 999, // FOR DEBUG - default 3
             },
             orderState: {
               ...state.orderState,
@@ -896,7 +904,40 @@ export class Game {
     });
   }
 
+  // SCORE STATE ///////////////////////////////////////
+  triggerScoreEvent(scoreEventType: ScoreEvent): void {
+    this.setState((state) => {
+      const newScore = this.increaseScore(state, scoreEventType);
+      return {
+        ...state,
+        scoreState: {
+          ...state.scoreState,
+          score: newScore,
+        },
+      };
+    });
+  }
+
+  private increaseScore(state: GameState, scoreEventType: ScoreEvent): number {
+    const scoreState = state.scoreState;
+    return (
+      scoreEvents[scoreEventType].score + scoreState.score * scoreState.combo
+    );
+  }
+
+  private increaseScoreCombo(state: GameState): number {
+    const scoreState = state.scoreState;
+    return scoreState.combo + 1;
+  }
+
   // Helper Methods ///////////////////////////////////////
+  private initScoreState(): ScoreState {
+    return {
+      score: 0,
+      combo: 1,
+    };
+  }
+
   private initOrderState(): OrderState {
     return {
       currentOrder: undefined,
@@ -1170,3 +1211,14 @@ export enum GameMode {
   closing = "closing", // see today's profit, and other stats
   dayEnd = "dayEnd", // give player option to start the next day (round).
 }
+
+export type ScoreEvent = keyof typeof scoreEvents;
+
+export const scoreEvents = {
+  coreHit: {
+    score: 1,
+  },
+  sale: {
+    score: 200,
+  },
+};
