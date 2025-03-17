@@ -1,22 +1,41 @@
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { GameContext } from "../../../../../context/game/GameContext";
-import { collisionEventDispatcher } from "../../../../../context/events/eventListener";
-import { ScoreEvent } from "../../../game/game";
+import {
+  collisionEventDispatcher,
+  gameEventDispatcher,
+} from "../../../../../context/events/eventListener";
+import { ScoreEvent, scoreEvents } from "../../../game/game";
 
 const ScoreOverlay = () => {
-  const { gameState, triggerScoreEvent } = useContext(GameContext);
+  const { gameState } = useContext(GameContext);
+  const [score, setScore] = useState(0);
+  const [combo, setCombo] = useState(1);
 
-  const score = gameState.scoreState.score;
-  const combo = gameState.scoreState.combo;
+  const increaseScore = useCallback(
+    (scoreEventType: ScoreEvent) => {
+      setScore((prevScore: number) => {
+        return prevScore + scoreEvents[scoreEventType].score * combo;
+      });
+    },
+    [combo]
+  );
 
   const handleCoreHit = useCallback(() => {
-    const event: ScoreEvent = "coreHit";
-    triggerScoreEvent(event);
-  }, [triggerScoreEvent]);
+    increaseScore("coreHit");
+  }, [increaseScore]);
+
+  const handleSale = useCallback(() => {
+    increaseScore("sale");
+  }, [increaseScore]);
 
   useEffect(() => {
     collisionEventDispatcher.subscribe("coreHit", handleCoreHit);
-  }, [handleCoreHit]);
+    gameEventDispatcher.subscribe("sale", handleSale);
+    return () => {
+      collisionEventDispatcher.unSubscribe("coreHit", handleCoreHit);
+      gameEventDispatcher.unSubscribe("sale", handleSale);
+    };
+  }, [handleCoreHit, handleSale]);
 
   return (
     <div className="score__container">

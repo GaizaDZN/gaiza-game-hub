@@ -12,7 +12,6 @@ import {
   Game,
   ResourceState,
   GameMode,
-  ScoreEvent,
 } from "../../scenes/coffeeshop/game/game";
 import { Vector3 } from "three";
 import { CursorStateKey } from "../../scenes/coffeeshop/components/threejs/Cursor";
@@ -127,14 +126,6 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
     return setGame(new Game(game.getState()));
   }, [game]);
 
-  const triggerScoreEvent = useCallback(
-    (scoreEventType: ScoreEvent) => {
-      game.triggerScoreEvent(scoreEventType);
-      return setGame(new Game(game.getState()));
-    },
-    [game]
-  );
-
   // Cursor
   const [cursorPosition, setCursorPosition] = useState<Vector3>(new Vector3());
   const [cursorState, setCursorState] = useState<CursorStateKey>("idle");
@@ -168,7 +159,6 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       resetGame,
       setTextPrinting,
       playerHit,
-      triggerScoreEvent,
 
       cursorState,
       setCursorState: handleCursorState,
@@ -192,7 +182,6 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       updateGameState,
       setTextPrinting,
       playerHit,
-      triggerScoreEvent,
 
       cursorState,
       handleCursorState,

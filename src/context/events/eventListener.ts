@@ -19,4 +19,24 @@ class CollisionEventDispatcher {
   }
 }
 
+type GameEvent = "sale";
+class GameEventDispatcher {
+  private listeners: { [key in GameEvent]?: ((e: any) => void)[] } = {};
+
+  subscribe(event: GameEvent, callback: (e: any) => void): void {
+    if (!this.listeners[event]) this.listeners[event] = [];
+    this.listeners[event]?.push(callback);
+  }
+
+  unSubscribe(event: GameEvent, callback: (e: any) => void): void {
+    this.listeners[event] = this.listeners[event]?.filter(
+      (cb) => cb != callback
+    );
+  }
+  dispatch(event: GameEvent, data?: any): void {
+    this.listeners[event]?.forEach((cb) => cb(data));
+  }
+}
+
 export const collisionEventDispatcher = new CollisionEventDispatcher();
+export const gameEventDispatcher = new GameEventDispatcher();

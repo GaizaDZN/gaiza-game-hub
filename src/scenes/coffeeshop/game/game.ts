@@ -1,3 +1,4 @@
+import { gameEventDispatcher } from "../../../context/events/eventListener";
 import { RandRange, stringToLines } from "../../../helpers/helpers";
 import { asciiCat, salesAscii } from "../ascii/art";
 import {
@@ -597,6 +598,8 @@ export class Game {
         orderSuccess,
         currentCustomer
       );
+      // trigger sale event if successful
+      if (orderSuccess) gameEventDispatcher.dispatch("sale");
 
       // update terminal with sale result
       const newTerminalContent = this.terminalSalesResult(
@@ -905,30 +908,19 @@ export class Game {
   }
 
   // SCORE STATE ///////////////////////////////////////
-  triggerScoreEvent(scoreEventType: ScoreEvent): void {
-    this.setState((state) => {
-      const newScore = this.increaseScore(state, scoreEventType);
-      return {
-        ...state,
-        scoreState: {
-          ...state.scoreState,
-          score: newScore,
-        },
-      };
-    });
-  }
 
-  private increaseScore(state: GameState, scoreEventType: ScoreEvent): number {
-    const scoreState = state.scoreState;
-    return (
-      scoreEvents[scoreEventType].score + scoreState.score * scoreState.combo
-    );
-  }
-
-  private increaseScoreCombo(state: GameState): number {
-    const scoreState = state.scoreState;
-    return scoreState.combo + 1;
-  }
+  // triggerScoreEvent(scoreEventType: ScoreEvent): void {
+  //   this.setState((state) => {
+  //     const newScore = this.increaseScore(state, scoreEventType);
+  //     return {
+  //       ...state,
+  //       scoreState: {
+  //         ...state.scoreState,
+  //         score: newScore,
+  //       },
+  //     };
+  //   });
+  // }
 
   // Helper Methods ///////////////////////////////////////
   private initScoreState(): ScoreState {
