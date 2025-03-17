@@ -11,6 +11,7 @@ import * as THREE from "three";
 import { coreBuffer } from "../Core";
 import { collisionEventDispatcher } from "../../../../../context/events/eventListener";
 import { GameContext } from "../../../../../context/game/GameContext";
+import { GameMode } from "../../../game/game";
 
 // Bullets.tsx
 
@@ -78,7 +79,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
     const meshRef = useRef<THREE.InstancedMesh>(null);
     const bullets = useRef<Bullet[]>([]);
     const initializedRef = useRef(false);
-    const { cursorState, cursorPosition } = useContext(GameContext);
+    const { cursorState, cursorPosition, gameState } = useContext(GameContext);
     const { viewport } = useThree();
 
     // Initialize bullet pool
@@ -193,7 +194,8 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         // Enemy bullets
         if (
           bullet.bulletSource === BulletSource.enemy &&
-          cursorState != "hit"
+          cursorState != "hit" &&
+          gameState.gameMode === GameMode.sales
         ) {
           const distanceFromCursor = bullet.position.distanceTo(cursorPosition);
           if (distanceFromCursor < 0.15) {

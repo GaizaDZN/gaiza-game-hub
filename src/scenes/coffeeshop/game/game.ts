@@ -13,6 +13,8 @@ import {
 // Core types
 export interface GameState {
   gameMode: GameMode;
+  modeChangeDelay: number; // milliseconds
+  lastModeChangeTime: number | null;
   newGameMode: GameMode;
   player: PlayerState;
   resources: ResourceState;
@@ -117,57 +119,22 @@ export class Game {
     this.state = {
       gameMode: GameMode.init,
       newGameMode: GameMode.init,
+      modeChangeDelay: 500,
+      lastModeChangeTime: null,
       player: { money: 100, reputation: 100, health: 3 },
-      resources: { beans: 20, water: 20, milk: 20, sugar: 20 },
-      orderState: {
-        currentOrder: undefined,
-        orderSuccess: false,
-        prevOrderState: PrevOrderState.none,
-        orderSize: 0,
-      },
-      coffeeState: {
-        latte: 0,
-        espresso: 0,
-        cappuccino: 0,
-        americano: 0,
-        black: 0,
-        total: 0,
-      },
-      customerState: {
-        currentCustomer: undefined,
-        customers: [],
-        completedCustomers: [],
-        extraCustomers: [],
-        quota: 0,
-      },
+      resources: this.initResourceState(),
+      orderState: this.initOrderState(),
+      coffeeState: this.initCoffeeState(),
+      customerState: this.initCustomerState(),
       messageLog: { messages: [] },
-      textState: {
-        textPrinting: false,
-        textFinished: false,
-      },
-      terminalLog: {
-        content: [],
-        maxLines: 50,
-        maxCharacters: 46,
-      },
-      salesState: {
-        goodOrders: 0,
-        badOrders: 0,
-        moneyStart: 0,
-        moneyEnd: 0,
-      },
+      textState: this.initTextState(),
+      terminalLog: this.initTerminalLog(),
+      salesState: this.initSalesState(),
       brewState: {
         coffeeName: "latte" as keyof CoffeeState,
         brewable: false,
       },
-      storeState: {
-        beans: 0,
-        water: 0,
-        milk: 0,
-        sugar: 0,
-        totalPrice: 0,
-        storeOpen: false,
-      },
+      storeState: this.initStoreState(),
       timers: this.initTimers(),
       priceModifier: 3,
       activeBars: { beans: 0, water: 0, milk: 0, sugar: 0 },
@@ -222,57 +189,22 @@ export class Game {
       this.state = {
         gameMode: GameMode.init,
         newGameMode: GameMode.init,
+        lastModeChangeTime: null,
+        modeChangeDelay: 500,
         player: { money: 100, reputation: 100, health: 3 },
-        resources: { beans: 20, water: 20, milk: 20, sugar: 20 },
-        orderState: {
-          currentOrder: undefined,
-          orderSuccess: false,
-          prevOrderState: PrevOrderState.none,
-          orderSize: 0,
-        },
-        coffeeState: {
-          latte: 0,
-          espresso: 0,
-          cappuccino: 0,
-          americano: 0,
-          black: 0,
-          total: 0,
-        },
-        customerState: {
-          currentCustomer: undefined,
-          customers: [],
-          completedCustomers: [],
-          extraCustomers: [],
-          quota: 0,
-        },
+        resources: this.initResourceState(),
+        orderState: this.initOrderState(),
+        coffeeState: this.initCoffeeState(),
+        customerState: this.initCustomerState(),
         messageLog: { messages: [] },
-        textState: {
-          textPrinting: false,
-          textFinished: false,
-        },
-        terminalLog: {
-          content: [],
-          maxLines: 50, // might reduce this later who knows.
-          maxCharacters: 46,
-        },
-        salesState: {
-          goodOrders: 0,
-          badOrders: 0,
-          moneyStart: 0,
-          moneyEnd: 0,
-        },
+        textState: this.initTextState(),
+        terminalLog: this.initTerminalLog(),
+        salesState: this.initSalesState(),
         brewState: {
           coffeeName: "latte" as keyof CoffeeState,
           brewable: false,
         },
-        storeState: {
-          beans: 0,
-          water: 0,
-          milk: 0,
-          sugar: 0,
-          totalPrice: 0,
-          storeOpen: false,
-        },
+        storeState: this.initStoreState(),
         timers: this.initTimers(),
         priceModifier: 3,
         activeBars: { beans: 0, water: 0, milk: 0, sugar: 0 },
@@ -294,7 +226,6 @@ export class Game {
     // do nothing if already at max
     if (this.state.activeBars[resource] >= 10) return;
 
-    // console.log(resource);
     // play sound
     onSuccess();
 
@@ -353,9 +284,32 @@ export class Game {
 
   public brewCoffee(onSuccess: () => void): void {
     const usedResources = this.state.activeBars;
-
     const newTerminalContent = [...this.state.terminalLog.content];
 
+    // prevent brewing in mode other than sales
+    if (this.state.gameMode != GameMode.sales) {
+      // brewing shouldn't work if the coffee type is not recognized
+      // assign 'shake' class to brew button for feedback
+      this.addToTerminal(
+        newTerminalContent,
+        ["Start sales mode to brew coffee."],
+        TerminalLine.system
+      );
+
+      this.setState((state) => {
+        return {
+          ...state,
+          terminalLog: {
+            ...state.terminalLog,
+            content: newTerminalContent,
+          },
+          orderState: {
+            ...state.orderState,
+          },
+        };
+      });
+      return;
+    }
     this.setState((state) => {
       // Calculate new resources
       const newResources = Object.entries(state.resources).reduce(
@@ -451,6 +405,18 @@ export class Game {
   // Prepare game mode change without triggering logic.
   public queueGameMode(newMode: GameMode): void {
     if (newMode === this.state.gameMode) return;
+
+    const now = Date.now();
+
+    // ignore if attempting to change modes rapidly
+    if (
+      this.state.lastModeChangeTime &&
+      now - this.state.lastModeChangeTime < this.state.modeChangeDelay
+    ) {
+      return;
+    }
+    this.state.lastModeChangeTime = now;
+
     this.setState((state) => {
       return {
         ...state,
@@ -461,8 +427,10 @@ export class Game {
 
   public setGameMode(): void {
     const newMode = this.state.newGameMode;
+    // ignore if dupe of current mode
     if (newMode === this.state.gameMode) return;
 
+    console.log("Setting game mode to:", newMode);
     this.setState((state) => {
       let updates: Partial<GameState> = {
         gameMode: newMode,
@@ -545,6 +513,9 @@ export class Game {
           break;
         }
         case GameMode.dayEnd: {
+          const { currentCustomer } = state.customerState;
+          if (currentCustomer) currentCustomer.deactivateMessage();
+
           // add ascii art
           this.addToTerminal(
             newTerminalContent,
@@ -557,11 +528,19 @@ export class Game {
           );
           updates = {
             ...updates,
+            customerState: {
+              ...state.customerState,
+              currentCustomer: undefined,
+              customers: [],
+            },
             orderState: {
               ...state.orderState,
+              orderSuccess: false,
               currentOrder: undefined,
               prevOrderState: PrevOrderState.none,
             },
+            textState: this.initTextState(),
+            coffeeState: this.initCoffeeState(),
             messageLog: {
               messages: [],
             },
@@ -653,14 +632,7 @@ export class Game {
             : PrevOrderState.fail,
           orderSize: this.getOrderSize(nextCustomer),
         },
-        coffeeState: {
-          latte: 0,
-          espresso: 0,
-          cappuccino: 0,
-          americano: 0,
-          black: 0,
-          total: 0,
-        },
+        coffeeState: this.initCoffeeState(),
         textState: {
           ...state.textState,
           textFinished: false,
@@ -713,11 +685,8 @@ export class Game {
         ...state,
         storeState: {
           ...state.storeState,
-          beans: 0,
-          water: 0,
-          milk: 0,
-          sugar: 0,
-          totalPrice: 0,
+          ...this.initStoreState(),
+          storeOpen: true,
         },
         terminalLog: {
           ...state.terminalLog,
@@ -808,12 +777,8 @@ export class Game {
           money: newMoney,
         },
         storeState: {
-          ...state.storeState,
-          beans: 0,
-          water: 0,
-          milk: 0,
-          sugar: 0,
-          totalPrice: 0,
+          ...this.initStoreState(),
+          storeOpen: true,
         },
         resources: {
           ...state.resources,
@@ -932,6 +897,68 @@ export class Game {
   }
 
   // Helper Methods ///////////////////////////////////////
+  private initOrderState(): OrderState {
+    return {
+      currentOrder: undefined,
+      orderSuccess: false,
+      prevOrderState: PrevOrderState.none,
+      orderSize: 0,
+    };
+  }
+  private initCustomerState(): CustomerState {
+    return {
+      currentCustomer: undefined,
+      customers: [],
+      completedCustomers: [],
+      extraCustomers: [],
+      quota: 0,
+    };
+  }
+
+  private initTerminalLog(): TerminalLog {
+    return {
+      content: [],
+      maxLines: 50,
+      maxCharacters: 46,
+    };
+  }
+
+  private initStoreState(): StoreState {
+    return {
+      beans: 0,
+      water: 0,
+      milk: 0,
+      sugar: 0,
+      totalPrice: 0,
+      storeOpen: false,
+    };
+  }
+  private initSalesState(): SalesState {
+    return {
+      goodOrders: 0,
+      badOrders: 0,
+      moneyStart: 0,
+      moneyEnd: 0,
+    };
+  }
+  private initTextState(): TextState {
+    return { textFinished: false, textPrinting: false };
+  }
+
+  private initCoffeeState(): CoffeeState {
+    return {
+      latte: 0,
+      espresso: 0,
+      cappuccino: 0,
+      americano: 0,
+      black: 0,
+      total: 0,
+    };
+  }
+  private initResourceState(): ResourceState {
+    return { beans: 20, water: 20, milk: 20, sugar: 20 };
+  }
+
   private checkSalesTimer(currentGameMode: GameMode): GameMode {
     let newGameMode = currentGameMode;
 

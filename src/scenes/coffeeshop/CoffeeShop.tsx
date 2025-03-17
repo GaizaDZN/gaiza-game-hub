@@ -28,13 +28,14 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
 
   useEffect(() => {
     const canvas = gl.domElement;
+    const mode = gameState.gameMode;
 
     // Trigger new game mode state
-    if (gameState.gameMode != gameState.newGameMode) {
+    if (mode != gameState.newGameMode) {
       setGameMode();
     }
 
-    if (gameState.player.health === 0) {
+    if (gameState.player.health === 0 && mode === GameMode.sales) {
       queueGameMode(GameMode.dayEnd);
     }
 

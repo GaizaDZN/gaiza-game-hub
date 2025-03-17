@@ -133,7 +133,13 @@ export const DayEndMessage: React.FC = () => {
               <tr>
                 <td>Profit:</td>
                 <td>
-                  ${+(salesState.moneyEnd - salesState.moneyStart).toFixed(2)}
+                  $
+                  {(() => {
+                    const profit = +(
+                      salesState.moneyEnd - salesState.moneyStart
+                    ).toFixed(2);
+                    return profit < 0 ? 0 : profit;
+                  })()}
                 </td>
               </tr>
             </tbody>
