@@ -468,7 +468,7 @@ export class Game {
               quota: newCustomers.length,
             },
             salesState: {
-              ...state.salesState,
+              ...this.initSalesState(),
               moneyStart: state.player.money, // set initial day money
             },
           };

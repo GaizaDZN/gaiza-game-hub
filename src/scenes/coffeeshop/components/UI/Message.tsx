@@ -45,7 +45,7 @@ export const Message: React.FC = () => {
         isRendered ? "fade-in ui-open" : "fade-out ui-close"
       }`}
     >
-      {currentCustomer?.getPortrait() === undefined ? (
+      {currentCustomer?.getPortrait() === "" ? (
         <DefaultAvatar />
       ) : (
         <CustomerAvatar avatar={currentCustomer?.getPortrait() || userImg} />

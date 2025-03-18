@@ -1226,12 +1226,12 @@ bottom: 10%;
 
 .score__container {
   position: absolute;
-  right: 5%;
+  right: 3%;
   top: 2%;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: 2px;
 
   .score-number__container,
   .highscore-number__container,
@@ -1244,9 +1244,9 @@ bottom: 10%;
   .score-number,
   .highscore-number,
   .combo-number {
-    font-size: 3rem;
+    font-size: 1rem;
     font-weight: bold;
-    color: #ffcc00; // Bright gold for emphasis
+    color: #ffcc00; 
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   }
 
@@ -1256,16 +1256,15 @@ bottom: 10%;
     font-size: 1rem;
     font-weight: 600;
     text-transform: uppercase;
-    color: #ddd;
     letter-spacing: 1px;
   }
 
   .highscore-number {
-    color: #ff6600; // Orange to distinguish high score
+    color: #ff6600; 
   }
 
   .combo-number {
-    color: #00ffcc; // Cyan to make it stand out
+    color: #00ffcc; 
   }
 }
 

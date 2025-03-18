@@ -11,6 +11,7 @@ interface InstancedAnimatedPlanesProps {
   height?: number;
   velocity?: number;
   playSpeed?: number;
+  staggers?: number; // Number of different playback positions
 }
 
 const InstancedAnimatedPlanes: React.FC<InstancedAnimatedPlanesProps> = ({
@@ -21,6 +22,57 @@ const InstancedAnimatedPlanes: React.FC<InstancedAnimatedPlanesProps> = ({
   z = 0,
   velocity = 0.01,
   playSpeed = 1,
+  staggers = 5, // Default to 5 different playback positions
+}) => {
+  // Calculate how many instances per stagger group
+  const instancesPerStagger = Math.ceil(count / staggers);
+
+  return (
+    <>
+      {Array.from({ length: staggers }).map((_, staggerIndex) => {
+        // Calculate the number of instances for this stagger group
+        const groupCount = Math.min(
+          instancesPerStagger,
+          count - staggerIndex * instancesPerStagger
+        );
+
+        // Skip if no instances needed for this group
+        if (groupCount <= 0) return null;
+
+        // Calculate the seek offset for this group (0 to 1)
+        const seekOffset = staggerIndex / staggers;
+
+        return (
+          <SingleGroupPlanes
+            key={staggerIndex}
+            count={groupCount}
+            videoUrl={videoUrl}
+            width={width}
+            height={height}
+            z={z}
+            velocity={velocity}
+            playSpeed={playSpeed}
+            seekOffset={seekOffset}
+          />
+        );
+      })}
+    </>
+  );
+};
+
+interface SingleGroupPlanesProps extends InstancedAnimatedPlanesProps {
+  seekOffset: number;
+}
+
+const SingleGroupPlanes: React.FC<SingleGroupPlanesProps> = ({
+  count,
+  videoUrl,
+  width = 1,
+  height = 1,
+  z = 0,
+  velocity = 0.01,
+  playSpeed = 1,
+  seekOffset = 0,
 }) => {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const { viewport } = useThree();
@@ -49,7 +101,12 @@ const InstancedAnimatedPlanes: React.FC<InstancedAnimatedPlanesProps> = ({
     video.crossOrigin = "anonymous";
     video.playbackRate = playSpeed;
 
-    video.addEventListener("loadeddata", () => {
+    video.addEventListener("loadedmetadata", () => {
+      // Apply the staggered seek position
+      if (video.duration && seekOffset > 0) {
+        video.currentTime = video.duration * seekOffset;
+      }
+
       const texture = new THREE.VideoTexture(video);
       // Configure texture for transparency
       texture.minFilter = THREE.LinearFilter;
@@ -63,7 +120,7 @@ const InstancedAnimatedPlanes: React.FC<InstancedAnimatedPlanesProps> = ({
     for (let i = 0; i < count; i++) {
       const x = Math.random() * viewport.width - viewport.width / 2;
       const y = Math.random() * viewport.height - viewport.height / 2;
-      const randZ = RandRange(-z, z);
+      const randZ = Math.random() * 2 * z - z;
       const position = new THREE.Vector3(x, y, randZ);
       newPositions.push(position);
 
@@ -94,7 +151,17 @@ const InstancedAnimatedPlanes: React.FC<InstancedAnimatedPlanesProps> = ({
         videoTexture.dispose();
       }
     };
-  }, [count, videoUrl, viewport.width, viewport.height, width, height]);
+  }, [
+    count,
+    videoUrl,
+    viewport.width,
+    viewport.height,
+    width,
+    height,
+    z,
+    playSpeed,
+    seekOffset,
+  ]);
 
   useFrame(() => {
     if (!meshRef.current) return;
@@ -104,8 +171,8 @@ const InstancedAnimatedPlanes: React.FC<InstancedAnimatedPlanesProps> = ({
 
       if (position.x + width / 2 < -viewport.width / 2) {
         position.x = viewport.width / 2 + width / 2;
-        let posY = RandRange(-viewport.height / 2, viewport.height / 2);
-        const posZ = RandRange(-z, z);
+        let posY = Math.random() * viewport.height - viewport.height / 2;
+        const posZ = Math.random() * 2 * z - z;
         if (
           posY + height > viewport.height / 2 ||
           posY - height < -viewport.height / 2
@@ -147,7 +214,7 @@ const InstancedAnimatedPlanes: React.FC<InstancedAnimatedPlanesProps> = ({
         side={THREE.DoubleSide}
         alphaTest={0.1}
         depthWrite={false}
-        premultipliedAlpha={true} // Added this to help with alpha blending
+        premultipliedAlpha={true}
       />
     </instancedMesh>
   );

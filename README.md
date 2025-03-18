@@ -4,18 +4,23 @@
 
 ---
 
-<div style="width:fit-content; background-color: #d3671e; border-radius: 10px">
-<h2 style="height:25px; padding:.5em;"> CoffeeShop</h2>
+<div>
+<h2> CoffeeShop</h2>
 </div>
 
-> **A sci-fi coffee brewing game.**  
-> Combine ingredients and brew coffee in a futuristic cafe.
+> **A sci-fi coffee brewing game with shmup elements**  
+> Combine ingredients and brew coffee in a retro-futuristic cafe.
 
 <p align="center">
-  <img src="/demo/img/coffeeshop.png" width="600" alt="Coffee Shop Demo">
+  <img src="/demo/img/coffeeshop.png" width="500" alt="Coffee Shop Demo">
 </p>
 
 ---
+
+### **Assets**
+- [Icons]("https://www.flaticon.com/") - Flaticon (Heavily modified)
+- [SFX]("https://pixabay.com/sound-effects/") - Pixabay (Heavily modified) 
+- [Rotating Food](https://archive.org/details/rotatingfood2)
 
 ### 🛠️ **Tech Stack**
 - [Three.js](https://threejs.org/) - 3D rendering.

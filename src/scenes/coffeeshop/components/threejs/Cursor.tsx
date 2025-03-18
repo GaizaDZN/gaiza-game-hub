@@ -329,7 +329,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
 
   return (
     <>
-      <mesh ref={cursorRef} position={[0, 0, 0]}>
+      <mesh ref={cursorRef} position={[5, 0, 0]}>
         <meshBasicMaterial
           color={currentState.color}
           opacity={currentState.opacity}

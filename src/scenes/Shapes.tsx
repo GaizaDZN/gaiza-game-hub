@@ -11,6 +11,10 @@ const Shapes: React.FC<SceneProps> = ({ gui, configScene, currentView }) => {
   const controlsRef = useRef<GuiControls>({});
   const perspCamera = camera as THREE.PerspectiveCamera;
 
+  const anim1 = "/src/assets/animation/cherry.webm";
+  const anim2 = "/src/assets/animation/banana.webm";
+  const anim3 = "/src/assets/animation/watermelon.webm";
+
   useEffect(() => {
     const viewConfig =
       configScene.views.find((view) => view.id === currentView) ||
@@ -146,8 +150,8 @@ const Shapes: React.FC<SceneProps> = ({ gui, configScene, currentView }) => {
       <directionalLight position={[5, 5, 5]} intensity={0.8} />
 
       <InstancedAnimatedPlanes
-        count={5}
-        videoUrl="/src/assets/animation/hood.webm"
+        count={10}
+        videoUrl={anim1}
         width={1}
         height={1}
         velocity={0.01}
@@ -156,11 +160,20 @@ const Shapes: React.FC<SceneProps> = ({ gui, configScene, currentView }) => {
       />
       <InstancedAnimatedPlanes
         count={10}
-        videoUrl="/src/assets/animation/alice.webm"
+        videoUrl={anim2}
         width={1}
         height={1}
         velocity={0.02}
-        playSpeed={0.1}
+        playSpeed={1}
+        z={0.1}
+      />
+      <InstancedAnimatedPlanes
+        count={10}
+        videoUrl={anim3}
+        width={1}
+        height={1}
+        velocity={0.02}
+        playSpeed={1}
         z={0.1}
       />
     </>
