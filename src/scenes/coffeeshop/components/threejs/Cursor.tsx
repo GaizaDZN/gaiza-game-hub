@@ -94,7 +94,7 @@ interface cursorProps {
   isMouseOnCanvas: boolean;
 }
 
-const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
+const Cursor: React.FC<cursorProps> = ({ isMouseOnCanvas }) => {
   const cursorRef = useRef<Mesh>(null);
   const {
     cursorState,

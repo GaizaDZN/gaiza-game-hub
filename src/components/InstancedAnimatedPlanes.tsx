@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { RandRange } from "../helpers/helpers";
 
 interface InstancedAnimatedPlanesProps {
   count: number;

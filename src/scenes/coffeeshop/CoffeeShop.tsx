@@ -17,7 +17,7 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
   const { gameState, setGameMode, queueGameMode } = useContext(GameContext);
   const [isMouseOnCanvas, setIsMouseOnCanvas] = useState(false);
   const [mouseHeld, setMouseHeld] = useState(false);
-  const { gl, size } = useThree();
+  const { gl } = useThree();
 
   const handleMouseDown = (mouseButton: number) => {
     if (mouseButton === 0) setMouseHeld(true);

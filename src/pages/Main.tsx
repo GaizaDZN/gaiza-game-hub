@@ -8,7 +8,6 @@ import {
 import GUI from "lil-gui";
 import BottomBar from "../components/Menu/BottomBar.tsx";
 import RightBar from "../components/Menu/RightBar.tsx";
-import Chibi from "../components/Menu/Chibi.tsx";
 import { useEffect, useState } from "react";
 import { GameProvider } from "../context/game/GameProvider.tsx";
 import CoffeeShopLayout from "../scenes/coffeeshop/CoffeeShopLayout.tsx";
@@ -92,7 +91,6 @@ const Main: React.FC<MainProps> = ({
               />
               <BottomBar />
               <RightBar />
-              {/* <Chibi /> */}
             </TooltipProvider>
           </InputProvider>
         </AudioProvider>

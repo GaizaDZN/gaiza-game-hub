@@ -1,5 +1,3 @@
-import { Howl } from "howler";
-
 // LOAD PORTRAITS //////////////////////
 
 const portraitImages = import.meta.glob(

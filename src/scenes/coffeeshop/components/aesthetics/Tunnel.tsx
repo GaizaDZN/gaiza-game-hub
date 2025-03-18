@@ -1,10 +1,4 @@
-import React, {
-  useRef,
-  useEffect,
-  useMemo,
-  useCallback,
-  useState,
-} from "react";
+import React, { useRef, useEffect, useMemo, useCallback } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { commonValues } from "../threejs/common";
@@ -18,7 +12,7 @@ const Tunnel = () => {
   const baseSpacing = tunnelCount / 8; // Base spacing value
   const fadeSpeed = baseSpacing / 1000;
   const globalDirection = useRef(1);
-  const [pathUpdating, setPathUpdating] = useState(true);
+  const pathUpdating = true;
 
   // make this state-driven to change paths dynamically
 

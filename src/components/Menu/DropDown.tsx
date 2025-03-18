@@ -1,4 +1,4 @@
-import Button, { ButtonProps } from "./buttons/ViewButton";
+import Button, { ButtonProps } from "./buttons/Button";
 
 interface DropDownProps {
   menuName: string;
