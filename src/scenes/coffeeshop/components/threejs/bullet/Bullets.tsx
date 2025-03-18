@@ -195,6 +195,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         if (
           bullet.bulletSource === BulletSource.enemy &&
           cursorState != "hit" &&
+          cursorState != "dead" &&
           gameState.gameMode === GameMode.sales
         ) {
           const distanceFromCursor = bullet.position.distanceTo(cursorPosition);

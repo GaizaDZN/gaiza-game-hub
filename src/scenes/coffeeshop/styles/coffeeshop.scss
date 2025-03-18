@@ -1227,25 +1227,45 @@ bottom: 10%;
 .score__container {
   position: absolute;
   right: 5%;
-  top: 0%;
+  top: 2%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
 
-  .score-number__container {
-    .score-number {
-
-    }
-    .score-text {
-
-    }
-    margin-bottom: .5em;
+  .score-number__container,
+  .highscore-number__container,
+  .score-combo__container {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
   }
 
-  .score-combo__container {
-    .combo-number {
+  .score-number,
+  .highscore-number,
+  .combo-number {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #ffcc00; // Bright gold for emphasis
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  }
 
-    }
-    .combo-text {
+  .score-text,
+  .highscore-text,
+  .combo-text {
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #ddd;
+    letter-spacing: 1px;
+  }
 
-    }
+  .highscore-number {
+    color: #ff6600; // Orange to distinguish high score
+  }
+
+  .combo-number {
+    color: #00ffcc; // Cyan to make it stand out
   }
 }
 

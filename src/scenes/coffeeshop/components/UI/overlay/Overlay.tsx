@@ -11,7 +11,6 @@ const SalesOverlay: React.FC = () => {
     <div className="canvas__overlay overlay__sales">
       <CustomerQueue />
       <CoffeeQueue />
-      <ScoreOverlay />
       <TimeBar />
     </div>
   );
@@ -21,6 +20,7 @@ const Overlay: React.FC = () => {
   const { gameState } = useContext(GameContext);
   return (
     <div className="canvas__overlay-container scanlines">
+      <ScoreOverlay />
       {gameState.gameMode === GameMode.sales && <SalesOverlay />}
     </div>
   );

@@ -1,5 +1,5 @@
 import { SceneProps } from "../common";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import IngredientVisuals from "./components/threejs/IngredientVisuals";
 import Cursor from "./components/threejs/Cursor";
 import { useThree } from "@react-three/fiber";
@@ -8,6 +8,7 @@ import Core from "./components/threejs/Core";
 import Tunnel from "./components/aesthetics/Tunnel";
 import { GameContext } from "../../context/game/GameContext";
 import { GameMode } from "./game/game";
+import { gameEventDispatcher } from "../../context/events/eventListener";
 
 const cursor = "/src/assets/img/cursor.png";
 
@@ -26,6 +27,10 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
     if (mouseButton === 0) setMouseHeld(false);
   };
 
+  const handlePlayerDeath = useCallback(() => {
+    queueGameMode(GameMode.dayEnd);
+  }, [queueGameMode]);
+
   useEffect(() => {
     const canvas = gl.domElement;
     const mode = gameState.gameMode;
@@ -35,9 +40,9 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
       setGameMode();
     }
 
-    if (gameState.player.health === 0 && mode === GameMode.sales) {
-      queueGameMode(GameMode.dayEnd);
-    }
+    // if (gameState.player.health === 0 && mode === GameMode.sales) {
+    //   queueGameMode(GameMode.dayEnd);
+    // }
 
     const handleMouseEnter = () => {
       setIsMouseOnCanvas(true);
@@ -55,11 +60,13 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
 
     inputDispatcher.subscribe("mousePress", handleMouseDown);
     inputDispatcher.subscribe("mouseUp", handleMouseUp);
+    gameEventDispatcher.subscribe("playerDeath", handlePlayerDeath);
     return () => {
       canvas.removeEventListener("mouseenter", handleMouseEnter);
       canvas.removeEventListener("mouseleave", handleMouseLeave);
       inputDispatcher.unsubscribe("mousePress", handleMouseDown);
       inputDispatcher.unsubscribe("mouseUp", handleMouseUp);
+      gameEventDispatcher.unsubscribe("playerDeath", handlePlayerDeath);
     };
   }, [
     gameState.gameMode,
@@ -68,6 +75,7 @@ const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
     gl.domElement,
     queueGameMode,
     setGameMode,
+    handlePlayerDeath,
   ]);
 
   return (

@@ -1,16 +1,15 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { GameContext } from "../../../../../context/game/GameContext";
 import {
-  CollisionEvent,
   collisionEventDispatcher,
-  GameEvent,
   gameEventDispatcher,
 } from "../../../../../context/events/eventListener";
 import { ScoreEvent, scoreEvents } from "../../../game/game";
 
 const ScoreOverlay = () => {
-  const { updateScoreState } = useContext(GameContext);
+  const { updateScoreState, gameState } = useContext(GameContext);
   const [score, setScore] = useState(0);
+  const [highscore, setHighscore] = useState(gameState.scoreState.highScore);
   const [combo, setCombo] = useState(1);
 
   const increaseScore = useCallback(
@@ -24,12 +23,18 @@ const ScoreOverlay = () => {
 
   const handleCoreHit = useCallback(() => {
     increaseScore("coreHit");
-  }, [increaseScore]);
+    setHighscore(Math.max(score, highscore));
+  }, [highscore, increaseScore, score]);
 
   const handleSale = useCallback(() => {
-    increaseScore("sale");
-    setCombo(combo + 1);
-  }, [increaseScore, combo]);
+    setScore((prevScore) => {
+      const newScore = prevScore + scoreEvents["sale"].score * combo;
+      updateScoreState(newScore, combo);
+      return newScore;
+    });
+
+    setCombo((prevCombo) => prevCombo + 1);
+  }, [updateScoreState, combo]);
 
   const resetCombo = useCallback(() => {
     setCombo(1);
@@ -37,47 +42,40 @@ const ScoreOverlay = () => {
 
   const handlePlayerDeath = useCallback(() => {
     updateScoreState(score, combo);
-  }, [combo, score, updateScoreState]);
+    setHighscore(Math.max(score, highscore));
+  }, [combo, highscore, score, updateScoreState]);
 
-  const eventHandlers = useMemo(
-    () => ({
-      coreHit: handleCoreHit,
-      playerHit: resetCombo,
-      playerDeath: handlePlayerDeath,
-      sale: handleSale,
-      saleFail: resetCombo,
-    }),
-    [handleCoreHit, handleSale, resetCombo, handlePlayerDeath]
-  );
+  const handleSalesStart = () => {
+    setScore(0);
+  };
 
   useEffect(() => {
-    Object.entries(eventHandlers).forEach(([event, handler]) => {
-      if (event.startsWith("core") || event.startsWith("player")) {
-        collisionEventDispatcher.subscribe(event as CollisionEvent, handler);
-      } else {
-        gameEventDispatcher.subscribe(event as GameEvent, handler);
-      }
-    });
+    collisionEventDispatcher.subscribe("coreHit", handleCoreHit);
+    collisionEventDispatcher.subscribe("playerHit", resetCombo);
+    gameEventDispatcher.subscribe("playerDeath", handlePlayerDeath);
+    gameEventDispatcher.subscribe("sale", handleSale);
+    gameEventDispatcher.subscribe("saleFail", resetCombo);
+    gameEventDispatcher.subscribe("enterSalesMode", handleSalesStart);
 
     return () => {
-      Object.entries(eventHandlers).forEach(([event, handler]) => {
-        if (event.startsWith("core") || event.startsWith("player")) {
-          collisionEventDispatcher.unsubscribe(
-            event as CollisionEvent,
-            handler
-          );
-        } else {
-          gameEventDispatcher.unsubscribe(event as GameEvent, handler);
-        }
-      });
+      collisionEventDispatcher.unsubscribe("coreHit", handleCoreHit);
+      collisionEventDispatcher.unsubscribe("playerHit", resetCombo);
+      gameEventDispatcher.unsubscribe("playerDeath", handlePlayerDeath);
+      gameEventDispatcher.unsubscribe("sale", handleSale);
+      gameEventDispatcher.unsubscribe("saleFail", resetCombo);
+      gameEventDispatcher.unsubscribe("enterSalesMode", handleSalesStart);
     };
-  }, [eventHandlers]);
+  }, [handleCoreHit, handlePlayerDeath, handleSale, resetCombo]);
 
   return (
     <div className="score__container">
       <div className="score-number__container">
         <span className="score-number">{score}</span>
         <span className="score-text">score</span>
+      </div>
+      <div className="highscore-number__container">
+        <span className="highscore-number">{highscore}</span>
+        <span className="highscore-text">highscore</span>
       </div>
       <div className="score-combo__container">
         <span className="combo-number">{combo}</span>

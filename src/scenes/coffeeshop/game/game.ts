@@ -38,6 +38,7 @@ export interface GameState {
 interface ScoreState {
   score: number;
   combo: number;
+  highScore: number;
 }
 
 interface StoreState extends ResourceState {
@@ -496,6 +497,8 @@ export class Game {
             this.startTimer("sales");
           }
 
+          gameEventDispatcher.dispatch("enterSalesMode");
+
           updates = {
             ...updates,
             customerState: {
@@ -505,7 +508,7 @@ export class Game {
             },
             player: {
               ...state.player,
-              health: 999, // FOR DEBUG - default 3
+              health: gameConsts.player.health,
             },
             orderState: {
               ...state.orderState,
@@ -598,8 +601,12 @@ export class Game {
         orderSuccess,
         currentCustomer
       );
-      // trigger sale event if successful
-      if (orderSuccess) gameEventDispatcher.dispatch("sale");
+      // trigger sale events
+      if (orderSuccess) {
+        gameEventDispatcher.dispatch("sale");
+      } else {
+        gameEventDispatcher.dispatch("saleFail");
+      }
 
       // update terminal with sale result
       const newTerminalContent = this.terminalSalesResult(
@@ -915,12 +922,14 @@ export class Game {
 
   updateScoreState(score: number, combo: number): void {
     this.setState((state) => {
+      const currHighscore = state.scoreState.highScore;
       return {
         ...state,
         scoreState: {
           ...state.scoreState,
           score,
           combo,
+          highScore: Math.max(score, currHighscore),
         },
       };
     });
@@ -931,6 +940,7 @@ export class Game {
     return {
       score: 0,
       combo: 1,
+      highScore: 0,
     };
   }
 
@@ -1193,6 +1203,9 @@ export class Game {
 const gameConsts = {
   timer: {
     sales: 60,
+  },
+  player: {
+    health: 1,
   },
 };
 

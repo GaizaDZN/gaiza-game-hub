@@ -78,6 +78,10 @@ export const cursorStates = {
     color: "#ca822f",
     opacity: 0.3,
   },
+  dead: {
+    color: "#000000",
+    opacity: 0,
+  },
 };
 
 export type CursorStateKey = keyof typeof cursorStates;
@@ -115,6 +119,7 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   const bulletInterval = useRef(200); // Milliseconds between bullet spawns
   const hitTimeout = useRef<NodeJS.Timeout | null>(null);
   const playerHitInterval = 2500;
+  const playerDeathInterval = 2800;
 
   // Create a reference for cursor position that doesn't change with renders
   // const cursorPosition = useRef(new THREE.Vector3());
@@ -159,13 +164,31 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
   // reset timeout state when re-entering sales mode
   const enterSalesMode = useCallback(() => {
     setTimedOut(false);
-  }, []);
+    if (cursorState === "dead") {
+      setCursorState("idle");
+      setCanFire(true);
+    }
+  }, [setCursorState, cursorState]);
+
+  const handlePlayerDeath = useCallback(() => {
+    setCursorState("dead");
+    setIsFiring(false);
+    setCanFire(false);
+    setTimeout(() => {
+      gameEventDispatcher.dispatch("playerDeath");
+    }, playerDeathInterval);
+  }, [setCursorState]);
 
   // Effect to control bullet spawning
   useEffect(() => {
+    if (cursorState === "dead") return; // Exit early if already dead
+
+    if (gameState.player.health === 0 && gameState.gameMode === GameMode.sales)
+      handlePlayerDeath();
+
     collisionEventDispatcher.subscribe("playerHit", handlePlayerHit);
     gameEventDispatcher.subscribe("timeout", holdFire);
-
+    gameEventDispatcher.subscribe("playerDeath", holdFire);
     gameEventDispatcher.subscribe("enterSalesMode", enterSalesMode);
 
     // Only allow firing in sales mode AND when not timed out
@@ -176,8 +199,8 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
       setCanFire(false);
     }
 
+    // Only update cursor state if it's not dead or hit
     if (cursorState !== "hit") {
-      // Rest of your cursor state logic remains the same
       if (isMouseOnCanvas && canFire) {
         setIsFiring(true);
         setCursorState("firing");
@@ -192,17 +215,20 @@ const Cursor: React.FC<cursorProps> = ({ mouseHeld, isMouseOnCanvas }) => {
       collisionEventDispatcher.unsubscribe("playerHit", handlePlayerHit);
       gameEventDispatcher.unsubscribe("timeout", holdFire);
       gameEventDispatcher.unsubscribe("enterSalesMode", enterSalesMode);
+      gameEventDispatcher.unsubscribe("playerDeath", holdFire);
     };
   }, [
-    isMouseOnCanvas,
-    cursorState,
-    handlePlayerHit,
-    setCursorState,
-    holdFire,
-    enterSalesMode,
     canFire,
-    timedOut,
+    cursorState,
+    enterSalesMode,
     gameState.gameMode,
+    gameState.player.health,
+    handlePlayerDeath,
+    handlePlayerHit,
+    holdFire,
+    isMouseOnCanvas,
+    setCursorState,
+    timedOut,
   ]);
 
   useFrame(({ clock }) => {

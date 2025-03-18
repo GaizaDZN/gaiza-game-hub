@@ -61,7 +61,7 @@ export const coreBuffer = 0.15;
 
 const Core: React.FC = () => {
   const coreRef = useRef<Mesh>(null);
-  const { gameState } = useContext(GameContext);
+  const { gameState, cursorState } = useContext(GameContext);
   const corePosition = useRef(new Vector3());
   const [coreState, setCoreState] = useState(coreStates.idle);
   const [bulletSpawnTrigger, setBulletSpawnTrigger] = useState(0);
@@ -103,7 +103,7 @@ const Core: React.FC = () => {
     core.rotation.y += 0.005;
 
     // Handle bullet spawning
-    if (isFiring) {
+    if (isFiring && cursorState != "dead") {
       const currentTime = clock.getElapsedTime() * 1000;
       if (
         fireRateElapsed(
