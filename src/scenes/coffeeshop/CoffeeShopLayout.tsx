@@ -11,11 +11,12 @@ import Overlay from "./components/UI/overlay/Overlay";
 import "./styles/coffeeshop.scss";
 import { PerspectiveCamera } from "@react-three/drei";
 import { commonValues } from "./components/threejs/common";
+import { BASE_URL } from "../../assets/assets";
 
 const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
   currentScene,
   currentView,
-  gui,
+  // gui,
 }) => {
   const { gameState, queueGameMode } = useContext(GameContext);
   const initGame = useCallback(() => {
@@ -33,7 +34,10 @@ const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
     <div className="canvas-container-coffee">
       <div className="canvas-img-container">
         <Overlay />
-        <img className="canvas-img pixelated" src="/src/assets/img/cafe.jpg" />
+        <img
+          className="canvas-img pixelated"
+          src={`${BASE_URL}//assets/img/cafe.jpg`}
+        />
       </div>
       <Canvas
         className="canvas-coffee"
@@ -41,7 +45,7 @@ const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
         style={{ background: "transparent" }}
       >
         <currentScene.component
-          gui={gui}
+          // gui={gui}
           configScene={currentScene}
           currentView={currentView}
         />

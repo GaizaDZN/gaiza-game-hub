@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Main from "./pages/Main";
 import "./App.css";
 import { SceneConfig, SceneIds, scenes } from "./scenes/common";
-import GUI from "lil-gui";
 
 const App: React.FC = () => {
   const [currentSceneId, setCurrentSceneId] = useState<string>(
@@ -56,13 +55,13 @@ const App: React.FC = () => {
     return sceneList.find((s) => s.id === sceneId);
   };
 
-  // Add an effect to keep currentScene in sync with currentSceneId
+  const basename = "/gaiza-game-hub";
   useEffect(() => {
     setCurrentScene(scenes[currentSceneId]);
   }, [currentSceneId]);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <Routes>
         <Route
           path="/"
@@ -73,7 +72,6 @@ const App: React.FC = () => {
               onViewChange={handleViewChange}
               onSceneChange={handleSceneChange}
               sceneList={sceneList}
-              gui={new GUI()}
             />
           }
         />

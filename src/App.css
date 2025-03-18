@@ -3,7 +3,7 @@
 
 @font-face {
   font-family: "OCR-A";
-  src: url("/src/assets/fonts/OCR-A.ttf") format("truetype");
+  src: url("/assets/fonts/OCR-A.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -284,7 +284,7 @@ body {
   position: absolute;
   width: 200%;
   height: 200%;
-  background-image: url("/src/assets/img/dot.png");
+  background-image: url("/assets/img/dot.png");
   background-repeat: repeat;
   /* Set background-size to match your pattern's dimensions */
   -webkit-transform: translateX(-50%) translateY(-50%);
@@ -330,7 +330,7 @@ body {
   width: 100%;
   overflow: hidden;
   white-space: nowrap;
-  background-image: url("/src/assets/img/dot.png");
+  background-image: url("/assets/img/dot.png");
   grid-area: 1/1/3/2;
   font-family: "OCR-A", monospace;
   font-size: 12px;

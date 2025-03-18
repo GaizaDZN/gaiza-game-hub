@@ -8,8 +8,9 @@ import React from "react";
 import { PrevOrderState } from "../../game/game";
 import TypewriterEffect from "./TypeWriterEffect";
 import { AudioContext } from "../../../../context/audio/AudioContext";
+import { BASE_URL } from "../../../../assets/assets";
 
-const userImg = "/src/assets/img/user.png";
+const userImg = `${BASE_URL}/assets/img/user.png`;
 
 const DefaultAvatar: React.FC = () => {
   return (
@@ -76,9 +77,9 @@ export const ResultMessage: React.FC = () => {
   const onRender = useCallback(() => {
     const prevOrder = customerOrder.prevOrderState;
     if (prevOrder === PrevOrderState.success) {
-      playSound("transaction_success.mp3");
+      playSound("transaction_success");
     } else if (prevOrder === PrevOrderState.fail) {
-      playSound("transaction_fail.mp3");
+      playSound("transaction_fail");
     }
   }, [customerOrder.prevOrderState, playSound]);
 

@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import { Howl, Howler } from "howler";
-
 import { soundFiles } from "../../assets/assets";
+
 import { AudioContext } from "./AudioContext";
 
 interface AudioProviderProps {
@@ -18,16 +18,14 @@ export function AudioProvider({ children }: AudioProviderProps) {
         return;
       }
 
-      // Create a new Howl instance if it doesn't exist
       if (!howlInstances[filename]) {
         howlInstances[filename] = new Howl({
           src: [soundFiles[filename]],
-          preload: true, // Preload the audio file
-          autoplay: false, // Don't autoplay
+          preload: true,
+          autoplay: false,
         });
       }
 
-      // Play the sound
       howlInstances[filename].play();
     },
     [howlInstances]
@@ -53,7 +51,6 @@ export function AudioProvider({ children }: AudioProviderProps) {
     [howlInstances]
   );
 
-  // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(
     () => ({
       playSound,
@@ -61,7 +58,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
       setVolume,
       getSound,
     }),
-    [playSound, setVolume, stopSound, getSound]
+    [playSound, stopSound, setVolume, getSound]
   );
 
   return (

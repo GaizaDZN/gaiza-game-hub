@@ -32,7 +32,7 @@ const MovingStars: React.FC<SceneProps> = ({
       configScene.views.find((view) => view.id === currentView) ||
       configScene.views[0];
 
-    if (viewConfig) {
+    if (viewConfig && gui) {
       const { position, rotation, fov } = viewConfig.camera;
 
       // Animate camera position

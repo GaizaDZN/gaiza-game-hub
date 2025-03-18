@@ -2,7 +2,6 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { AudioContext } from "../../../../context/audio/AudioContext";
 import { GameContext } from "../../../../context/game/GameContext";
 
-const typingSound = "typing_sound.mp3";
 interface TypewriterEffectProps {
   message: string;
   delay?: number; // Optional delay between character appearances
@@ -20,7 +19,7 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
   const { playSound } = useContext(AudioContext);
 
   const handleUpdate = useCallback(() => {
-    playSound(typingSound);
+    playSound("typing_sound");
     setPrintedMessage(message.substring(0, currentCharacterIndex + 1));
     setCurrentCharacterIndex((prevIndex) => prevIndex + 1);
   }, [currentCharacterIndex, message, playSound]);

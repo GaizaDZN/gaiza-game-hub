@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { ResourceState } from "../../../game/game";
 import { GameContext } from "../../../../../context/game/GameContext";
 import { resourceCost } from "../../../game/coffeeshop.types";
+import { BASE_URL } from "../../../../../assets/assets";
 
 interface StoreItemProps {
   quantity: number;
@@ -75,7 +76,7 @@ const Store: React.FC = () => {
           <span>Buy</span>
         </div>
       </div>
-      <img className="store__bg" src="/src/assets/img/store.jpg"></img>
+      <img className="store__bg" src={`${BASE_URL}/assets/img/store.jpg`}></img>
     </div>
   );
 };

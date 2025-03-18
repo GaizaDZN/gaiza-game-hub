@@ -7,10 +7,6 @@ import { keybinds } from "../../../../context/input/keybinds";
 import { inputDispatcher } from "../../../../context/input/InputDispatcher";
 import { AudioContext } from "../../../../context/audio/AudioContext";
 
-const confirmSFX = "confirm.mp3";
-const cancelSFX = "stop-13692.mp3";
-const brewSFX = "brew.mp3";
-
 const BottomUI = () => {
   const {
     gameState,
@@ -24,7 +20,7 @@ const BottomUI = () => {
   const currentCustomer = useCustomer();
 
   const handleBrewCoffee = useCallback(() => {
-    brewCoffee(() => playSound(brewSFX));
+    brewCoffee(() => playSound("brew"));
     setJustBrewed(true);
   }, [brewCoffee, playSound]);
 
@@ -57,12 +53,12 @@ const BottomUI = () => {
   }, [gameState.gameMode, handleBrewCoffee, justBrewed, queueGameMode]);
 
   const handleConfirm = () => {
-    playSound(confirmSFX);
+    playSound("confirm");
     confirmCheck();
   };
 
   const handleCancel = () => {
-    playSound(cancelSFX);
+    playSound("stop");
   };
 
   const clickBtn = (classname: string, animationClass?: string) => {

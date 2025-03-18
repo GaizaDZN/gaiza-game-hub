@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://github.com/GaizaDZN/gaiza-game-hub",
+  "homepage": "https://GaizaDZN.github.io/gaiza-game-hub/",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

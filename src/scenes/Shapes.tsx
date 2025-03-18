@@ -5,22 +5,23 @@ import gsap from "gsap";
 // import InstancedAnimatedPlanes from "../components/InstancedAnimatedPlanes";
 import { GuiControls, SceneProps } from "./common";
 import InstancedAnimatedPlanes from "../components/InstancedAnimatedPlanes";
+import { BASE_URL } from "../assets/assets";
 
 const Shapes: React.FC<SceneProps> = ({ gui, configScene, currentView }) => {
   const { camera } = useThree();
   const controlsRef = useRef<GuiControls>({});
   const perspCamera = camera as THREE.PerspectiveCamera;
 
-  const anim1 = "/src/assets/animation/cherry.webm";
-  const anim2 = "/src/assets/animation/banana.webm";
-  const anim3 = "/src/assets/animation/watermelon.webm";
+  const anim1 = `${BASE_URL}/assets/animation/cherry.webm`;
+  const anim2 = `${BASE_URL}/assets/animation/banana.webm`;
+  const anim3 = `${BASE_URL}/assets/animation/watermelon.webm`;
 
   useEffect(() => {
     const viewConfig =
       configScene.views.find((view) => view.id === currentView) ||
       configScene.views[0];
 
-    if (viewConfig) {
+    if (viewConfig && gui) {
       const { position, rotation, fov } = viewConfig.camera;
 
       // Animate camera position
@@ -70,8 +71,8 @@ const Shapes: React.FC<SceneProps> = ({ gui, configScene, currentView }) => {
 
       // Create new camera folder and controls
       const cameraFolder = gui.addFolder("Camera");
-      const positionFolder = cameraFolder.addFolder("Position");
-      const rotationFolder = cameraFolder.addFolder("Rotation");
+      const positionFolder = cameraFolder?.addFolder("Position");
+      const rotationFolder = cameraFolder?.addFolder("Rotation");
 
       // Store reference to the camera folder
       controlsRef.current.cameraFolder = cameraFolder;

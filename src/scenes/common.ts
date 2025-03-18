@@ -46,11 +46,11 @@ export interface SceneConfig {
 export interface SceneLayoutProps {
   currentScene: SceneConfig;
   currentView: string;
-  gui: GUI;
+  gui?: GUI;
 }
 
 export interface SceneProps {
-  gui: GUI;
+  gui?: GUI;
   configScene: SceneConfig;
   currentView?: string;
 }

@@ -9,11 +9,12 @@ import Tunnel from "./components/aesthetics/Tunnel";
 import { GameContext } from "../../context/game/GameContext";
 import { GameMode } from "./game/game";
 import { gameEventDispatcher } from "../../context/events/eventListener";
+import { BASE_URL } from "../../assets/assets";
 
-const cursor = "/src/assets/img/cursor.png";
+const cursor = `${BASE_URL}/assets/img/cursor.png`;
 
 const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
-  gui.hide();
+  gui?.hide();
   const { gameState, setGameMode, queueGameMode } = useContext(GameContext);
   const [isMouseOnCanvas, setIsMouseOnCanvas] = useState(false);
   const [mouseHeld, setMouseHeld] = useState(false);

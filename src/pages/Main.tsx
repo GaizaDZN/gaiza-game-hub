@@ -21,7 +21,7 @@ const lights = gui.addFolder("Lights");
 lights.addFolder("Ambient Lights");
 lights.addFolder("Directional Lights");
 lights.close();
-
+gui.hide();
 // Scene-specific components
 const DefaultSceneLayout: React.FC<SceneLayoutProps> = ({
   currentScene,

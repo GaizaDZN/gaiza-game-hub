@@ -14,7 +14,7 @@ const TopUI = () => {
 
   const handleIncrement = useCallback(
     (ingredient: keyof ResourceState) => {
-      incrementActiveBar(ingredient, () => playSound("minor_button.mp3"));
+      incrementActiveBar(ingredient, () => playSound("minor_button"));
     },
     [incrementActiveBar, playSound]
   );

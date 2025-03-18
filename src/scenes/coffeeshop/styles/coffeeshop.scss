@@ -3,7 +3,7 @@
 
 @font-face {
   font-family: "Nulshock";
-  src: url("/src/assets/fonts/Nulshock.otf") format("opentype");
+  src: url("/assets/fonts/Nulshock.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -11,7 +11,7 @@
 
 @font-face {
   font-family: "Railway";
-  src: url("/src/assets/fonts/Railway.otf") format("opentype");
+  src: url("/assets/fonts/Railway.otf") format("opentype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -87,7 +87,7 @@
 
 .coffee-ui-title:before {
   content: "";
-  background-image: url("/src/assets/img/dot.png");
+  background-image: url("/assets/img/dot.png");
   opacity: 0.8;
   position: absolute;
   width: 100%;
@@ -118,7 +118,7 @@
 }
 .coffee-ui-buttons::before {
   content: "";
-  background-image: url("/src/assets/img/dot.png");
+  background-image: url("/assets/img/dot.png");
   opacity: 0.8;
   position: absolute;
   width: 100%;
@@ -139,7 +139,7 @@
 
 .coffee-ui-buttons .top-ui:before {
   content: "";
-  background-image: url("/src/assets/img/dot.png");
+  background-image: url("/assets/img/dot.png");
   opacity: 0.8;
   position: absolute;
   width: 100%;
@@ -668,7 +668,7 @@
 
 .customerInner-bg {
   opacity: 0.15;
-  background-image: url("/src/assets/img/av-bg.png");
+  background-image: url("/assets/img/av-bg.png");
   position: absolute;
   width: 100%;
   height: 100%;
@@ -729,7 +729,7 @@
 
 .textContainer::before {
   content: "";
-  background-image: url("/src/assets/img/dot.png");
+  background-image: url("/assets/img/dot.png");
   position: absolute;
   width: 100%;
   height: 100%;
@@ -837,7 +837,7 @@
 
 .tool-tip-bg:after {
   content: "";
-  background-image: url("/src/assets/img/dot.png");
+  background-image: url("/assets/img/dot.png");
   opacity: 0.8;
   position: absolute;
   width: 100%;

@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { GameContext } from "../../../../context/game/GameContext";
 import Store from "./store/Store";
 import { GameMode } from "../../game/game";
+import { BASE_URL } from "../../../../assets/assets";
 
 const CoffeeQuantity: React.FC<{ name: string; quantity: number }> = ({
   name,
@@ -40,19 +41,19 @@ const Info: React.FC = () => {
       <div className="coffee-ui-resources">
         <ul className="resource-list">
           <ResourceQuantity
-            url="/src/assets/img/coffee.png"
+            url={`${BASE_URL}/assets/img/coffee.png`}
             quantity={gameState.resources.beans}
           />
           <ResourceQuantity
-            url="/src/assets/img/water.png"
+            url={`${BASE_URL}/assets/img/water.png`}
             quantity={gameState.resources.beans}
           />
           <ResourceQuantity
-            url="/src/assets/img/milk.png"
+            url={`${BASE_URL}/assets/img/milk.png`}
             quantity={gameState.resources.beans}
           />
           <ResourceQuantity
-            url="/src/assets/img/sugar.png"
+            url={`${BASE_URL}/assets/img/sugar.png`}
             quantity={gameState.resources.beans}
           />
         </ul>
