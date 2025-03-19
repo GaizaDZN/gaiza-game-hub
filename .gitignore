@@ -24,4 +24,5 @@ dist-ssr
 *.sw?
 /src/assets/img/portraits/do_not_upload
 /src/assets/img/chibi_1.png
+.gitignore
 TODO.md

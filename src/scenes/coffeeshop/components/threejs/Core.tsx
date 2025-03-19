@@ -7,6 +7,7 @@ import Bullets, {
   bulletConsts,
   BulletsHandle,
   BulletSource,
+  BulletType,
 } from "./bullet/Bullets";
 import { GameContext } from "../../../../context/game/GameContext";
 import { fireRateElapsed } from "../../../../helpers/helpers";
@@ -36,7 +37,7 @@ const CoreBullets: React.FC<CoreBulletProps> = ({
   const { cursorPosition } = useContext(GameContext);
   useEffect(() => {
     if (isActive && spawnTrigger > 0) {
-      bulletsRef.current?.spawnBullet();
+      bulletsRef.current?.spawnBullet(BulletType.Normal);
     }
   }, [isActive, spawnTrigger]);
 
@@ -52,6 +53,7 @@ const CoreBullets: React.FC<CoreBulletProps> = ({
       bulletColor={bulletColor}
       maxLifetime={4000}
       bulletSource={BulletSource.enemy}
+      bulletType={BulletType.Normal}
     />
   );
 };

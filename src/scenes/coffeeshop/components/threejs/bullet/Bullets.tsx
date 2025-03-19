@@ -13,10 +13,13 @@ import { collisionEventDispatcher } from "../../../../../context/events/eventLis
 import { GameContext } from "../../../../../context/game/GameContext";
 import { GameMode } from "../../../game/game";
 
-// Bullets.tsx
+export enum BulletType {
+  Normal,
+  Missile,
+}
 
 export interface BulletsHandle {
-  spawnBullet: () => boolean;
+  spawnBullet: (bulletType: BulletType) => boolean;
 }
 
 export enum BulletSource {
@@ -25,6 +28,7 @@ export enum BulletSource {
 }
 
 export interface BulletProps {
+  bulletType: BulletType;
   bulletSource: BulletSource;
   origin: THREE.Vector3;
   target?: THREE.Vector3;
@@ -36,6 +40,7 @@ export interface BulletProps {
 }
 
 interface Bullet {
+  bulletType?: BulletType;
   position: THREE.Vector3;
   velocity: THREE.Vector3;
   bulletSize: number;
@@ -73,6 +78,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       bulletColor = bulletConsts.enemy.color,
       maxLifetime = bulletConsts.enemy.maxLifetime,
       bulletSource,
+      bulletType = BulletType.Normal,
     },
     ref
   ) => {
@@ -93,37 +99,51 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
             bulletSize: bulletSize,
             active: false,
             bulletSource,
+            bulletType,
           }));
 
         initializedRef.current = true;
       }
-    }, [bulletSize, bulletSource, count, origin, velocity]);
+    }, [bulletSize, bulletSource, bulletType, count, origin, velocity]);
 
     // Function to spawn a bullet
-    const spawnBullet = useCallback(() => {
-      const inactiveBullet = bullets.current.find((b) => !b.active);
-      if (inactiveBullet) {
-        const direction = new THREE.Vector3()
-          .subVectors(target, origin)
-          .normalize();
+    const spawnBullet = useCallback(
+      (bulletType: BulletType) => {
+        const inactiveBullet = bullets.current.find((b) => !b.active);
+        if (inactiveBullet) {
+          const direction = new THREE.Vector3()
+            .subVectors(target, origin)
+            .normalize();
 
-        const bulletSpeed =
-          inactiveBullet.bulletSource === BulletSource.player
-            ? bulletConsts.player.speed
-            : bulletConsts.enemy.speed;
-        inactiveBullet.position.copy(origin);
-        inactiveBullet.velocity.copy(direction.multiplyScalar(bulletSpeed));
-        inactiveBullet.active = true;
-        inactiveBullet.createdAt = Date.now();
+          switch (bulletType) {
+            case BulletType.Normal: {
+              const bulletSpeed =
+                inactiveBullet.bulletSource === BulletSource.player
+                  ? bulletConsts.player.speed
+                  : bulletConsts.enemy.speed;
+              inactiveBullet.position.copy(origin);
+              inactiveBullet.velocity.copy(
+                direction.multiplyScalar(bulletSpeed)
+              );
+              inactiveBullet.active = true;
+              inactiveBullet.createdAt = Date.now();
+              break;
+            }
 
-        return true;
-      }
-      return false;
-    }, [origin, target]);
+            default:
+              break;
+          }
+
+          return true;
+        }
+        return false;
+      },
+      [origin, target]
+    );
 
     // Expose the spawnBullet function to the parent component via ref
     useImperativeHandle(ref, () => ({
-      spawnBullet,
+      spawnBullet: (bulletType: BulletType) => spawnBullet(bulletType),
     }));
 
     const bulletOffScreen = (
@@ -148,6 +168,36 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
     const coreRadius =
       (Math.min(viewport.width, viewport.height) / 2) * coreBuffer;
 
+    // MOVEMENT //////////////////////////////////////
+    const handleBulletPosition = (bullet: Bullet) => {
+      switch (bullet.bulletType) {
+        case BulletType.Normal:
+          updateNormalBullet(bullet);
+          break;
+        case BulletType.Missile:
+          updateMissile(bullet);
+          break;
+        default:
+          throw new Error(`bullet type ${bullet.bulletType} not recognized`);
+      }
+    };
+
+    // bullets that move directly to the target.
+    const updateNormalBullet = (bullet: Bullet) => {
+      bullet.position.add(bullet.velocity);
+    };
+
+    // bullets that move outward and then curve toward the target.
+    const updateMissile = (bullet: Bullet) => {
+      const direction = new THREE.Vector3()
+        .subVectors(target, bullet.position)
+        .normalize();
+      bullet.velocity.lerp(direction, 0.05);
+      bullet.position.add(bullet.velocity);
+    };
+
+    // ANIMATION /////////////////////////////////////////////////
+
     useFrame(() => {
       if (!meshRef.current) return;
       const maxX = viewport.width / 2;
@@ -165,7 +215,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         }
 
         // Move bullet
-        bullet.position.add(bullet.velocity);
+        handleBulletPosition(bullet);
 
         // Deactivate bullet
         if (bulletOffScreen(bullet, maxX, maxY) || bulletExpired(bullet)) {

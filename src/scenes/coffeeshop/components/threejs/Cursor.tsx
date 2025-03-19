@@ -9,7 +9,6 @@ import React, {
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Mesh } from "three";
-import Bullets, { BulletsHandle, BulletSource } from "./bullet/Bullets";
 import { coreBuffer } from "./Core";
 import { commonValues } from "./common";
 import { fireRateElapsed, scaleByPosition } from "../../../../helpers/helpers";
@@ -19,46 +18,7 @@ import {
   gameEventDispatcher,
 } from "../../../../context/events/eventListener";
 import { GameMode } from "../../game/game";
-
-// Define CursorBullets component - this is a persistent component
-// that manages bullet rendering regardless of firing state
-interface CursorBulletProps {
-  cursorPosition: THREE.Vector3;
-  count?: number;
-  bulletColor?: string;
-  isActive: boolean;
-  spawnTrigger: number; // Add a trigger to force bullet spawning
-}
-
-const CursorBullets: React.FC<CursorBulletProps> = ({
-  cursorPosition,
-  count = 10,
-  bulletColor = "yellow",
-  isActive,
-  spawnTrigger,
-}) => {
-  // Correctly type the ref
-  const bulletsRef = useRef<BulletsHandle | null>(null);
-
-  useEffect(() => {
-    if (isActive && spawnTrigger > 0) {
-      bulletsRef.current?.spawnBullet();
-    }
-  }, [isActive, spawnTrigger]);
-
-  return (
-    <Bullets
-      ref={bulletsRef}
-      origin={cursorPosition}
-      target={new THREE.Vector3(0, 0, 0)}
-      count={count}
-      bulletSize={0.15}
-      bulletColor={bulletColor}
-      maxLifetime={2000}
-      bulletSource={BulletSource.player}
-    />
-  );
-};
+import CursorBullets from "./bullet/CursorBullet";
 
 export interface CursorState {
   color: string;
@@ -179,6 +139,8 @@ const Cursor: React.FC<cursorProps> = ({ isMouseOnCanvas }) => {
     }, playerDeathInterval);
   }, [setCursorState]);
 
+  const launchMissiles = () => {};
+
   // Effect to control bullet spawning
   useEffect(() => {
     if (cursorState === "dead") return; // Exit early if already dead
@@ -190,6 +152,7 @@ const Cursor: React.FC<cursorProps> = ({ isMouseOnCanvas }) => {
     gameEventDispatcher.subscribe("timeout", holdFire);
     gameEventDispatcher.subscribe("playerDeath", holdFire);
     gameEventDispatcher.subscribe("enterSalesMode", enterSalesMode);
+    gameEventDispatcher.subscribe("sale", launchMissiles);
 
     // Only allow firing in sales mode AND when not timed out
     if (gameState.gameMode === GameMode.sales && !timedOut && !canFire) {
@@ -216,6 +179,7 @@ const Cursor: React.FC<cursorProps> = ({ isMouseOnCanvas }) => {
       gameEventDispatcher.unsubscribe("timeout", holdFire);
       gameEventDispatcher.unsubscribe("enterSalesMode", enterSalesMode);
       gameEventDispatcher.unsubscribe("playerDeath", holdFire);
+      gameEventDispatcher.unsubscribe("sale", launchMissiles);
     };
   }, [
     canFire,
