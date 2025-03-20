@@ -14,8 +14,9 @@ import { GameContext } from "../../../../../context/game/GameContext";
 import { GameMode } from "../../../game/game";
 
 export enum BulletType {
-  Normal,
-  Missile,
+  Normal, // default, accelerates in the target direction.
+  Missile, // continuously tracks the target for a short duration.
+  Explosive, // explodes when reaching the target, releasing smaller bullets in a radial pattern.
 }
 
 export interface BulletsHandle {
@@ -85,7 +86,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
     const meshRef = useRef<THREE.InstancedMesh>(null);
     const bullets = useRef<Bullet[]>([]);
     const initializedRef = useRef(false);
-    const { cursorState, cursorPosition, gameState } = useContext(GameContext);
+    const { cursorState, gameState } = useContext(GameContext);
     const { viewport } = useThree();
 
     // Initialize bullet pool
@@ -117,29 +118,61 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
 
           switch (bulletType) {
             case BulletType.Normal: {
-              const bulletSpeed =
-                inactiveBullet.bulletSource === BulletSource.player
-                  ? bulletConsts.player.speed
-                  : bulletConsts.enemy.speed;
-              inactiveBullet.position.copy(origin);
-              inactiveBullet.velocity.copy(
-                direction.multiplyScalar(bulletSpeed)
-              );
-              inactiveBullet.active = true;
-              inactiveBullet.createdAt = Date.now();
+              break;
+            }
+            case BulletType.Missile: {
+              inactiveBullet.velocity.set(0, 0.1, 0); // initial missile velocity
               break;
             }
 
             default:
               break;
           }
-
+          const bulletSpeed =
+            inactiveBullet.bulletSource === BulletSource.player
+              ? bulletConsts.player.speed
+              : bulletConsts.enemy.speed;
+          inactiveBullet.position.copy(origin);
+          inactiveBullet.velocity.copy(direction.multiplyScalar(bulletSpeed));
+          inactiveBullet.active = true;
+          inactiveBullet.createdAt = Date.now();
           return true;
         }
         return false;
       },
       [origin, target]
     );
+
+    // COLLISION //////////////////////////////////////
+    const handlePlayerCollision = (
+      bullet: Bullet,
+      distanceToTarget: number
+    ) => {
+      const distanceFromCore = distanceToTarget + coreBuffer;
+      if (bullet.bulletSource === BulletSource.player) {
+        if (distanceFromCore < coreRadius) {
+          bullet.active = false;
+          collisionEventDispatcher.dispatch("coreHit");
+          return;
+        }
+      }
+    };
+    const handleEnemyCollision = (bullet: Bullet, distanceToTarget: number) => {
+      if (
+        bullet.bulletSource === BulletSource.enemy &&
+        cursorState !== "hit" &&
+        cursorState !== "dead" &&
+        gameState.gameMode === GameMode.sales
+      ) {
+        // const distanceFromCursor = bullet.position.distanceTo(cursorPosition);
+        if (distanceToTarget < 0.15) {
+          // TODO: change this to cursor size
+          bullet.active = false;
+          collisionEventDispatcher.dispatch("playerHit");
+          return;
+        }
+      }
+    };
 
     // Expose the spawnBullet function to the parent component via ref
     useImperativeHandle(ref, () => ({
@@ -169,7 +202,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       (Math.min(viewport.width, viewport.height) / 2) * coreBuffer;
 
     // MOVEMENT //////////////////////////////////////
-    const handleBulletPosition = (bullet: Bullet) => {
+    const updateBulletPosition = (bullet: Bullet) => {
       switch (bullet.bulletType) {
         case BulletType.Normal:
           updateNormalBullet(bullet);
@@ -215,7 +248,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         }
 
         // Move bullet
-        handleBulletPosition(bullet);
+        updateBulletPosition(bullet);
 
         // Deactivate bullet
         if (bulletOffScreen(bullet, maxX, maxY) || bulletExpired(bullet)) {
@@ -231,31 +264,21 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         );
         const maxDistance = Math.sqrt(maxX ** 2 + maxY ** 2);
         const distanceRatio = distanceFromCenter / maxDistance;
+        const distanceToTarget = bullet.position.distanceTo(target);
+
+        // Explosives
+        if (
+          bullet.bulletType === BulletType.Explosive &&
+          distanceToTarget < 0.1
+        ) {
+          // EXPLODE
+        }
 
         // Player bullets
-        if (bullet.bulletSource === BulletSource.player) {
-          if (distanceFromCenter < coreRadius) {
-            bullet.active = false;
-            collisionEventDispatcher.dispatch("coreHit");
-            return;
-          }
-        }
+        handlePlayerCollision(bullet, distanceToTarget);
 
         // Enemy bullets
-        if (
-          bullet.bulletSource === BulletSource.enemy &&
-          cursorState != "hit" &&
-          cursorState != "dead" &&
-          gameState.gameMode === GameMode.sales
-        ) {
-          const distanceFromCursor = bullet.position.distanceTo(cursorPosition);
-          if (distanceFromCursor < 0.15) {
-            // TODO: change this to cursor size
-            bullet.active = false;
-            collisionEventDispatcher.dispatch("playerHit");
-            return;
-          }
-        }
+        handleEnemyCollision(bullet, distanceToTarget);
 
         dummy.position.copy(bullet.position);
 

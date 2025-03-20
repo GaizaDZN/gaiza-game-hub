@@ -1,4 +1,4 @@
-import React, {
+import {
   SetStateAction,
   useCallback,
   useEffect,
@@ -15,6 +15,7 @@ import {
 } from "../../scenes/coffeeshop/game/game";
 import { Vector3 } from "three";
 import { CursorStateKey } from "../../scenes/coffeeshop/components/threejs/Cursor";
+import { SidebarInfo } from "./types";
 
 interface GameProviderProps {
   children: React.ReactNode;
@@ -23,8 +24,8 @@ interface GameProviderProps {
 
 export function GameProvider({ children, initialState }: GameProviderProps) {
   // Use useState with a function to ensure game is only created once
-  const [game, setGame] = React.useState(() => new Game(initialState));
-  const [gameState, setGameState] = React.useState(game.getState());
+  const [game, setGame] = useState(() => new Game(initialState));
+  const [gameState, setGameState] = useState(game.getState());
 
   // Update local state when game version changes
   useEffect(() => {
@@ -149,6 +150,13 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
     setCursorPosition(new Vector3().copy(position));
   }, []);
 
+  // SideBar Info
+  const [activeGameInfo, setActiveGameInfo] = useState<SidebarInfo>(undefined);
+
+  const handleSetActiveGameInfo = useCallback((gameInfo: SidebarInfo) => {
+    setActiveGameInfo(gameInfo);
+  }, []);
+
   // Memoize context value to prevent unnecessary re-renders
   const value = useMemo(
     () => ({
@@ -174,6 +182,9 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       cursorPosition,
       setCursorPosition: handleSetCursorPosition,
       handleSetCursorPosition,
+
+      activeGameInfo,
+      setActiveGameInfo: handleSetActiveGameInfo,
     }),
     [
       gameState,
@@ -197,6 +208,9 @@ export function GameProvider({ children, initialState }: GameProviderProps) {
       handleCursorState,
       cursorPosition,
       handleSetCursorPosition,
+
+      activeGameInfo,
+      handleSetActiveGameInfo,
     ]
   );
 

@@ -263,7 +263,7 @@ const Cursor: React.FC<cursorProps> = ({ isMouseOnCanvas }) => {
 
         // Scale: increase size as cursor moves away from center (e.g., 1.0 at center, up to 1.5 at edges)
         const minScale = 0.8;
-        const maxScale = 1.2;
+        const maxScale = 1.1;
         const scaleAdjustment =
           minScale + (maxScale - minScale) * distanceRatio;
         // Apply scale based on distance from center

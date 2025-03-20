@@ -6,6 +6,7 @@ import {
 } from "../../scenes/coffeeshop/game/game";
 import { Vector3 } from "three";
 import { CursorStateKey } from "../../scenes/coffeeshop/components/threejs/Cursor";
+import { SidebarInfo } from "./types";
 
 interface GameContextType {
   gameState: GameState;
@@ -32,6 +33,9 @@ interface GameContextType {
   setCursorState: Dispatch<SetStateAction<CursorStateKey>>;
   cursorPosition: Vector3;
   setCursorPosition: (position: Vector3) => void;
+
+  activeGameInfo: SidebarInfo;
+  setActiveGameInfo: (newSidebarInfo: SidebarInfo) => void;
 }
 
 export const GameContext = createContext<GameContextType>({
@@ -56,6 +60,9 @@ export const GameContext = createContext<GameContextType>({
   setCursorState: () => {},
   cursorPosition: new Vector3(),
   setCursorPosition: () => {},
+
+  activeGameInfo: undefined,
+  setActiveGameInfo: () => {},
 });
 
 // Custom hooks for accessing game state and actions

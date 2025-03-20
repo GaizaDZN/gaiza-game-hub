@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { SceneConfig, ViewConfig } from "../../scenes/common";
 import Button from "./buttons/Button";
 import SceneMenu from "./SceneMenu";
 import ArrowButton from "./buttons/ArrowButton";
+import { GameContext } from "../../context/game/GameContext";
 
 interface SidebarProps {
   views: ViewConfig[];
@@ -20,7 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [sceneMenuToggle, setSceneMenuToggle] = useState<string>(
     "sceneMenu sceneMenu-closed"
   );
-
+  const { activeGameInfo } = useContext(GameContext);
   const menuName = "sidebar";
 
   const toggleSceneMenu = () => {
@@ -46,15 +47,18 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <ArrowButton toggleSceneMenu={toggleSceneMenu} />
         </div>
-        {views.map((view) => (
-          <Button
-            key={view.id}
-            action={() => onViewChange(view.id)}
-            content={view.name}
-            menuName={menuName}
-            view={view}
-          />
-        ))}
+        {views.length > 1
+          ? views.map((view) => (
+              <Button
+                key={view.id}
+                action={() => onViewChange(view.id)}
+                content={view.name}
+                menuName={menuName}
+                view={view}
+              />
+            ))
+          : ""}
+        {activeGameInfo && <SidebarInfo sceneComponent={activeGameInfo} />}
       </div>
       <div className="sidebar-bottom"></div>
     </div>
@@ -62,3 +66,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 };
 
 export default Sidebar;
+
+interface SidebarInfoProps {
+  sceneComponent: React.FC;
+}
+// Information about the scene, controls, purpose, etc.
+const SidebarInfo: React.FC<SidebarInfoProps> = ({ sceneComponent }) => {
+  return <div className="sidebar-info">{sceneComponent({})}</div>;
+};
