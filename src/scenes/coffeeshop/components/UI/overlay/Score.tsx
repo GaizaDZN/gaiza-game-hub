@@ -49,6 +49,15 @@ const ScoreOverlay = () => {
     setScore(0);
   };
 
+  const handleScoreUpdate = (score: number): string => {
+    const newScoreText = "00000000";
+    const newScoreStr = score.toString();
+    return (
+      newScoreText.substring(0, newScoreText.length - newScoreStr.length) +
+      newScoreStr
+    );
+  };
+
   useEffect(() => {
     collisionEventDispatcher.subscribe("coreHit", handleCoreHit);
     collisionEventDispatcher.subscribe("playerHit", resetCombo);
@@ -70,16 +79,16 @@ const ScoreOverlay = () => {
   return (
     <div className="score__container">
       <div className="score-number__container">
-        <span className="score-number">{score}</span>
-        <span className="score-text">score</span>
+        <span className="score-number">{handleScoreUpdate(score)}</span>
+        {/* <span className="score-text">score</span> */}
       </div>
       <div className="highscore-number__container">
-        <span className="highscore-number">{highscore}</span>
-        <span className="highscore-text">highscore</span>
+        {/* <span className="highscore-number">{highscore}</span> */}
+        {/* <span className="highscore-text">highscore</span> */}
       </div>
       <div className="score-combo__container">
         <span className="combo-number">{combo}</span>
-        <span className="combo-text">combo</span>
+        <span className="combo-text">X</span>
       </div>
     </div>
   );

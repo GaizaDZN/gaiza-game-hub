@@ -17,6 +17,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "VT323";
+  src: url("/assets/fonts/VT323-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* Colors */
   --coffeeUI: #0f0906;
@@ -1225,31 +1233,37 @@ bottom: 10%;
 }
 
 .score__container {
-  position: absolute;
-  right: 3%;
-  top: 2%;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+    position: absolute;
+    right: 3%;
+    top: 2%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    line-height: 2em;
 
   .score-number__container,
   .highscore-number__container,
   .score-combo__container {
+    font-family: "VT323", "monospace";
     display: flex;
     align-items: baseline;
     gap: 5px;
   }
 
+
   .score-number,
   .highscore-number,
   .combo-number {
-    font-size: 1rem;
+    font-size: 1em;
     font-weight: bold;
-    color: #ffcc00; 
+    // color: #ffcc00; 
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   }
 
+    .score-number {
+    font-size: 2em;
+  }
   .score-text,
   .highscore-text,
   .combo-text {
@@ -1264,7 +1278,7 @@ bottom: 10%;
   }
 
   .combo-number {
-    color: #00ffcc; 
+    // color: #00ffcc; 
   }
 }
 
