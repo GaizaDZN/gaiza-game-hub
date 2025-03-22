@@ -26,56 +26,54 @@ const TextWindow: React.FC = () => {
   const customerOrder = useOrder();
 
   useEffect(() => {
-    // Don't proceed if not in sales mode
-    if (gameState.gameMode != GameMode.sales) return () => {}; // Return empty cleanup function
+    if (gameState.gameMode !== GameMode.sales) return;
 
-    if (customer?.isActive()) {
-      setLoadingMessage(false);
-    } else {
+    // Only set loading to true when customer is not active
+    if (!customer?.isActive()) {
       setLoadingMessage(true);
 
-      // First timer for message loading
       const loadingTimer = setTimeout(() => {
         customer?.activateMessage();
         updateGameState({ ...gameState });
+        setLoadingMessage(false);
 
-        // Second timer for next customer message
-        const transitionTimer = setTimeout(() => {
-          if (customerOrder.prevOrderState !== PrevOrderState.none) {
+        if (customerOrder.prevOrderState !== PrevOrderState.none) {
+          const transitionTimer = setTimeout(() => {
             customerOrder.prevOrderState = PrevOrderState.none;
             updateGameState({ ...gameState });
-          }
-        }, 700);
+          }, 700);
 
-        // Return cleanup function that clears both timers
-        return () => {
-          clearTimeout(loadingTimer);
-          clearTimeout(transitionTimer);
-        };
+          return () => clearTimeout(transitionTimer);
+        }
       }, 700);
 
-      // Cleanup function for the loading timer
       return () => clearTimeout(loadingTimer);
     }
   }, [customer, customerOrder, gameState, updateGameState]);
 
+  const renderContent = () => {
+    // no customer / customer
+    if (!customer) {
+      return gameState.gameMode === GameMode.dayEnd ? <DayEndMessage /> : null;
+    }
+
+    // active customer
+    if (loadingMessage) {
+      return <Diamonds />;
+    }
+
+    // customer message
+    return customerOrder.prevOrderState !== PrevOrderState.none ? (
+      <ResultMessage />
+    ) : (
+      <Message />
+    );
+  };
+
   return (
     <div className="coffee-ui-textWindow">
       <div className="textBG">
-        <ul className="textContainer blink-subtle">
-          {customer?.isActive() ? (
-            loadingMessage ? (
-              <Diamonds />
-            ) : customerOrder.prevOrderState != PrevOrderState.none ? (
-              <ResultMessage /> // Show success/fail message
-            ) : (
-              <Message /> // Show the next customer message
-            )
-          ) : // Render the day end stats if in day end mode
-          gameState.gameMode === GameMode.dayEnd ? (
-            <DayEndMessage />
-          ) : null}
-        </ul>
+        <ul className="textContainer blink-subtle">{renderContent()}</ul>
       </div>
     </div>
   );

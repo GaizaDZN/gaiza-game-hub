@@ -20,4 +20,7 @@ export const soundFiles: Record<string, string> = {
   transaction_success: `${BASE_URL}/assets/sfx/transaction_success.mp3`,
   transaction_success2: `${BASE_URL}/assets/sfx/transaction_success2.mp3`,
   typing_sound: `${BASE_URL}/assets/sfx/typing_sound.mp3`,
+  typing_sound2: `${BASE_URL}/assets/sfx/typing_sound2.mp3`,
+  typing_sound4: `${BASE_URL}/assets/sfx/typing_sound4.mp3`,
+  core_hit: `${BASE_URL}/assets/sfx/coreHit.mp3`,
 };

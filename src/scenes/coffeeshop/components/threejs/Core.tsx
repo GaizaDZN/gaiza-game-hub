@@ -12,6 +12,7 @@ import Bullets, {
 import { GameContext } from "../../../../context/game/GameContext";
 import { fireRateElapsed } from "../../../../helpers/helpers";
 import { GameMode } from "../../game/game";
+import { AudioContext } from "../../../../context/audio/AudioContext";
 
 // Define CursorBullets component - this is a persistent component
 // that manages bullet rendering regardless of firing state
@@ -64,6 +65,7 @@ export const coreBuffer = 0.15;
 const Core: React.FC = () => {
   const coreRef = useRef<Mesh>(null);
   const { gameState, cursorState } = useContext(GameContext);
+  const { playSound } = useContext(AudioContext);
   const corePosition = useRef(new Vector3());
   const [coreState, setCoreState] = useState(coreStates.idle);
   const [bulletSpawnTrigger, setBulletSpawnTrigger] = useState(0);
@@ -76,7 +78,12 @@ const Core: React.FC = () => {
   const lastBulletTime = useRef(1500);
   const bulletInterval = useRef(1500); // Milliseconds between bullet spawns
 
+  // const playCoreHitSound = useCallback(() => {
+  //   playSound("core_hit");
+  // }, [playSound]);
+
   const handleCoreHit = useCallback(() => {
+    // playCoreHitSound();
     setCoreState(coreStates.hit);
     if (hitTimeout.current) {
       clearTimeout(hitTimeout.current); // Clear any existing timeout
@@ -128,13 +135,13 @@ const Core: React.FC = () => {
       </mesh>
 
       {/* Persistent bullet component */}
-      <CoreBullets
+      {/* <CoreBullets
         corePosition={corePosition.current}
         count={20}
         bulletColor="red"
         isActive={isFiring}
         spawnTrigger={bulletSpawnTrigger}
-      />
+      /> */}
     </>
   );
 };

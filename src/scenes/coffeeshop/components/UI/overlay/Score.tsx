@@ -4,10 +4,14 @@ import {
   collisionEventDispatcher,
   gameEventDispatcher,
 } from "../../../../../context/events/eventListener";
-import { ScoreEvent, scoreEvents } from "../../../game/game";
+import { GameMode, ScoreEvent, scoreEvents } from "../../../game/game";
+import { OverlayStates } from "./types";
 
 const ScoreOverlay = () => {
   const { updateScoreState, gameState } = useContext(GameContext);
+  const [pendingScoreUpdate, setPendingScoreUpdate] = useState(false);
+  const [scoreOverlayState, setScoreOverlayState] =
+    useState<OverlayStates>("hidden");
   const [score, setScore] = useState(0);
   const [highscore, setHighscore] = useState(gameState.scoreState.highScore);
   const [combo, setCombo] = useState(1);
@@ -27,14 +31,10 @@ const ScoreOverlay = () => {
   }, [highscore, increaseScore, score]);
 
   const handleSale = useCallback(() => {
-    setScore((prevScore) => {
-      const newScore = prevScore + scoreEvents["sale"].score * combo;
-      updateScoreState(newScore, combo);
-      return newScore;
-    });
-
+    setScore((prevScore) => prevScore + scoreEvents["sale"].score * combo);
+    setPendingScoreUpdate(true); // Flag for score update
     setCombo((prevCombo) => prevCombo + 1);
-  }, [updateScoreState, combo]);
+  }, [combo]);
 
   const resetCombo = useCallback(() => {
     setCombo(1);
@@ -59,6 +59,14 @@ const ScoreOverlay = () => {
   };
 
   useEffect(() => {
+    if (scoreOverlayState === "hidden" && gameState.gameMode === GameMode.sales)
+      setScoreOverlayState("idle");
+
+    if (pendingScoreUpdate) {
+      updateScoreState(score, combo);
+      setPendingScoreUpdate(false);
+    }
+
     collisionEventDispatcher.subscribe("coreHit", handleCoreHit);
     collisionEventDispatcher.subscribe("playerHit", resetCombo);
     gameEventDispatcher.subscribe("playerDeath", handlePlayerDeath);
@@ -74,10 +82,25 @@ const ScoreOverlay = () => {
       gameEventDispatcher.unsubscribe("saleFail", resetCombo);
       gameEventDispatcher.unsubscribe("enterSalesMode", handleSalesStart);
     };
-  }, [handleCoreHit, handlePlayerDeath, handleSale, resetCombo]);
+  }, [
+    combo,
+    gameState.gameMode,
+    handleCoreHit,
+    handlePlayerDeath,
+    handleSale,
+    pendingScoreUpdate,
+    resetCombo,
+    score,
+    scoreOverlayState,
+    updateScoreState,
+  ]);
 
   return (
-    <div className="score__container">
+    <div
+      className={`score__container ${
+        scoreOverlayState === "hidden" ? "hidden" : "fade-in ui-open"
+      }`}
+    >
       <div className="score-number__container">
         <span className="score-number">{handleScoreUpdate(score)}</span>
         {/* <span className="score-text">score</span> */}

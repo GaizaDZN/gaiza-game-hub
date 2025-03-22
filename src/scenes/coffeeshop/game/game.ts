@@ -545,12 +545,7 @@ export class Game {
               currentCustomer: undefined,
               customers: [],
             },
-            orderState: {
-              ...state.orderState,
-              orderSuccess: false,
-              currentOrder: undefined,
-              prevOrderState: PrevOrderState.none,
-            },
+            orderState: this.initOrderState(),
             textState: this.initTextState(),
             coffeeState: this.initCoffeeState(),
             messageLog: {
