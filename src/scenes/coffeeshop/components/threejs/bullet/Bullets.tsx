@@ -48,6 +48,10 @@ interface Bullet {
   active: boolean;
   createdAt?: number;
   bulletSource: BulletSource;
+  stage: number;
+  bulletTarget: THREE.Vector3 | null; // for creating paths to actual target
+  bulletPath: THREE.Vector3[] | null;
+  bulletChildren: Bullet[] | null; // for explosives
 }
 
 export const bulletConsts = {
@@ -65,6 +69,22 @@ export const bulletConsts = {
     color: "red",
     maxLifetime: 4000,
     speed: 0.03,
+  },
+  bullet: {
+    explosive: {
+      small: {
+        count: 3,
+        radius: 2,
+      },
+      medium: {
+        count: 5,
+        radius: 3,
+      },
+      large: {
+        count: 8,
+        radius: 4,
+      },
+    },
   },
 };
 
@@ -89,74 +109,160 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
     const { cursorState, gameState } = useContext(GameContext);
     const { viewport } = useThree();
 
+    const initBullet = useCallback((): Bullet => {
+      return {
+        position: origin.clone(),
+        velocity: velocity.clone(),
+        bulletSize: bulletSize,
+        active: false,
+        bulletSource,
+        bulletType,
+        stage: 0,
+        bulletTarget: null,
+        bulletPath: null,
+        bulletChildren: null,
+      };
+    }, [origin, velocity, bulletSize, bulletSource, bulletType]);
+
     // Initialize bullet pool
     useEffect(() => {
       if (!initializedRef.current) {
         bullets.current = Array(count)
           .fill(null)
-          .map(() => ({
-            position: origin.clone(),
-            velocity: velocity.clone(),
-            bulletSize: bulletSize,
-            active: false,
-            bulletSource,
-            bulletType,
-          }));
+          .map(() => initBullet());
 
         initializedRef.current = true;
       }
-    }, [bulletSize, bulletSource, bulletType, count, origin, velocity]);
+    }, [
+      bulletSize,
+      bulletSource,
+      bulletType,
+      count,
+      initBullet,
+      origin,
+      velocity,
+    ]);
+
+    const createBulletPath = (bullet: Bullet | undefined): THREE.Vector3[] => {
+      const newBulletPath: THREE.Vector3[] = [];
+
+      if (bullet) {
+        // create path based on bullet type
+      }
+      return newBulletPath;
+    };
+
+    // Establish a new target for bullets with multiple stages (missiles, explosives)
+    const setBulletTargets = (bullet: Bullet | undefined) => {
+      if (bullet) {
+        switch (bullet.bulletType) {
+          case BulletType.Missile:
+            // if no path or target position has changed, create a path.
+            if (!bullet.bulletPath) {
+              bullet.bulletPath = createBulletPath(bullet);
+            } else {
+              // update path if end target has changed - for tracking.
+              // maybe update on an interval to prevent too many re-renders?
+              const lastTarget =
+                bullet.bulletPath[bullet.bulletPath.length - 1];
+              if (lastTarget != target) {
+                bullet.bulletPath = createBulletPath(bullet);
+              }
+            }
+            break;
+          case BulletType.Explosive:
+            // Assign targets to children in a radius. Create children if null.
+            if (!bullet.bulletChildren) {
+              // bullet.bulletChildren = createExplosiveChildren(bullet);
+            }
+            break;
+          //
+          default:
+            console.log(
+              `Bullet type ${bullet.bulletType} not recognized. Using missile default.`
+            );
+            break;
+        }
+      }
+    };
+
+    const explodeBullet = (parentBullet: Bullet) => {
+      const { count, radius } = bulletConsts.bullet.explosive.large;
+
+      const explosionOrigin = parentBullet.bulletTarget ?? target;
+
+      for (let i = 0; i < count; i++) {
+        const angle = (i * Math.PI * 2) / count;
+        const pelletTarget = new THREE.Vector3(
+          explosionOrigin.x + Math.cos(angle) * radius,
+          explosionOrigin.y + Math.sin(angle) * radius,
+          explosionOrigin.z
+        );
+
+        const pellet = activateBullet(
+          parentBullet.position,
+          pelletTarget,
+          parentBullet.bulletSource
+        );
+        // increase stage - only bullets at stage 0 should explode
+        if (pellet) pellet.stage = 1;
+      }
+      parentBullet.active = false;
+    };
+
+    const activateBullet = (
+      origin: THREE.Vector3,
+      target: THREE.Vector3 | null,
+      source: BulletSource
+    ): Bullet | null => {
+      const inactiveBullet = bullets.current.find((b) => !b.active);
+      if (!inactiveBullet) return null;
+
+      inactiveBullet.position.copy(origin);
+      inactiveBullet.bulletTarget = target ? target.clone() : null;
+      inactiveBullet.velocity.set(0, 0, 0);
+      inactiveBullet.active = true;
+      inactiveBullet.createdAt = Date.now();
+
+      // Calculate direction and assign velocity
+      const bulletSpeed =
+        source === BulletSource.player
+          ? bulletConsts.player.speed
+          : bulletConsts.enemy.speed;
+
+      if (target) {
+        const direction = new THREE.Vector3()
+          .subVectors(target, origin)
+          .normalize();
+        inactiveBullet.velocity.copy(direction.multiplyScalar(bulletSpeed));
+      }
+
+      return inactiveBullet;
+    };
 
     // Function to spawn a bullet
     const spawnBullet = useCallback(
       (bulletType: BulletType) => {
-        const inactiveBullet = bullets.current.find((b) => !b.active);
-        if (inactiveBullet) {
-          const direction = new THREE.Vector3()
-            .subVectors(target, origin)
-            .normalize();
+        const targetPosition =
+          bulletType === BulletType.Missile
+            ? origin
+                .clone()
+                .add(
+                  new THREE.Vector3(
+                    Math.random() * 0.1 - 0.05,
+                    Math.random() * 0.1 - 0.05,
+                    0
+                  )
+                )
+            : target;
 
-          switch (bulletType) {
-            case BulletType.Normal: {
-              break;
-            }
-            case BulletType.Missile: {
-              inactiveBullet.velocity.set(0, 0.1, 0); // initial missile velocity
-              break;
-            }
-
-            default:
-              break;
-          }
-          const bulletSpeed =
-            inactiveBullet.bulletSource === BulletSource.player
-              ? bulletConsts.player.speed
-              : bulletConsts.enemy.speed;
-          inactiveBullet.position.copy(origin);
-          inactiveBullet.velocity.copy(direction.multiplyScalar(bulletSpeed));
-          inactiveBullet.active = true;
-          inactiveBullet.createdAt = Date.now();
-          return true;
-        }
-        return false;
+        return activateBullet(origin, targetPosition, bulletSource) !== null;
       },
-      [origin, target]
+      [bulletSource, origin, target]
     );
 
     // COLLISION //////////////////////////////////////
-    const handlePlayerCollision = (
-      bullet: Bullet,
-      distanceToTarget: number
-    ) => {
-      const distanceFromCore = distanceToTarget + coreBuffer;
-      if (bullet.bulletSource === BulletSource.player) {
-        if (distanceFromCore < coreRadius) {
-          bullet.active = false;
-          collisionEventDispatcher.dispatch("coreHit");
-          return;
-        }
-      }
-    };
+
     const handleEnemyCollision = (bullet: Bullet, distanceToTarget: number) => {
       if (
         bullet.bulletSource === BulletSource.enemy &&
@@ -204,7 +310,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
     // MOVEMENT //////////////////////////////////////
     const updateBulletPosition = (bullet: Bullet) => {
       switch (bullet.bulletType) {
-        case BulletType.Normal:
+        case BulletType.Normal || BulletType.Explosive:
           updateNormalBullet(bullet);
           break;
         case BulletType.Missile:
@@ -220,13 +326,12 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       bullet.position.add(bullet.velocity);
     };
 
-    // bullets that move outward and then curve toward the target.
+    // bullets that move outward from origin and then curve toward the target.
     const updateMissile = (bullet: Bullet) => {
-      const direction = new THREE.Vector3()
-        .subVectors(target, bullet.position)
-        .normalize();
-      bullet.velocity.lerp(direction, 0.05);
-      bullet.position.add(bullet.velocity);
+      // move outward from origin
+      if (bullet.stage === 0) {
+        bullet.position.add(bullet.velocity);
+      }
     };
 
     // ANIMATION /////////////////////////////////////////////////
@@ -269,13 +374,22 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         // Explosives
         if (
           bullet.bulletType === BulletType.Explosive &&
-          distanceToTarget < 0.1
+          bullet.stage === 0 &&
+          distanceToTarget < 0.5
         ) {
           // EXPLODE
+          explodeBullet(bullet);
         }
 
         // Player bullets
-        handlePlayerCollision(bullet, distanceToTarget);
+
+        const distanceFromCore = distanceToTarget + coreBuffer;
+        if (bullet.bulletSource === BulletSource.player) {
+          if (distanceFromCore < coreRadius) {
+            bullet.active = false;
+            collisionEventDispatcher.dispatch("coreHit");
+          }
+        }
 
         // Enemy bullets
         handleEnemyCollision(bullet, distanceToTarget);

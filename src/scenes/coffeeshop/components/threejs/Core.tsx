@@ -3,61 +3,10 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Mesh, Vector3 } from "three";
 import { collisionEventDispatcher } from "../../../../context/events/eventListener";
 import { commonValues } from "./common";
-import Bullets, {
-  bulletConsts,
-  BulletsHandle,
-  BulletSource,
-  BulletType,
-} from "./bullet/Bullets";
 import { GameContext } from "../../../../context/game/GameContext";
-import { fireRateElapsed } from "../../../../helpers/helpers";
+import { fireRateElapsed, RandRange } from "../../../../helpers/helpers";
 import { GameMode } from "../../game/game";
 import { AudioContext } from "../../../../context/audio/AudioContext";
-
-// Define CursorBullets component - this is a persistent component
-// that manages bullet rendering regardless of firing state
-interface CoreBulletProps {
-  corePosition: Vector3;
-  count?: number;
-  bulletColor?: string;
-  isActive: boolean;
-  spawnTrigger: number; // Add a trigger to force bullet spawning
-  target?: Vector3;
-}
-
-const CoreBullets: React.FC<CoreBulletProps> = ({
-  corePosition,
-  count = 20,
-  bulletColor = "red",
-  isActive,
-  spawnTrigger,
-  target,
-}) => {
-  // Correctly type the ref
-  const bulletsRef = useRef<BulletsHandle | null>(null);
-  const { cursorPosition } = useContext(GameContext);
-  useEffect(() => {
-    if (isActive && spawnTrigger > 0) {
-      bulletsRef.current?.spawnBullet(BulletType.Normal);
-    }
-  }, [isActive, spawnTrigger]);
-
-  target = cursorPosition;
-
-  return (
-    <Bullets
-      ref={bulletsRef}
-      origin={corePosition}
-      target={target}
-      count={count}
-      bulletSize={bulletConsts.enemy.size}
-      bulletColor={bulletColor}
-      maxLifetime={4000}
-      bulletSource={BulletSource.enemy}
-      bulletType={BulletType.Normal}
-    />
-  );
-};
 
 // buffer around the core
 export const coreBuffer = 0.15;
@@ -66,7 +15,7 @@ const Core: React.FC = () => {
   const coreRef = useRef<Mesh>(null);
   const { gameState, cursorState } = useContext(GameContext);
   const { playSound } = useContext(AudioContext);
-  const corePosition = useRef(new Vector3());
+  // const corePosition = useRef(new Vector3());
   const [coreState, setCoreState] = useState(coreStates.idle);
   const [bulletSpawnTrigger, setBulletSpawnTrigger] = useState(0);
 
@@ -78,12 +27,26 @@ const Core: React.FC = () => {
   const lastBulletTime = useRef(1500);
   const bulletInterval = useRef(1500); // Milliseconds between bullet spawns
 
-  // const playCoreHitSound = useCallback(() => {
-  //   playSound("core_hit");
-  // }, [playSound]);
+  const playCoreHitSound = useCallback(() => {
+    const randNum = Math.ceil(RandRange(0, 3));
+    switch (randNum) {
+      case 1:
+        playSound("core_hit");
+        break;
+      case 2:
+        playSound("core_hit2");
+        break;
+      case 3:
+        playSound("core_hit3");
+        break;
+      default:
+        playSound("core_hit");
+        break;
+    }
+  }, [playSound]);
 
   const handleCoreHit = useCallback(() => {
-    // playCoreHitSound();
+    playCoreHitSound();
     setCoreState(coreStates.hit);
     if (hitTimeout.current) {
       clearTimeout(hitTimeout.current); // Clear any existing timeout
@@ -92,7 +55,7 @@ const Core: React.FC = () => {
       setCoreState(coreStates.idle);
       hitTimeout.current = null;
     }, coreHitInterval);
-  }, [coreHitInterval]);
+  }, [coreHitInterval, playCoreHitSound]);
 
   useEffect(() => {
     collisionEventDispatcher.subscribe("coreHit", handleCoreHit);

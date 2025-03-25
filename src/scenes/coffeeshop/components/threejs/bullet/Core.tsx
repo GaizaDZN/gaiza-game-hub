@@ -1,47 +1,55 @@
 // Define CursorBullets component - this is a persistent component
 
-import { useRef, useEffect } from "react";
-import Bullets, { BulletsHandle, BulletSource, BulletType } from "./Bullets";
+import { useRef, useContext, useEffect } from "react";
 import { Vector3 } from "three";
+import { GameContext } from "../../../../../context/game/GameContext";
+import Bullets, {
+  bulletConsts,
+  BulletsHandle,
+  BulletSource,
+  BulletType,
+} from "./Bullets";
 
 // that manages bullet rendering regardless of firing state
-interface CursorBulletProps {
-  cursorPosition: Vector3;
+interface CoreBulletProps {
+  corePosition: Vector3;
   count?: number;
   bulletColor?: string;
   isActive: boolean;
   spawnTrigger: number; // Add a trigger to force bullet spawning
+  target?: Vector3;
 }
 
-const CursorBullets: React.FC<CursorBulletProps> = ({
-  cursorPosition,
-  count = 10,
-  bulletColor = "yellow",
+export const CoreBullets: React.FC<CoreBulletProps> = ({
+  corePosition,
+  count = 20,
+  bulletColor = "red",
   isActive,
   spawnTrigger,
+  target,
 }) => {
   // Correctly type the ref
   const bulletsRef = useRef<BulletsHandle | null>(null);
-
+  const { cursorPosition } = useContext(GameContext);
   useEffect(() => {
     if (isActive && spawnTrigger > 0) {
       bulletsRef.current?.spawnBullet(BulletType.Normal);
     }
   }, [isActive, spawnTrigger]);
 
+  target = cursorPosition;
+
   return (
     <Bullets
       ref={bulletsRef}
-      origin={cursorPosition}
-      target={new Vector3(0, 0, 0)}
+      origin={corePosition}
+      target={target}
       count={count}
-      bulletSize={0.15}
+      bulletSize={bulletConsts.enemy.size}
       bulletColor={bulletColor}
-      maxLifetime={2000}
-      bulletSource={BulletSource.player}
+      maxLifetime={4000}
+      bulletSource={BulletSource.enemy}
       bulletType={BulletType.Normal}
     />
   );
 };
-
-export default CursorBullets;

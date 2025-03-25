@@ -18,7 +18,11 @@ import {
   gameEventDispatcher,
 } from "../../../../context/events/eventListener";
 import { GameMode } from "../../game/game";
-import CursorBullets from "./bullet/CursorBullet";
+import {
+  CursorBullets,
+  CursorMissiles,
+  CursorExplosives,
+} from "./bullet/Cursor";
 
 export interface CursorState {
   color: string;
@@ -76,7 +80,7 @@ const Cursor: React.FC<cursorProps> = ({ isMouseOnCanvas }) => {
   const [isFiring, setIsFiring] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const lastBulletTime = useRef(0);
-  const bulletInterval = useRef(200); // Milliseconds between bullet spawns
+  const bulletInterval = useRef(1000); // Milliseconds between bullet spawns
   const hitTimeout = useRef<NodeJS.Timeout | null>(null);
   const playerHitInterval = 2500;
   const playerDeathInterval = 2800;
@@ -303,10 +307,22 @@ const Cursor: React.FC<cursorProps> = ({ isMouseOnCanvas }) => {
       </mesh>
 
       {/* Persistent bullet component */}
-      <CursorBullets
+      {/* <CursorBullets
         cursorPosition={cursorPosition}
         count={20}
         bulletColor="yellow"
+        isActive={isFiring}
+        spawnTrigger={bulletSpawnTrigger}
+      /> */}
+      {/* <CursorMissiles
+        cursorPosition={cursorPosition}
+        count={20}
+        isActive={isFiring}
+        spawnTrigger={bulletSpawnTrigger}
+      /> */}
+      <CursorExplosives
+        cursorPosition={cursorPosition}
+        count={20}
         isActive={isFiring}
         spawnTrigger={bulletSpawnTrigger}
       />
