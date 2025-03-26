@@ -80,7 +80,7 @@ const Cursor: React.FC<cursorProps> = ({ isMouseOnCanvas }) => {
   const [isFiring, setIsFiring] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const lastBulletTime = useRef(0);
-  const bulletInterval = useRef(1000); // Milliseconds between bullet spawns
+  const bulletInterval = useRef(1500); // Milliseconds between bullet spawns
   const hitTimeout = useRef<NodeJS.Timeout | null>(null);
   const playerHitInterval = 2500;
   const playerDeathInterval = 2800;
@@ -314,18 +314,18 @@ const Cursor: React.FC<cursorProps> = ({ isMouseOnCanvas }) => {
         isActive={isFiring}
         spawnTrigger={bulletSpawnTrigger}
       /> */}
-      {/* <CursorMissiles
-        cursorPosition={cursorPosition}
-        count={20}
-        isActive={isFiring}
-        spawnTrigger={bulletSpawnTrigger}
-      /> */}
-      <CursorExplosives
+      <CursorMissiles
         cursorPosition={cursorPosition}
         count={20}
         isActive={isFiring}
         spawnTrigger={bulletSpawnTrigger}
       />
+      {/* <CursorExplosives
+        cursorPosition={cursorPosition}
+        count={20}
+        isActive={isFiring}
+        spawnTrigger={bulletSpawnTrigger}
+      /> */}
     </>
   );
 };

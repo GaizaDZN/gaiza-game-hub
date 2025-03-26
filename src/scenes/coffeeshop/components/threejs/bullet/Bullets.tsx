@@ -143,48 +143,10 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       velocity,
     ]);
 
-    const createBulletPath = (bullet: Bullet | undefined): THREE.Vector3[] => {
-      const newBulletPath: THREE.Vector3[] = [];
-
-      if (bullet) {
-        // create path based on bullet type
-      }
-      return newBulletPath;
-    };
-
-    // Establish a new target for bullets with multiple stages (missiles, explosives)
-    const setBulletTargets = (bullet: Bullet | undefined) => {
-      if (bullet) {
-        switch (bullet.bulletType) {
-          case BulletType.Missile:
-            // if no path or target position has changed, create a path.
-            if (!bullet.bulletPath) {
-              bullet.bulletPath = createBulletPath(bullet);
-            } else {
-              // update path if end target has changed - for tracking.
-              // maybe update on an interval to prevent too many re-renders?
-              const lastTarget =
-                bullet.bulletPath[bullet.bulletPath.length - 1];
-              if (lastTarget != target) {
-                bullet.bulletPath = createBulletPath(bullet);
-              }
-            }
-            break;
-          case BulletType.Explosive:
-            // Assign targets to children in a radius. Create children if null.
-            if (!bullet.bulletChildren) {
-              // bullet.bulletChildren = createExplosiveChildren(bullet);
-            }
-            break;
-          //
-          default:
-            console.log(
-              `Bullet type ${bullet.bulletType} not recognized. Using missile default.`
-            );
-            break;
-        }
-      }
-    };
+    // Expose the spawnBullet function to the parent component via ref
+    useImperativeHandle(ref, () => ({
+      spawnBullet: (bulletType: BulletType) => spawnBullet(bulletType),
+    }));
 
     const explodeBullet = (parentBullet: Bullet) => {
       const { count, radius } = bulletConsts.bullet.explosive.large;
@@ -210,35 +172,92 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       parentBullet.active = false;
     };
 
-    const activateBullet = (
-      origin: THREE.Vector3,
-      target: THREE.Vector3 | null,
-      source: BulletSource
-    ): Bullet | null => {
-      const inactiveBullet = bullets.current.find((b) => !b.active);
-      if (!inactiveBullet) return null;
+    const createMissilePath = useCallback(
+      (bullet: Bullet): THREE.Vector3[] => {
+        const path: THREE.Vector3[] = [];
+        const start = origin.clone();
+        const end = target.clone();
 
-      inactiveBullet.position.copy(origin);
-      inactiveBullet.bulletTarget = target ? target.clone() : null;
-      inactiveBullet.velocity.set(0, 0, 0);
-      inactiveBullet.active = true;
-      inactiveBullet.createdAt = Date.now();
+        // Control point for the arc (midway, but lifted upwards)
+        const midX = (start.x + end.x) / 2;
+        const midY = Math.max(start.y, end.y) + Math.abs(end.y - start.y) * 1.5;
+        const mid = new THREE.Vector3(midX, midY, origin.z);
 
-      // Calculate direction and assign velocity
-      const bulletSpeed =
-        source === BulletSource.player
-          ? bulletConsts.player.speed
-          : bulletConsts.enemy.speed;
+        const steps = 10; // Adjust for smoother curve
+        let prevPoint = start.clone();
+        path.push(prevPoint.clone());
 
-      if (target) {
+        for (let i = 1; i <= steps; i++) {
+          const t = i / steps;
+          const p1 = new THREE.Vector3().lerpVectors(start, mid, t);
+          const p2 = new THREE.Vector3().lerpVectors(mid, end, t);
+          const point = new THREE.Vector3().lerpVectors(p1, p2, t);
+          point.z = origin.z;
+
+          // Only add the point if it's sufficiently far from the last one
+          if (prevPoint.distanceTo(point) > 0.3) {
+            // Adjust threshold
+            path.push(point.clone());
+            prevPoint = point.clone();
+          }
+        }
+
+        bullet.bulletTarget = path[1]; // Ensure it starts at a reasonable first target
+        return path;
+      },
+      [origin, target]
+    );
+
+    const adjustTrajectory = useCallback(
+      (newTarget: THREE.Vector3, bullet: Bullet, source: BulletSource) => {
+        let bulletSpeed =
+          source === BulletSource.player
+            ? bulletConsts.player.speed
+            : bulletConsts.enemy.speed;
+        if (bullet.bulletType === BulletType.Missile) {
+          bulletSpeed = bulletSpeed / 3;
+        }
+
         const direction = new THREE.Vector3()
-          .subVectors(target, origin)
+          .subVectors(newTarget, bullet.stage === 0 ? origin : bullet.position)
           .normalize();
-        inactiveBullet.velocity.copy(direction.multiplyScalar(bulletSpeed));
-      }
+        bullet.velocity.copy(direction.multiplyScalar(bulletSpeed));
+      },
+      [origin]
+    );
 
-      return inactiveBullet;
-    };
+    const activateBullet = useCallback(
+      (
+        origin: THREE.Vector3,
+        target: THREE.Vector3 | null,
+        source: BulletSource
+      ): Bullet | null => {
+        const inactiveBullet = bullets.current.find((b) => !b.active);
+        if (!inactiveBullet) return null;
+
+        inactiveBullet.position.copy(origin);
+        inactiveBullet.bulletTarget = target ? target.clone() : null;
+        inactiveBullet.velocity.set(0, 0, 0);
+        inactiveBullet.stage = 0;
+        inactiveBullet.bulletPath = null;
+
+        // Add missile logic
+        if (bulletType === BulletType.Missile && inactiveBullet) {
+          inactiveBullet.bulletPath = createMissilePath(inactiveBullet);
+        }
+
+        // Calculate direction and assign velocity
+        const targetToUse = inactiveBullet.bulletTarget || target;
+        if (targetToUse) {
+          adjustTrajectory(targetToUse, inactiveBullet, source);
+        }
+
+        inactiveBullet.active = true;
+        inactiveBullet.createdAt = Date.now();
+        return inactiveBullet;
+      },
+      [adjustTrajectory, bulletType, createMissilePath]
+    );
 
     // Function to spawn a bullet
     const spawnBullet = useCallback(
@@ -256,9 +275,11 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
                 )
             : target;
 
-        return activateBullet(origin, targetPosition, bulletSource) !== null;
+        const newBullet = activateBullet(origin, targetPosition, bulletSource);
+
+        return newBullet != null;
       },
-      [bulletSource, origin, target]
+      [activateBullet, bulletSource, origin, target]
     );
 
     // COLLISION //////////////////////////////////////
@@ -270,20 +291,13 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         cursorState !== "dead" &&
         gameState.gameMode === GameMode.sales
       ) {
-        // const distanceFromCursor = bullet.position.distanceTo(cursorPosition);
         if (distanceToTarget < 0.15) {
-          // TODO: change this to cursor size
           bullet.active = false;
           collisionEventDispatcher.dispatch("playerHit");
           return;
         }
       }
     };
-
-    // Expose the spawnBullet function to the parent component via ref
-    useImperativeHandle(ref, () => ({
-      spawnBullet: (bulletType: BulletType) => spawnBullet(bulletType),
-    }));
 
     const bulletOffScreen = (
       bullet: Bullet,
@@ -328,9 +342,51 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
 
     // bullets that move outward from origin and then curve toward the target.
     const updateMissile = (bullet: Bullet) => {
-      // move outward from origin
-      if (bullet.stage === 0) {
-        bullet.position.add(bullet.velocity);
+      bullet.position.add(bullet.velocity);
+
+      // adjust path if target has moved - tracking (target never moves)
+      // if (bullet.bulletPath) {
+      //   const lastTarget = bullet.bulletPath[bullet.bulletPath.length - 1];
+      //   if (!lastTarget.equals(target)) {
+      //     // recreate path only if target has moved significantly
+      //     const distanceToOriginalTarget = lastTarget.distanceTo(target);
+      //     if (distanceToOriginalTarget > 0.8) {
+      //       bullet.bulletPath = createMissilePath(bullet);
+      //     }
+      //   }
+      // }
+    };
+
+    const handleBulletStaging = (bullet: Bullet, distanceToTarget: number) => {
+      switch (bullet.bulletType) {
+        case BulletType.Explosive:
+          if (bullet.stage === 0 && distanceToTarget < 0.5) {
+            explodeBullet(bullet);
+          }
+          return;
+
+        case BulletType.Missile:
+          if (bullet.bulletPath)
+            if (
+              distanceToTarget <= 0.15 &&
+              bullet.stage < bullet.bulletPath.length - 1
+            ) {
+              // check if current waypoint is reached and if there are more
+              bullet.stage++;
+
+              // update target to next waypoint.
+              if (bullet.stage < bullet.bulletPath.length) {
+                bullet.bulletTarget = bullet.bulletPath[bullet.stage];
+                adjustTrajectory(
+                  bullet.bulletTarget,
+                  bullet,
+                  bullet.bulletSource
+                );
+              }
+            }
+          return;
+        default:
+          return;
       }
     };
 
@@ -369,22 +425,26 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         );
         const maxDistance = Math.sqrt(maxX ** 2 + maxY ** 2);
         const distanceRatio = distanceFromCenter / maxDistance;
-        const distanceToTarget = bullet.position.distanceTo(target);
 
-        // Explosives
+        const distanceToTarget = bullet.position.distanceTo(
+          bullet.bulletTarget ?? target
+        );
+
+        // bullets with a bulletTarget will undergo special staging logic
         if (
-          bullet.bulletType === BulletType.Explosive &&
-          bullet.stage === 0 &&
-          distanceToTarget < 0.5
+          bullet.bulletType === BulletType.Missile ||
+          bullet.bulletType === BulletType.Explosive
         ) {
-          // EXPLODE
-          explodeBullet(bullet);
+          // Special bullet staging logic
+          handleBulletStaging(bullet, distanceToTarget);
         }
 
         // Player bullets
-
         const distanceFromCore = distanceToTarget + coreBuffer;
-        if (bullet.bulletSource === BulletSource.player) {
+        if (
+          bullet.bulletSource === BulletSource.player &&
+          bullet.bulletType === BulletType.Normal
+        ) {
           if (distanceFromCore < coreRadius) {
             bullet.active = false;
             collisionEventDispatcher.dispatch("coreHit");
