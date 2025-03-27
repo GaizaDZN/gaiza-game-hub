@@ -85,9 +85,6 @@ const Cursor: React.FC<cursorProps> = ({ isMouseOnCanvas }) => {
   const playerHitInterval = 2500;
   const playerDeathInterval = 2800;
 
-  // Create a reference for cursor position that doesn't change with renders
-  // const cursorPosition = useRef(new THREE.Vector3());
-
   // Create a counter to trigger new bullet spawns
   const [bulletSpawnTrigger, setBulletSpawnTrigger] = useState(0);
 

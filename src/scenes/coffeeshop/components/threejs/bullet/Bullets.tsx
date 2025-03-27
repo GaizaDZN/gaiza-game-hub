@@ -53,6 +53,7 @@ interface Bullet {
   bulletPath: THREE.Vector3[] | null;
   bulletChildren: Bullet[] | null; // for explosives
   isPellet: boolean;
+  trailInstances: Array<{ position: THREE.Vector3; opacity: number }>;
 }
 
 export const bulletConsts = {
@@ -107,6 +108,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
     const meshRef = useRef<THREE.InstancedMesh>(null);
     const bullets = useRef<Bullet[]>([]);
     const initializedRef = useRef(false);
+    const trailMeshRef = useRef<THREE.InstancedMesh>(null);
     const { cursorState, gameState } = useContext(GameContext);
     const { viewport } = useThree();
 
@@ -123,6 +125,10 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         bulletPath: null,
         bulletChildren: null,
         isPellet: false,
+        trailInstances: [] as Array<{
+          position: THREE.Vector3;
+          opacity: number;
+        }>,
       };
     }, [origin, velocity, bulletSize, bulletSource, bulletType]);
 
@@ -424,6 +430,17 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       }
     };
 
+    const getAdjustedScale = (
+      bullet: Bullet,
+      distanceRatio: number
+    ): number => {
+      const minScale = 0.6;
+      const maxScale = 1;
+      return (
+        bullet.bulletSize * (minScale + (maxScale - minScale) * distanceRatio)
+      );
+    };
+
     // ANIMATION /////////////////////////////////////////////////
 
     useFrame(() => {
@@ -432,26 +449,46 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       const maxY = viewport.height / 2;
 
       const dummy = new THREE.Object3D();
+      const trailDummy = new THREE.Object3D();
+
+      let shouldUpdateInstanceMatrix = false;
+      let shouldUpdateTrailMatrix = false;
+
       bullets.current.forEach((bullet, index) => {
         if (!bullet.active) {
-          // Skip rendering inactive bullets by setting their matrix to identity
-          dummy.position.set(0, 0, 0); // Move off-screen
-          dummy.scale.set(0, 0, 0); // Scale to zero to make it invisible
+          bullet.trailInstances = bullet.trailInstances.filter(
+            (trail) => trail.opacity > 0
+          );
+          // Skip rendering
+          dummy.position.set(0, 0, 0);
+          dummy.scale.set(0, 0, 0);
           dummy.updateMatrix();
           meshRef.current?.setMatrixAt(index, dummy.matrix);
+          shouldUpdateInstanceMatrix = true;
           return;
         }
 
         // Move bullet
         updateBulletPosition(bullet);
 
-        // Deactivate bullet
+        // Spawn trail instance every few frames
+        if (Math.random() > 0.6) {
+          bullet.trailInstances.push({
+            position: bullet.position.clone(),
+            opacity: 1.0, // start fully visible
+          });
+
+          if (bullet.trailInstances.length > 5) {
+            bullet.trailInstances.shift();
+          }
+        }
+
+        // COLLISIONS /////////////////////////////////////////////
+
         if (bulletOffScreen(bullet, maxX, maxY) || bulletExpired(bullet)) {
           bullet.active = false;
           return;
         }
-
-        // Handle collisions
 
         // Compute distance from the center
         const distanceFromCenter = Math.sqrt(
@@ -486,12 +523,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         dummy.position.copy(bullet.position);
 
         if (bullet.bulletSource === BulletSource.player) {
-          const minScale = 0.6;
-          const maxScale = 1;
-          const scaleAdjustment =
-            bullet.bulletSize *
-            (minScale + (maxScale - minScale) * distanceRatio);
-          // Apply scale based on distance from center
+          const scaleAdjustment = getAdjustedScale(bullet, distanceRatio);
           dummy.scale.set(scaleAdjustment, scaleAdjustment, scaleAdjustment);
         } else {
           dummy.scale.set(
@@ -503,18 +535,57 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
 
         dummy.updateMatrix();
         meshRef.current?.setMatrixAt(index, dummy.matrix);
+        shouldUpdateInstanceMatrix = true;
       });
 
-      if (meshRef.current.instanceMatrix) {
+      // TRAILS ////////////////////////////////////////////////////
+      // Update trail instances
+      bullets.current.forEach((bullet, index) => {
+        // Filter out completely faded trails
+        bullet.trailInstances = bullet.trailInstances.filter((trail) => {
+          trail.opacity -= 0.1;
+          return trail.opacity > 0;
+        });
+
+        bullet.trailInstances.forEach((trail, trailIndex) => {
+          trailDummy.position.copy(trail.position);
+          const trailSize = bullet.bulletSize;
+          trailDummy.scale.set(trailSize, trailSize, trailSize);
+          trailDummy.updateMatrix();
+          trailMeshRef.current?.setMatrixAt(
+            index * 10 + trailIndex, // Offset by bullet index
+            trailDummy.matrix
+          );
+          shouldUpdateTrailMatrix = true;
+        });
+      });
+
+      if (shouldUpdateInstanceMatrix && meshRef.current.instanceMatrix) {
         meshRef.current.instanceMatrix.needsUpdate = true;
+      }
+
+      if (shouldUpdateTrailMatrix && trailMeshRef.current?.instanceMatrix) {
+        trailMeshRef.current.instanceMatrix.needsUpdate = true;
       }
     });
 
     return (
-      <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
-        <sphereGeometry args={[0.5, 8, 8]} />
-        <meshBasicMaterial color={bulletColor} />
-      </instancedMesh>
+      <>
+        {/* Main bullets */}
+        <instancedMesh ref={meshRef} args={[undefined, undefined, count]}>
+          <sphereGeometry args={[0.5, 3, 3]} />
+          <meshBasicMaterial color={bulletColor} />
+        </instancedMesh>
+
+        {/* Trail instances */}
+        <instancedMesh
+          ref={trailMeshRef}
+          args={[undefined, undefined, count * 5]}
+        >
+          <sphereGeometry args={[0.2, 1, 1]} />
+          <meshBasicMaterial color={bulletColor} transparent opacity={1} />
+        </instancedMesh>
+      </>
     );
   }
 );
