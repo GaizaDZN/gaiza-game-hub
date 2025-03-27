@@ -56,7 +56,7 @@ export const CursorMissiles: React.FC<CursorBulletProps> = ({
 
   useEffect(() => {
     if (isActive && spawnTrigger > 0) {
-      bulletsRef.current?.spawnBullet(BulletType.Normal);
+      bulletsRef.current?.spawnBullet(BulletType.Missile);
     }
   }, [isActive, spawnTrigger]);
 
@@ -87,7 +87,7 @@ export const CursorExplosives: React.FC<CursorBulletProps> = ({
 
   useEffect(() => {
     if (isActive && spawnTrigger > 0) {
-      bulletsRef.current?.spawnBullet(BulletType.Normal);
+      bulletsRef.current?.spawnBullet(BulletType.Explosive);
     }
   }, [isActive, spawnTrigger]);
 

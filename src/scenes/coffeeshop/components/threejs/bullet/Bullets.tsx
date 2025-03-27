@@ -41,7 +41,7 @@ export interface BulletProps {
 }
 
 interface Bullet {
-  bulletType?: BulletType;
+  bulletType: BulletType;
   position: THREE.Vector3;
   velocity: THREE.Vector3;
   bulletSize: number;
@@ -52,6 +52,7 @@ interface Bullet {
   bulletTarget: THREE.Vector3 | null; // for creating paths to actual target
   bulletPath: THREE.Vector3[] | null;
   bulletChildren: Bullet[] | null; // for explosives
+  isPellet: boolean;
 }
 
 export const bulletConsts = {
@@ -99,7 +100,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       bulletColor = bulletConsts.enemy.color,
       maxLifetime = bulletConsts.enemy.maxLifetime,
       bulletSource,
-      bulletType = BulletType.Normal,
+      bulletType,
     },
     ref
   ) => {
@@ -115,12 +116,13 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         velocity: velocity.clone(),
         bulletSize: bulletSize,
         active: false,
-        bulletSource,
-        bulletType,
+        bulletSource: bulletSource,
+        bulletType: bulletType,
         stage: 0,
         bulletTarget: null,
         bulletPath: null,
         bulletChildren: null,
+        isPellet: false,
       };
     }, [origin, velocity, bulletSize, bulletSource, bulletType]);
 
@@ -164,10 +166,15 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         const pellet = activateBullet(
           parentBullet.position,
           pelletTarget,
-          parentBullet.bulletSource
+          parentBullet.bulletSource,
+          BulletType.Normal
         );
-        // increase stage - only bullets at stage 0 should explode
-        if (pellet) pellet.stage = 1;
+
+        if (pellet) {
+          pellet.isPellet = true;
+          // increase stage - only bullets at stage 0 should explode
+          pellet.stage = 1;
+        }
       }
       parentBullet.active = false;
     };
@@ -194,7 +201,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
           const point = new THREE.Vector3().lerpVectors(p1, p2, t);
 
           // only add the point if it's sufficiently far from the last one
-          if (prevPoint.distanceTo(point) > 0.3) {
+          if (prevPoint.distanceTo(point) > 0.2) {
             path.push(point.clone());
             prevPoint = point.clone();
           }
@@ -228,19 +235,24 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       (
         origin: THREE.Vector3,
         target: THREE.Vector3 | null,
-        source: BulletSource
+        source: BulletSource,
+        type: BulletType
       ): Bullet | null => {
         const inactiveBullet = bullets.current.find((b) => !b.active);
         if (!inactiveBullet) return null;
 
         inactiveBullet.position.copy(origin);
-        inactiveBullet.bulletTarget = target ? target.clone() : null;
+        inactiveBullet.bulletTarget = null;
         inactiveBullet.velocity.set(0, 0, 0);
         inactiveBullet.stage = 0;
         inactiveBullet.bulletPath = null;
+        inactiveBullet.bulletType = type;
 
         // Add missile logic
-        if (bulletType === BulletType.Missile && inactiveBullet) {
+        if (
+          inactiveBullet.bulletType === BulletType.Missile &&
+          inactiveBullet
+        ) {
           inactiveBullet.bulletPath = createMissilePath(inactiveBullet);
         }
 
@@ -254,26 +266,13 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         inactiveBullet.createdAt = Date.now();
         return inactiveBullet;
       },
-      [adjustTrajectory, bulletType, createMissilePath]
+      [adjustTrajectory, createMissilePath]
     );
 
     // Function to spawn a bullet
     const spawnBullet = useCallback(
-      (bulletType: BulletType) => {
-        const targetPosition =
-          bulletType === BulletType.Missile
-            ? origin
-                .clone()
-                .add(
-                  new THREE.Vector3(
-                    Math.random() * 0.1 - 0.05,
-                    Math.random() * 0.1 - 0.05,
-                    0
-                  )
-                )
-            : target;
-
-        const newBullet = activateBullet(origin, targetPosition, bulletSource);
+      (type: BulletType) => {
+        const newBullet = activateBullet(origin, target, bulletSource, type);
 
         return newBullet != null;
       },
@@ -322,7 +321,10 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
     // MOVEMENT //////////////////////////////////////
     const updateBulletPosition = (bullet: Bullet) => {
       switch (bullet.bulletType) {
-        case BulletType.Normal || BulletType.Explosive:
+        case BulletType.Normal:
+          updateNormalBullet(bullet);
+          break;
+        case BulletType.Explosive:
           updateNormalBullet(bullet);
           break;
         case BulletType.Missile:
@@ -358,7 +360,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
     const handleBulletStaging = (bullet: Bullet, distanceToTarget: number) => {
       switch (bullet.bulletType) {
         case BulletType.Explosive:
-          if (bullet.stage === 0 && distanceToTarget < 0.5) {
+          if (bullet.stage === 0 && distanceToTarget < 0.8) {
             explodeBullet(bullet);
           }
           return;
@@ -400,8 +402,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       switch (bullet.bulletType) {
         case BulletType.Normal:
           {
-            const distanceFromCore = distanceToTarget + coreBuffer;
-            if (distanceFromCore < coreRadius) {
+            if (distanceToTarget < coreRadius - bullet.bulletSize) {
               triggerCoreHit(bullet);
             }
           }
@@ -459,23 +460,27 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         const maxDistance = Math.sqrt(maxX ** 2 + maxY ** 2);
         const distanceRatio = distanceFromCenter / maxDistance;
 
-        const distanceToTarget = bullet.position.distanceTo(
-          bullet.bulletTarget ?? target
-        );
+        const pos1 = bullet.position.clone();
+        const pos2 = (bullet.bulletTarget ?? target).clone();
 
-        // bullets with a bulletTarget will undergo special staging logic
+        // flatten Z-axis
+        pos1.z = 0;
+        pos2.z = 0;
+        const distance2D = pos1.distanceTo(pos2);
+
+        // bullets with staging logic
         if (
           bullet.bulletType === BulletType.Missile ||
           bullet.bulletType === BulletType.Explosive
         ) {
           // Special bullet staging logic
-          handleBulletStaging(bullet, distanceToTarget);
+          handleBulletStaging(bullet, distance2D);
         }
 
         if (bullet.bulletSource === BulletSource.player) {
-          handlePlayerCollisions(bullet, distanceToTarget);
+          handlePlayerCollisions(bullet, distance2D);
         } else {
-          handleEnemyCollision(bullet, distanceToTarget);
+          handleEnemyCollision(bullet, distance2D);
         }
 
         dummy.position.copy(bullet.position);
