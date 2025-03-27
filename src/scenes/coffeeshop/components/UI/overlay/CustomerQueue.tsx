@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { GameContext } from "../../../../../context/game/GameContext";
-import { BASE_URL } from "../../../../../assets/assets";
+import { BASE_URL } from "../../../../../../public/assets/assets";
 
 const userImg = `${BASE_URL}//assets/img/user.png`;
 

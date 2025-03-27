@@ -11,7 +11,7 @@ import Overlay from "./components/UI/overlay/Overlay";
 import "./styles/coffeeshop.scss";
 import { PerspectiveCamera } from "@react-three/drei";
 import { commonValues } from "./components/threejs/common";
-import { BASE_URL } from "../../assets/assets";
+import { BASE_URL } from "../../../public/assets/assets";
 
 const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
   currentScene,

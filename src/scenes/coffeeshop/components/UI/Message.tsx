@@ -8,7 +8,7 @@ import React from "react";
 import { PrevOrderState } from "../../game/game";
 import TypewriterEffect from "./TypeWriterEffect";
 import { AudioContext } from "../../../../context/audio/AudioContext";
-import { BASE_URL } from "../../../../assets/assets";
+import { BASE_URL } from "../../../../../public/assets/assets";
 
 const userImg = `${BASE_URL}/assets/img/user.png`;
 

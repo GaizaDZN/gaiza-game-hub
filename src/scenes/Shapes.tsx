@@ -5,7 +5,7 @@ import gsap from "gsap";
 // import InstancedAnimatedPlanes from "../components/InstancedAnimatedPlanes";
 import { GuiControls, SceneProps } from "./common";
 import InstancedAnimatedPlanes from "../components/InstancedAnimatedPlanes";
-import { BASE_URL } from "../assets/assets";
+import { BASE_URL } from "../../public/assets/assets";
 
 const Shapes: React.FC<SceneProps> = ({ gui, configScene, currentView }) => {
   const { camera } = useThree();

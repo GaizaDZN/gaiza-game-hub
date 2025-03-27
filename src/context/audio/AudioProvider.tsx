@@ -1,8 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import { Howl, Howler } from "howler";
-import { soundFiles } from "../../assets/assets";
-
 import { AudioContext } from "./AudioContext";
+import { soundFiles } from "../../../public/assets/assets";
 
 interface AudioProviderProps {
   children: React.ReactNode;

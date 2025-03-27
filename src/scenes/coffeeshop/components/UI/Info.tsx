@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { GameContext } from "../../../../context/game/GameContext";
 import Store from "./store/Store";
 import { GameMode } from "../../game/game";
-import { BASE_URL } from "../../../../assets/assets";
+import { BASE_URL } from "../../../../../public/assets/assets";
 
 const CoffeeQuantity: React.FC<{ name: string; quantity: number }> = ({
   name,

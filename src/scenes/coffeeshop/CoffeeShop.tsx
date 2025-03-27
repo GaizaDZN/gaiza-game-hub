@@ -9,7 +9,7 @@ import Tunnel from "./components/aesthetics/Tunnel";
 import { GameContext } from "../../context/game/GameContext";
 import { GameMode } from "./game/game";
 import { gameEventDispatcher } from "../../context/events/eventListener";
-import { BASE_URL } from "../../assets/assets";
+import { BASE_URL } from "../../../public/assets/assets";
 
 const cursor = `${BASE_URL}/assets/img/cursor.png`;
 

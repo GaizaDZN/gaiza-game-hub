@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { ResourceState } from "../../../game/game";
 import { GameContext } from "../../../../../context/game/GameContext";
 import { resourceCost } from "../../../game/coffeeshop.types";
-import { BASE_URL } from "../../../../../assets/assets";
+import { BASE_URL } from "../../../../../../public/assets/assets";
 
 interface StoreItemProps {
   quantity: number;
