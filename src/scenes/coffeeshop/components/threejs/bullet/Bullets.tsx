@@ -53,7 +53,13 @@ interface Bullet {
   bulletPath: THREE.Vector3[] | null;
   bulletChildren: Bullet[] | null; // for explosives
   isPellet: boolean;
-  trailInstances: Array<{ position: THREE.Vector3; opacity: number }>;
+  trailInstances: TrailInstance[];
+}
+
+interface TrailInstance {
+  position: THREE.Vector3;
+  opacity: number;
+  active: boolean; // Add an active flag
 }
 
 export const bulletConsts = {
@@ -107,6 +113,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
   ) => {
     const meshRef = useRef<THREE.InstancedMesh>(null);
     const bullets = useRef<Bullet[]>([]);
+    const trailPool = useRef<TrailInstance[]>([]);
     const initializedRef = useRef(false);
     const trailMeshRef = useRef<THREE.InstancedMesh>(null);
     const { cursorState, gameState } = useContext(GameContext);
@@ -125,12 +132,17 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         bulletPath: null,
         bulletChildren: null,
         isPellet: false,
-        trailInstances: [] as Array<{
-          position: THREE.Vector3;
-          opacity: number;
-        }>,
+        trailInstances: [],
       };
     }, [origin, velocity, bulletSize, bulletSource, bulletType]);
+
+    const initTrail = useCallback((): TrailInstance => {
+      return {
+        position: new THREE.Vector3(0, 0, 0),
+        opacity: 0,
+        active: false,
+      };
+    }, []);
 
     // Initialize bullet pool
     useEffect(() => {
@@ -138,6 +150,10 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         bullets.current = Array(count)
           .fill(null)
           .map(() => initBullet());
+
+        trailPool.current = Array(count * 5)
+          .fill(null)
+          .map(() => initTrail());
 
         initializedRef.current = true;
       }
@@ -147,6 +163,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       bulletType,
       count,
       initBullet,
+      initTrail,
       origin,
       velocity,
     ]);
@@ -284,6 +301,30 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       },
       [activateBullet, bulletSource, origin, target]
     );
+
+    const spawnTrail = useCallback((bullet: Bullet) => {
+      // find first inactive trail in the pool
+      const availableTrail = trailPool.current.find((trail) => !trail.active);
+
+      if (availableTrail) {
+        availableTrail.position.copy(bullet.position);
+        availableTrail.opacity = 1.0;
+        availableTrail.active = true;
+
+        // TODO: Limit total active trails per bullet
+        const activeBulletTrails = trailPool.current.filter(
+          (trail) =>
+            trail.active && trail.position.distanceTo(bullet.position) < 1
+        );
+
+        if (activeBulletTrails.length > 5) {
+          // deactivate the oldest trail
+          const oldestTrail = activeBulletTrails[0];
+          oldestTrail.active = false;
+          oldestTrail.opacity = 0;
+        }
+      }
+    }, []);
 
     // COLLISION //////////////////////////////////////
 
@@ -450,15 +491,13 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
 
       const dummy = new THREE.Object3D();
       const trailDummy = new THREE.Object3D();
+      const activeTrails = trailPool.current.filter((trail) => trail.active);
 
       let shouldUpdateInstanceMatrix = false;
       let shouldUpdateTrailMatrix = false;
 
       bullets.current.forEach((bullet, index) => {
         if (!bullet.active) {
-          bullet.trailInstances = bullet.trailInstances.filter(
-            (trail) => trail.opacity > 0
-          );
           // Skip rendering
           dummy.position.set(0, 0, 0);
           dummy.scale.set(0, 0, 0);
@@ -473,14 +512,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
 
         // Spawn trail instance every few frames
         if (Math.random() > 0.6) {
-          bullet.trailInstances.push({
-            position: bullet.position.clone(),
-            opacity: 1.0, // start fully visible
-          });
-
-          if (bullet.trailInstances.length > 5) {
-            bullet.trailInstances.shift();
-          }
+          spawnTrail(bullet);
         }
 
         // COLLISIONS /////////////////////////////////////////////
@@ -539,25 +571,24 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       });
 
       // TRAILS ////////////////////////////////////////////////////
-      // Update trail instances
-      bullets.current.forEach((bullet, index) => {
-        // Filter out completely faded trails
-        bullet.trailInstances = bullet.trailInstances.filter((trail) => {
-          trail.opacity -= 0.1;
-          return trail.opacity > 0;
-        });
+      // Render trails from the pool
+      activeTrails.forEach((trail, trailIndex) => {
+        // Reduce opacity
+        trail.opacity -= 0.1;
 
-        bullet.trailInstances.forEach((trail, trailIndex) => {
-          trailDummy.position.copy(trail.position);
-          const trailSize = bullet.bulletSize;
-          trailDummy.scale.set(trailSize, trailSize, trailSize);
-          trailDummy.updateMatrix();
-          trailMeshRef.current?.setMatrixAt(
-            index * 10 + trailIndex, // Offset by bullet index
-            trailDummy.matrix
-          );
-          shouldUpdateTrailMatrix = true;
-        });
+        // Deactivate if opacity is too low
+        if (trail.opacity <= 0) {
+          trail.active = false;
+          return;
+        }
+
+        // Render trail
+        trailDummy.position.copy(trail.position);
+        trailDummy.scale.set(0.2, 0.2, 0.2); // Adjust trail size as needed
+        trailDummy.updateMatrix();
+
+        trailMeshRef.current?.setMatrixAt(trailIndex, trailDummy.matrix);
+        shouldUpdateTrailMatrix = true;
       });
 
       if (shouldUpdateInstanceMatrix && meshRef.current.instanceMatrix) {
