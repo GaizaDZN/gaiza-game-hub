@@ -178,12 +178,12 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         const start = origin.clone();
         const end = target.clone();
 
-        // Control point for the arc (midway, but lifted upwards)
+        // arc
         const midX = (start.x + end.x) / 2;
-        const midY = Math.max(start.y, end.y) + Math.abs(end.y - start.y) * 1.5;
+        const midY = Math.max(start.y, end.y) + Math.abs(end.y - start.y) * 1.1;
         const mid = new THREE.Vector3(midX, midY, origin.z);
 
-        const steps = 10; // Adjust for smoother curve
+        const steps = 10; // more steps = smoother curve
         let prevPoint = start.clone();
         path.push(prevPoint.clone());
 
@@ -192,17 +192,15 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
           const p1 = new THREE.Vector3().lerpVectors(start, mid, t);
           const p2 = new THREE.Vector3().lerpVectors(mid, end, t);
           const point = new THREE.Vector3().lerpVectors(p1, p2, t);
-          point.z = origin.z;
 
-          // Only add the point if it's sufficiently far from the last one
+          // only add the point if it's sufficiently far from the last one
           if (prevPoint.distanceTo(point) > 0.3) {
-            // Adjust threshold
             path.push(point.clone());
             prevPoint = point.clone();
           }
         }
 
-        bullet.bulletTarget = path[1]; // Ensure it starts at a reasonable first target
+        bullet.bulletTarget = path[1]; // 0 is the bullet origin
         return path;
       },
       [origin, target]
@@ -390,6 +388,41 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       }
     };
 
+    const triggerCoreHit = (bullet: Bullet) => {
+      bullet.active = false;
+      collisionEventDispatcher.dispatch("coreHit");
+    };
+
+    const handlePlayerCollisions = (
+      bullet: Bullet,
+      distanceToTarget: number
+    ) => {
+      switch (bullet.bulletType) {
+        case BulletType.Normal:
+          {
+            const distanceFromCore = distanceToTarget + coreBuffer;
+            if (distanceFromCore < coreRadius) {
+              triggerCoreHit(bullet);
+            }
+          }
+          return;
+        case BulletType.Missile:
+          {
+            if (bullet.bulletPath) {
+              if (
+                bullet.bulletTarget?.equals(target) &&
+                distanceToTarget < coreRadius - bullet.bulletSize * 2.9
+              ) {
+                triggerCoreHit(bullet);
+              }
+            }
+          }
+          return;
+        default:
+          break;
+      }
+    };
+
     // ANIMATION /////////////////////////////////////////////////
 
     useFrame(() => {
@@ -439,20 +472,11 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
           handleBulletStaging(bullet, distanceToTarget);
         }
 
-        // Player bullets
-        const distanceFromCore = distanceToTarget + coreBuffer;
-        if (
-          bullet.bulletSource === BulletSource.player &&
-          bullet.bulletType === BulletType.Normal
-        ) {
-          if (distanceFromCore < coreRadius) {
-            bullet.active = false;
-            collisionEventDispatcher.dispatch("coreHit");
-          }
+        if (bullet.bulletSource === BulletSource.player) {
+          handlePlayerCollisions(bullet, distanceToTarget);
+        } else {
+          handleEnemyCollision(bullet, distanceToTarget);
         }
-
-        // Enemy bullets
-        handleEnemyCollision(bullet, distanceToTarget);
 
         dummy.position.copy(bullet.position);
 
