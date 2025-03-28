@@ -1,8 +1,8 @@
 import { useContext } from "react";
 import { GameContext } from "../../../../../context/game/GameContext";
-import { BASE_URL } from "../../../../../assets/assets";
+import { imageFiles } from "../../../../../assets";
 
-const userImg = `${BASE_URL}//assets/img/user.png`;
+const userImg = imageFiles.user;
 
 const CustomerQueue: React.FC = () => {
   const { gameState } = useContext(GameContext);

@@ -17,7 +17,7 @@ const Core: React.FC = () => {
   const { playSound } = useContext(AudioContext);
   // const corePosition = useRef(new Vector3());
   const [coreState, setCoreState] = useState(coreStates.idle);
-  const [bulletSpawnTrigger, setBulletSpawnTrigger] = useState(0);
+  // const [bulletSpawnTrigger, setBulletSpawnTrigger] = useState(0);
 
   const hitTimeout = useRef<NodeJS.Timeout | null>(null);
   const coreHitInterval = commonValues.hit.interval;
@@ -85,7 +85,7 @@ const Core: React.FC = () => {
         )
       ) {
         lastBulletTime.current = currentTime;
-        setBulletSpawnTrigger((prev) => prev + 1);
+        // setBulletSpawnTrigger((prev) => prev + 1);
       }
     }
   });

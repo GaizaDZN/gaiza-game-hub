@@ -8,9 +8,9 @@ import React from "react";
 import { PrevOrderState } from "../../game/game";
 import TypewriterEffect from "./TypeWriterEffect";
 import { AudioContext } from "../../../../context/audio/AudioContext";
-import { BASE_URL } from "../../../../assets/assets";
+import { imageFiles } from "../../../../assets";
 
-const userImg = `${BASE_URL}/assets/img/user.png`;
+const userImg = imageFiles.user;
 
 const DefaultAvatar: React.FC = () => {
   return (

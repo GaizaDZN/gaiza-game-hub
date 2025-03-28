@@ -1,10 +1,11 @@
 import { createContext, useContext } from "react";
+import { soundFiles } from "../../assets";
 
 interface AudioContextType {
-  playSound: (filename: string) => void;
-  stopSound: (filename: string) => void;
+  playSound: (filename: keyof typeof soundFiles) => void;
+  stopSound: (filename: keyof typeof soundFiles) => void;
   setVolume: (volume: number) => void;
-  getSound: (filename: string) => Howl | undefined;
+  getSound: (filename: keyof typeof soundFiles) => Howl | undefined;
 }
 
 export const AudioContext = createContext<AudioContextType>({

@@ -5,16 +5,16 @@ import gsap from "gsap";
 // import InstancedAnimatedPlanes from "../components/InstancedAnimatedPlanes";
 import { GuiControls, SceneProps } from "./common";
 import InstancedAnimatedPlanes from "../components/InstancedAnimatedPlanes";
-import { BASE_URL } from "../assets/assets";
+import { imageFiles } from "../assets";
 
 const Shapes: React.FC<SceneProps> = ({ gui, configScene, currentView }) => {
   const { camera } = useThree();
   const controlsRef = useRef<GuiControls>({});
   const perspCamera = camera as THREE.PerspectiveCamera;
 
-  const anim1 = `${BASE_URL}/assets/animation/cherry.webm`;
-  const anim2 = `${BASE_URL}/assets/animation/banana.webm`;
-  const anim3 = `${BASE_URL}/assets/animation/watermelon.webm`;
+  const anim1 = imageFiles.cherry;
+  const anim2 = imageFiles.banana;
+  const anim3 = imageFiles.watermelon;
 
   useEffect(() => {
     const viewConfig =

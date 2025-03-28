@@ -1,6 +1,6 @@
 // Coffee shop game
 
-import { characterPortraits } from "../../../assets/assets";
+import { characterPortraits } from "../../../assets";
 import { generateRandomId, RandRange } from "../../../helpers/helpers";
 import Chance from "chance";
 const chance = new Chance();

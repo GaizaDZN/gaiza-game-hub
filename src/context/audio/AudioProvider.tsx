@@ -1,8 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import { Howl, Howler } from "howler";
-import { soundFiles } from "../../assets/assets";
-
 import { AudioContext } from "./AudioContext";
+import { soundFiles } from "../../assets";
 
 interface AudioProviderProps {
   children: React.ReactNode;
@@ -12,7 +11,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const howlInstances = useMemo<Record<string, Howl>>(() => ({}), []);
 
   const playSound = useCallback(
-    (filename: string) => {
+    (filename: keyof typeof soundFiles) => {
       if (!soundFiles[filename]) {
         console.warn(`Sound file ${filename} not found`);
         return;
@@ -32,7 +31,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
   );
 
   const stopSound = useCallback(
-    (filename: string) => {
+    (filename: keyof typeof soundFiles) => {
       if (howlInstances[filename]) {
         howlInstances[filename].stop();
       }
@@ -45,7 +44,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
   }, []);
 
   const getSound = useCallback(
-    (filename: string): Howl | undefined => {
+    (filename: keyof typeof soundFiles): Howl | undefined => {
       return howlInstances[filename];
     },
     [howlInstances]

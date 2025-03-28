@@ -5,6 +5,7 @@ import {
   forwardRef,
   useImperativeHandle,
   useContext,
+  useMemo,
 } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -54,12 +55,16 @@ interface Bullet {
   bulletChildren: Bullet[] | null; // for explosives
   isPellet: boolean;
   trailInstances: TrailInstance[];
+  needsReset: boolean;
 }
 
 interface TrailInstance {
   position: THREE.Vector3;
   opacity: number;
-  active: boolean; // Add an active flag
+  active: boolean;
+  maxLifetime: number;
+  createdAt?: number;
+  needsReset: boolean;
 }
 
 export const bulletConsts = {
@@ -94,6 +99,9 @@ export const bulletConsts = {
       },
     },
   },
+  trail: {
+    lifetime: 1000,
+  },
 };
 
 const Bullets = forwardRef<BulletsHandle, BulletProps>(
@@ -112,10 +120,10 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
     ref
   ) => {
     const meshRef = useRef<THREE.InstancedMesh>(null);
-    const bullets = useRef<Bullet[]>([]);
+    const trailMeshRef = useRef<THREE.InstancedMesh>(null);
+    const bulletPool = useRef<Bullet[]>([]);
     const trailPool = useRef<TrailInstance[]>([]);
     const initializedRef = useRef(false);
-    const trailMeshRef = useRef<THREE.InstancedMesh>(null);
     const { cursorState, gameState } = useContext(GameContext);
     const { viewport } = useThree();
 
@@ -133,6 +141,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         bulletChildren: null,
         isPellet: false,
         trailInstances: [],
+        needsReset: false,
       };
     }, [origin, velocity, bulletSize, bulletSource, bulletType]);
 
@@ -141,13 +150,15 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         position: new THREE.Vector3(0, 0, 0),
         opacity: 0,
         active: false,
+        maxLifetime: bulletConsts.trail.lifetime,
+        needsReset: false,
       };
     }, []);
 
     // Initialize bullet pool
     useEffect(() => {
       if (!initializedRef.current) {
-        bullets.current = Array(count)
+        bulletPool.current = Array(count)
           .fill(null)
           .map(() => initBullet());
 
@@ -199,7 +210,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
           pellet.stage = 1;
         }
       }
-      parentBullet.active = false;
+      deactivateInstance(parentBullet);
     };
 
     const createMissilePath = useCallback(
@@ -261,7 +272,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         source: BulletSource,
         type: BulletType
       ): Bullet | null => {
-        const inactiveBullet = bullets.current.find((b) => !b.active);
+        const inactiveBullet = bulletPool.current.find((b) => !b.active);
         if (!inactiveBullet) return null;
 
         inactiveBullet.position.copy(origin);
@@ -310,6 +321,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         availableTrail.position.copy(bullet.position);
         availableTrail.opacity = 1.0;
         availableTrail.active = true;
+        availableTrail.createdAt = Date.now();
 
         // TODO: Limit total active trails per bullet
         const activeBulletTrails = trailPool.current.filter(
@@ -320,7 +332,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         if (activeBulletTrails.length > 5) {
           // deactivate the oldest trail
           const oldestTrail = activeBulletTrails[0];
-          oldestTrail.active = false;
+          deactivateInstance(oldestTrail);
           oldestTrail.opacity = 0;
         }
       }
@@ -336,7 +348,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         gameState.gameMode === GameMode.sales
       ) {
         if (distanceToTarget < 0.15) {
-          bullet.active = false;
+          deactivateInstance(bullet);
           collisionEventDispatcher.dispatch("playerHit");
           return;
         }
@@ -359,6 +371,13 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
     const bulletExpired = (bullet: Bullet): boolean | 0 | undefined => {
       const currentTime = Date.now();
       return bullet.createdAt && currentTime - bullet.createdAt > maxLifetime;
+    };
+
+    const trailExpired = (trail: TrailInstance): boolean | 0 | undefined => {
+      const currentTime = Date.now();
+      return (
+        trail.createdAt && currentTime - trail.createdAt > trail.maxLifetime
+      );
     };
 
     // Dead zone within coreBuffer - if a bullet enters this position it hits the core.
@@ -438,7 +457,7 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
     };
 
     const triggerCoreHit = (bullet: Bullet) => {
-      bullet.active = false;
+      deactivateInstance(bullet);
       collisionEventDispatcher.dispatch("coreHit");
     };
 
@@ -482,27 +501,47 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
       );
     };
 
+    const deactivateInstance = (instance: Bullet | TrailInstance): void => {
+      instance.active = false;
+      instance.needsReset = true;
+    };
+
+    const resetInstance = (
+      object3d: THREE.Object3D,
+      index: number,
+      ref: React.RefObject<
+        THREE.InstancedMesh<
+          THREE.BufferGeometry<THREE.NormalBufferAttributes>,
+          THREE.Material | THREE.Material[],
+          THREE.InstancedMeshEventMap
+        >
+      >
+    ) => {
+      object3d.position.set(0, 0, 0);
+      object3d.scale.set(0, 0, 0);
+      object3d.updateMatrix();
+      ref.current?.setMatrixAt(index, object3d.matrix);
+    };
+
     // ANIMATION /////////////////////////////////////////////////
+
+    const dummy = useMemo(() => new THREE.Object3D(), []);
+    const trailDummy = useMemo(() => new THREE.Object3D(), []);
+    const pos1 = useMemo(() => new THREE.Vector3(), []);
+    const pos2 = useMemo(() => new THREE.Vector3(), []);
 
     useFrame(() => {
       if (!meshRef.current) return;
       const maxX = viewport.width / 2;
       const maxY = viewport.height / 2;
 
-      const dummy = new THREE.Object3D();
-      const trailDummy = new THREE.Object3D();
-      const activeTrails = trailPool.current.filter((trail) => trail.active);
-
       let shouldUpdateInstanceMatrix = false;
       let shouldUpdateTrailMatrix = false;
 
-      bullets.current.forEach((bullet, index) => {
+      bulletPool.current.forEach((bullet, index) => {
         if (!bullet.active) {
-          // Skip rendering
-          dummy.position.set(0, 0, 0);
-          dummy.scale.set(0, 0, 0);
-          dummy.updateMatrix();
-          meshRef.current?.setMatrixAt(index, dummy.matrix);
+          resetInstance(dummy, index, meshRef);
+          bullet.needsReset = false;
           shouldUpdateInstanceMatrix = true;
           return;
         }
@@ -511,14 +550,14 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         updateBulletPosition(bullet);
 
         // Spawn trail instance every few frames
-        if (Math.random() > 0.6) {
+        if (Math.random() > 0.7) {
           spawnTrail(bullet);
         }
 
         // COLLISIONS /////////////////////////////////////////////
 
         if (bulletOffScreen(bullet, maxX, maxY) || bulletExpired(bullet)) {
-          bullet.active = false;
+          deactivateInstance(bullet);
           return;
         }
 
@@ -529,9 +568,8 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
         const maxDistance = Math.sqrt(maxX ** 2 + maxY ** 2);
         const distanceRatio = distanceFromCenter / maxDistance;
 
-        const pos1 = bullet.position.clone();
-        const pos2 = (bullet.bulletTarget ?? target).clone();
-
+        pos1.copy(bullet.position);
+        pos2.copy(bullet.bulletTarget ?? target);
         // flatten Z-axis
         pos1.z = 0;
         pos2.z = 0;
@@ -572,13 +610,20 @@ const Bullets = forwardRef<BulletsHandle, BulletProps>(
 
       // TRAILS ////////////////////////////////////////////////////
       // Render trails from the pool
-      activeTrails.forEach((trail, trailIndex) => {
+      trailPool.current.forEach((trail, trailIndex) => {
+        if (!trail.active && trail.needsReset) {
+          resetInstance(trailDummy, trailIndex, trailMeshRef);
+          trail.needsReset = false;
+          shouldUpdateTrailMatrix = true;
+          return;
+        }
+
         // Reduce opacity
         trail.opacity -= 0.1;
 
-        // Deactivate if opacity is too low
-        if (trail.opacity <= 0) {
-          trail.active = false;
+        // Deactivate if opacity is too low or time expired
+        if (trail.opacity <= 0 || trailExpired(trail)) {
+          deactivateInstance(trail);
           return;
         }
 

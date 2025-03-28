@@ -9,9 +9,9 @@ import Tunnel from "./components/aesthetics/Tunnel";
 import { GameContext } from "../../context/game/GameContext";
 import { GameMode } from "./game/game";
 import { gameEventDispatcher } from "../../context/events/eventListener";
-import { BASE_URL } from "../../assets/assets";
+import { imageFiles } from "../../assets";
 
-const cursor = `${BASE_URL}/assets/img/cursor.png`;
+const cursor = imageFiles.cursor;
 
 const CoffeeShop: React.FC<SceneProps> = ({ gui }) => {
   gui?.hide();

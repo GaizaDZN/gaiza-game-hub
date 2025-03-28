@@ -11,7 +11,7 @@ import Overlay from "./components/UI/overlay/Overlay";
 import "./styles/coffeeshop.scss";
 import { PerspectiveCamera } from "@react-three/drei";
 import { commonValues } from "./components/threejs/common";
-import { BASE_URL } from "../../assets/assets";
+import { imageFiles } from "../../assets";
 
 const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
   currentScene,
@@ -34,10 +34,7 @@ const CoffeeShopLayout: React.FC<SceneLayoutProps> = ({
     <div className="canvas-container-coffee">
       <div className="canvas-img-container">
         <Overlay />
-        <img
-          className="canvas-img pixelated"
-          src={`${BASE_URL}//assets/img/cafe.jpg`}
-        />
+        <img className="canvas-img pixelated" src={imageFiles.cafe} />
       </div>
       <Canvas
         className="canvas-coffee"
